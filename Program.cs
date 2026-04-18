@@ -1,14 +1,15 @@
-using FinanceTracker.Api.GraphQL;
+using FinanceTracker.Api.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services
-    .AddGraphQLServer()
-    .AddQueryType<Query>()
-    .AddMutationType<Mutation>();
+builder.Services.AddSupabaseAuth(builder.Configuration);
+builder.Services.AddDatabase(builder.Configuration);
+builder.Services.AddGraphQl();
 
 var app = builder.Build();
 
+app.UseAuthentication();
+app.UseAuthorization();
 app.MapGraphQL();
 
 app.Run();
