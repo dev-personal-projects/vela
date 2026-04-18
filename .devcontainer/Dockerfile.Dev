@@ -1,0 +1,47 @@
+# Dockerfile.dev
+
+FROM mcr.microsoft.com/dotnet/sdk:10.0
+
+# Install essential tools
+RUN apt-get update && \
+    apt-get install -y \
+    curl \
+    git \
+    unzip \
+    jq \
+    ripgrep \
+    iproute2 \
+    iputils-ping \
+    netcat-openbsd \
+    dnsutils \
+    traceroute \
+    ca-certificates \
+    gnupg \
+    lsb-release \
+    postgresql-client && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install Node.js (useful for tooling if needed)
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
+    apt-get install -y nodejs && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install Azure CLI
+RUN curl -sL https://aka.ms/InstallAzureCLIDeb | bash
+
+# Install GitHub CLI
+RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+    | gpg --dearmor -o /usr/share/keyrings/githubcli-archive-keyring.gpg && \
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" \
+    | tee /etc/apt/sources.list.d/github-cli.list > /dev/null && \
+    apt-get update && \
+    apt-get install -y gh && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install cloc (optional)
+RUN curl -fsSL https://raw.githubusercontent.com/AlDanial/cloc/master/cloc -o /usr/local/bin/cloc && \
+    chmod 0755 /usr/local/bin/cloc
+
+WORKDIR /workspace
+
+CMD ["bash"]

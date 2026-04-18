@@ -23,6 +23,13 @@ bld/
 [Ll]og/
 [Ll]ogs/
 
+# Root level build output
+/bin/
+/obj/
+
+# Solution files (using .slnx instead)
+*.sln
+
 # .NET Core
 project.lock.json
 project.fragment.lock.json
