@@ -26,6 +26,6 @@
     5000,
     5001
   ],
-  "postCreateCommand": "dotnet restore",
-  "postStartCommand": "echo 'Dev container ready 🚀'"
+  "postCreateCommand": "dotnet restore || true",
+  "postStartCommand": "dotnet restore && echo 'Dev container ready 🚀'"
 }
