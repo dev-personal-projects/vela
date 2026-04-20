@@ -7,13 +7,13 @@ Define all core business entities and enums. This layer is the heart of the appl
 
 ## Checklist
 
-- [ ] `LoanType` enum created
-- [ ] `Income` entity created
-- [ ] `Expense` entity created
-- [ ] `SavingsGoal` entity with `Progress()` computed method
-- [ ] `Loan` entity with `RemainingBalance()` computed method
-- [ ] All entities carry `UserId` (Supabase Auth UUID)
-- [ ] All entities enforce invariants via constructor — no public setters on required fields
+- [x] `LoanType` enum created
+- [x] `Income` entity created
+- [x] `Expense` entity created
+- [x] `SavingsGoal` entity with `Progress()` computed method
+- [x] `Loan` entity with `RemainingBalance()` computed method
+- [x] All entities carry `UserId` (Supabase Auth UUID)
+- [x] All entities enforce invariants via constructor — no public setters on required fields
 
 ---
 
