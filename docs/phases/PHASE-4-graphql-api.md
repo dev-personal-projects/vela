@@ -7,15 +7,15 @@ Expose all features through a clean, authenticated GraphQL API. Resolvers are th
 
 ## Checklist
 
-- [ ] JWT Bearer + Hot Chocolate authorization wired in `Program.cs`
-- [ ] `signUp` mutation calls Supabase Auth and returns JWT
-- [ ] `signIn` mutation calls Supabase Auth and returns JWT
-- [ ] All queries protected with `[Authorize]`
-- [ ] All mutations except `signUp` and `signIn` protected with `[Authorize]`
-- [ ] `UserId` extracted from `ClaimsPrincipal` in every protected resolver
-- [ ] `health` query remains public
-- [ ] All mutations return typed payloads with data or error
-- [ ] Dashboard query returns aggregated summary
+- [x] JWT Bearer + Hot Chocolate authorization wired in `Program.cs`
+- [x] `signUp` mutation calls Supabase Auth and returns JWT
+- [x] `signIn` mutation calls Supabase Auth and returns JWT
+- [x] All queries protected with `[Authorize]`
+- [x] All mutations except `signUp` and `signIn` protected with `[Authorize]`
+- [x] `UserId` extracted from `ClaimsPrincipal` in every protected resolver
+- [x] `health` query remains public
+- [x] All mutations return typed payloads with data or error
+- [x] Dashboard query returns aggregated summary
 
 ---
 
