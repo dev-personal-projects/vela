@@ -1,34 +1,34 @@
 namespace FinanceTracker.Domain.Common;
 
-public abstract class ResultBase
+public abstract class AppResultBase
 {
     public string? Error { get; }
     public bool IsSuccess { get; }
     public bool IsFailure => !IsSuccess;
 
-    protected ResultBase(string? error, bool isSuccess)
+    protected AppResultBase(string? error, bool isSuccess)
     {
         Error = error;
         IsSuccess = isSuccess;
     }
 }
 
-public sealed class Result<T> : ResultBase
+public sealed class AppResult<T> : AppResultBase
 {
     public T? Value { get; }
 
-    private Result(T? value, string? error, bool isSuccess)
+    private AppResult(T? value, string? error, bool isSuccess)
         : base(error, isSuccess) => Value = value;
 
-    public static Result<T> Ok(T value) => new(value, null, true);
-    public static Result<T> Fail(string error) => new(default, error, false);
+    public static AppResult<T> Ok(T value) => new(value, null, true);
+    public static AppResult<T> Fail(string error) => new(default, error, false);
 }
 
-public sealed class Result : ResultBase
+public sealed class AppResult : AppResultBase
 {
-    private Result(string? error, bool isSuccess)
+    private AppResult(string? error, bool isSuccess)
         : base(error, isSuccess) { }
 
-    public static Result Ok() => new(null, true);
-    public static Result Fail(string error) => new(error, false);
+    public static AppResult Ok() => new(null, true);
+    public static AppResult Fail(string error) => new(error, false);
 }

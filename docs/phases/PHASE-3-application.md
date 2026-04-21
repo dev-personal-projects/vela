@@ -7,15 +7,15 @@ Implement all business logic through services. Services orchestrate domain entit
 
 ## Checklist
 
-- [ ] DTOs defined for all inputs
-- [ ] `IAuthService` interface and `AuthService` implementation
-- [ ] `IIncomeService` interface and `IncomeService` implementation
-- [ ] `IExpenseService` interface and `ExpenseService` implementation
-- [ ] `ISavingsGoalService` interface and `SavingsGoalService` implementation
-- [ ] `ILoanService` interface and `LoanService` implemented
-- [ ] All services return `Result<T>` or `Result`
-- [ ] All validation rules enforced in services
-- [ ] All services registered in DI
+- [x] DTOs defined for all inputs
+- [x] `IAuthService` interface and `AuthService` implementation
+- [x] `IIncomeService` interface and `IncomeService` implementation
+- [x] `IExpenseService` interface and `ExpenseService` implementation
+- [x] `ISavingsGoalService` interface and `SavingsGoalService` implementation
+- [x] `ILoanService` interface and `LoanService` implemented
+- [x] All services return `AppResult<T>` or `AppResult`
+- [x] All validation rules enforced in services
+- [x] All services registered in DI
 
 ---
 
