@@ -7,15 +7,15 @@ Connect to Supabase PostgreSQL via EF Core, apply the SQL migrations, and implem
 
 ## Checklist
 
-- [ ] `AppDbContext` configured with all entity `DbSet`s and table mappings
-- [ ] EF Core column mappings match the SQL migration schema
-- [ ] SQL migrations applied to Supabase via `apply-migrations.sh`
-- [ ] `IIncomeRepository` interface defined in Application layer
-- [ ] `IExpenseRepository` interface defined in Application layer
-- [ ] `ISavingsGoalRepository` interface defined in Application layer
-- [ ] `ILoanRepository` interface defined in Application layer
-- [ ] All four repository implementations complete
-- [ ] All repositories registered in DI in `Program.cs`
+- [x] `AppDbContext` configured with all entity `DbSet`s and table mappings
+- [x] EF Core column mappings match the SQL migration schema
+- [x] SQL migrations applied to Supabase via `apply-migrations.sh`
+- [x] `IIncomeRepository` interface defined in Application layer
+- [x] `IExpenseRepository` interface defined in Application layer
+- [x] `ISavingsGoalRepository` interface defined in Application layer
+- [x] `ILoanRepository` interface defined in Application layer
+- [x] All four repository implementations complete
+- [x] All repositories registered in DI in `Program.cs`
 
 ---
 
