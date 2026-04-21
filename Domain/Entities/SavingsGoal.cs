@@ -4,7 +4,7 @@ public sealed class SavingsGoal
 {
     public Guid Id { get; }
     public Guid UserId { get; }
-    public string Name { get; }
+    public string Name { get; } = string.Empty;
     public decimal TargetAmount { get; }
     public decimal CurrentAmount { get; private set; }
     public DateTime? Deadline { get; }
@@ -12,6 +12,8 @@ public sealed class SavingsGoal
 
     public decimal Progress =>
         TargetAmount == 0 ? 0 : Math.Round(CurrentAmount / TargetAmount * 100, 2);
+
+    private SavingsGoal() { }
 
     public SavingsGoal(Guid userId, string name, decimal targetAmount, DateTime? deadline = null)
     {

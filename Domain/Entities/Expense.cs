@@ -5,10 +5,12 @@ public sealed class Expense
     public Guid Id { get; }
     public Guid UserId { get; }
     public decimal Amount { get; }
-    public string Category { get; }
-    public string Description { get; }
+    public string Category { get; } = string.Empty;
+    public string Description { get; } = string.Empty;
     public DateTime Date { get; }
     public DateTime CreatedAt { get; }
+
+    private Expense() { }
 
     public Expense(Guid userId, decimal amount, string category, string description, DateTime date)
     {

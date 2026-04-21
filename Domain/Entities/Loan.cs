@@ -6,17 +6,19 @@ public sealed class Loan
 {
     public Guid Id { get; }
     public Guid UserId { get; }
-    public string CounterpartyName { get; }
+    public string CounterpartyName { get; } = string.Empty;
     public decimal Amount { get; }
     public decimal AmountRepaid { get; private set; }
     public LoanType Type { get; }
-    public string Description { get; }
+    public string Description { get; } = string.Empty;
     public DateTime Date { get; }
     public DateTime? DueDate { get; }
     public DateTime CreatedAt { get; }
 
     public decimal RemainingBalance => Amount - AmountRepaid;
     public bool IsSettled => AmountRepaid >= Amount;
+
+    private Loan() { }
 
     public Loan(
         Guid userId,

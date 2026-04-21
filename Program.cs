@@ -7,7 +7,7 @@ builder.Services.AddSupabaseClient(builder.Configuration);
 builder.Services.AddDatabase(builder.Configuration);
 builder.Services.AddRepositories();
 builder.Services.AddServices();
-builder.Services.AddGraphQl();
+builder.Services.AddGraphQl(builder.Environment);
 
 var app = builder.Build();
 

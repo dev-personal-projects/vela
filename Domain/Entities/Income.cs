@@ -5,10 +5,12 @@ public sealed class Income
     public Guid Id { get; }
     public Guid UserId { get; }
     public decimal Amount { get; }
-    public string Source { get; }
-    public string Description { get; }
+    public string Source { get; } = string.Empty;
+    public string Description { get; } = string.Empty;
     public DateTime Date { get; }
     public DateTime CreatedAt { get; }
+
+    private Income() { }
 
     public Income(Guid userId, decimal amount, string source, string description, DateTime date)
     {

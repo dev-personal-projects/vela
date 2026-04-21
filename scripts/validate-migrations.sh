@@ -136,14 +136,14 @@ build_combined_script() {
         echo "-- Applying: $filename"
         echo "-- ────────────────────────────────────────────────────"
         echo ""
-        echo "\\echo '>>> Applying: $filename'"
+        printf "\\echo '>>> Applying: %s'\n" "$filename"
         echo ""
-        echo "\\i $migration"
+        printf "\\i %s\n" "$migration"
         echo ""
     done
 
     echo "-- ────────────────────────────────────────────────────"
-    echo "\\echo '>>> All migrations validated — rolling back (dry-run)'"
+    printf "\\echo '>>> All migrations validated — rolling back (dry-run)'\n"
     echo "ROLLBACK;"
 }
 
