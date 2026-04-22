@@ -13,12 +13,20 @@ public sealed class AuthController(IAuthService authService) : ControllerBase
     {
         var result = await authService.SignUpAsync(input, ct);
 
-        if (result.IsFailure)
+        // Email confirmation disabled — token returned immediately
+        if (result.IsSuccess)
         {
-            return BadRequest(new { error = result.Error });
+            return StatusCode(201, result.Value);
         }
 
-        return Ok(result.Value);
+        // Email confirmation enabled — user created but needs to confirm
+        if (result.Error!.Contains("confirm your email"))
+        {
+            return StatusCode(201, new { message = result.Error });
+        }
+
+        // Actual failure — validation or duplicate email
+        return BadRequest(new { error = result.Error });
     }
 
     [HttpPost("signin")]
@@ -28,7 +36,12 @@ public sealed class AuthController(IAuthService authService) : ControllerBase
 
         if (result.IsFailure)
         {
-            return Unauthorized(new { error = result.Error });
+            var isValidationError = result.Error!.Contains("required") ||
+                                    result.Error.Contains("valid email");
+
+            return isValidationError
+                ? BadRequest(new { error = result.Error })
+                : Unauthorized(new { error = result.Error });
         }
 
         return Ok(result.Value);

@@ -1,10 +1,10 @@
 {
   "info": {
-    "title": "Finance Tracker — GraphQL API Tests",
-    "description": "Every request shows the exact URL, method, headers and body to send. All requests go to the same endpoint. The body changes per operation.",
+    "title": "Finance Tracker API — Test Examples",
+    "description": "Every request shows the exact method, URL, headers and body. Auth uses REST endpoints. Everything else uses GraphQL.",
     "baseUrl_local": "http://localhost:8080",
     "baseUrl_production": "https://your-app.azurewebsites.net",
-    "note": "Replace <JWT_TOKEN> with the accessToken returned from signIn"
+    "note": "Replace <JWT_TOKEN> with the accessToken returned from Sign In"
   },
 
   "requests": [
@@ -12,18 +12,17 @@
     {
       "id": 1,
       "name": "Health Check",
-      "description": "Public — no token needed. Confirms the API is running.",
-      "method": "POST",
-      "url": "http://localhost:8080/graphql",
-      "headers": {
-        "Content-Type": "application/json"
-      },
-      "body": {
-        "query": "{ health }"
-      },
+      "description": "Public GET — no token needed. Used by load balancers and monitoring tools.",
+      "method": "GET",
+      "url": "http://localhost:8080/health",
+      "headers": {},
+      "body": null,
       "expected_response": {
-        "data": {
-          "health": "Finance Tracker API is running!"
+        "status": 200,
+        "body": {
+          "status": "healthy",
+          "service": "Finance Tracker API",
+          "timestamp": "2025-01-15T00:00:00Z"
         }
       }
     },
@@ -31,24 +30,22 @@
     {
       "id": 2,
       "name": "Sign Up",
-      "description": "Public — creates a new user account. Copy the accessToken from the response.",
+      "description": "REST POST — creates a new user. Returns accessToken and refreshToken immediately when email confirmation is disabled in Supabase.",
       "method": "POST",
-      "url": "http://localhost:8080/graphql",
+      "url": "http://localhost:8080/api/auth/signup",
       "headers": {
         "Content-Type": "application/json"
       },
       "body": {
-        "query": "mutation { signUp(input: { email: \"user@example.com\", password: \"Password123!\" }) { auth { accessToken tokenType } errors } }"
+        "email": "user@example.com",
+        "password": "Password123!"
       },
       "expected_response": {
-        "data": {
-          "signUp": {
-            "auth": {
-              "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-              "tokenType": "bearer"
-            },
-            "errors": null
-          }
+        "status": 201,
+        "body": {
+          "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+          "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+          "tokenType": "bearer"
         }
       }
     },
@@ -56,21 +53,20 @@
     {
       "id": 3,
       "name": "Sign Up — Invalid Email",
-      "description": "Should return a validation error.",
+      "description": "Should return 400 with a validation error.",
       "method": "POST",
-      "url": "http://localhost:8080/graphql",
+      "url": "http://localhost:8080/api/auth/signup",
       "headers": {
         "Content-Type": "application/json"
       },
       "body": {
-        "query": "mutation { signUp(input: { email: \"notanemail\", password: \"Password123!\" }) { auth { accessToken } errors } }"
+        "email": "notanemail",
+        "password": "Password123!"
       },
       "expected_response": {
-        "data": {
-          "signUp": {
-            "auth": null,
-            "errors": ["A valid email address is required."]
-          }
+        "status": 400,
+        "body": {
+          "error": "A valid email address is required."
         }
       }
     },
@@ -78,76 +74,114 @@
     {
       "id": 4,
       "name": "Sign Up — Short Password",
-      "description": "Should return a validation error.",
+      "description": "Should return 400 with a validation error.",
       "method": "POST",
-      "url": "http://localhost:8080/graphql",
+      "url": "http://localhost:8080/api/auth/signup",
       "headers": {
         "Content-Type": "application/json"
       },
       "body": {
-        "query": "mutation { signUp(input: { email: \"user@example.com\", password: \"123\" }) { auth { accessToken } errors } }"
+        "email": "user@example.com",
+        "password": "123"
       },
       "expected_response": {
-        "data": {
-          "signUp": {
-            "auth": null,
-            "errors": ["Password must be at least 8 characters."]
-          }
+        "status": 400,
+        "body": {
+          "error": "Password must be at least 8 characters."
         }
       }
     },
 
     {
       "id": 5,
-      "name": "Sign In",
-      "description": "Public — returns JWT. Copy the accessToken and use it in all requests below.",
+      "name": "Sign Up — Email Already Exists",
+      "description": "Should return 400 with a clear duplicate error.",
       "method": "POST",
-      "url": "http://localhost:8080/graphql",
+      "url": "http://localhost:8080/api/auth/signup",
       "headers": {
         "Content-Type": "application/json"
       },
       "body": {
-        "query": "mutation { signIn(input: { email: \"user@example.com\", password: \"Password123!\" }) { auth { accessToken tokenType } errors } }"
+        "email": "user@example.com",
+        "password": "Password123!"
       },
       "expected_response": {
-        "data": {
-          "signIn": {
-            "auth": {
-              "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-              "tokenType": "bearer"
-            },
-            "errors": null
-          }
+        "status": 400,
+        "body": {
+          "error": "An account with this email already exists."
         }
       }
     },
 
     {
       "id": 6,
-      "name": "Sign In — Wrong Password",
-      "description": "Should return an authentication error.",
+      "name": "Sign In",
+      "description": "REST POST — returns accessToken and refreshToken. Copy the accessToken for all GraphQL requests.",
       "method": "POST",
-      "url": "http://localhost:8080/graphql",
+      "url": "http://localhost:8080/api/auth/signin",
       "headers": {
         "Content-Type": "application/json"
       },
       "body": {
-        "query": "mutation { signIn(input: { email: \"user@example.com\", password: \"wrongpassword\" }) { auth { accessToken } errors } }"
+        "email": "user@example.com",
+        "password": "Password123!"
       },
       "expected_response": {
-        "data": {
-          "signIn": {
-            "auth": null,
-            "errors": ["Authentication failed."]
-          }
+        "status": 200,
+        "body": {
+          "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+          "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+          "tokenType": "bearer"
         }
       }
     },
 
     {
       "id": 7,
+      "name": "Sign In — Wrong Password",
+      "description": "Should return 401 with a clear error.",
+      "method": "POST",
+      "url": "http://localhost:8080/api/auth/signin",
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "email": "user@example.com",
+        "password": "wrongpassword"
+      },
+      "expected_response": {
+        "status": 401,
+        "body": {
+          "error": "Incorrect email or password."
+        }
+      }
+    },
+
+    {
+      "id": 8,
+      "name": "Sign In — User Not Found",
+      "description": "Should return 401 with a clear error.",
+      "method": "POST",
+      "url": "http://localhost:8080/api/auth/signin",
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "email": "nobody@example.com",
+        "password": "Password123!"
+      },
+      "expected_response": {
+        "status": 401,
+        "body": {
+          "error": "Incorrect email or password."
+        }
+      }
+    },
+
+    {
+      "id": 9,
       "name": "Protected Query — No Token",
-      "description": "Should be rejected. No Authorization header provided.",
+      "description": "GraphQL POST — should be rejected with auth error.",
       "method": "POST",
       "url": "http://localhost:8080/graphql",
       "headers": {
@@ -157,18 +191,21 @@
         "query": "{ incomes { id amount } }"
       },
       "expected_response": {
-        "errors": [
-          {
-            "message": "The current user is not authorized to access this resource."
-          }
-        ]
+        "status": 200,
+        "body": {
+          "errors": [
+            {
+              "message": "The current user is not authorized to access this resource."
+            }
+          ]
+        }
       }
     },
 
     {
-      "id": 8,
+      "id": 10,
       "name": "Add Income",
-      "description": "Requires JWT. Adds an income record.",
+      "description": "GraphQL POST — requires JWT. Adds an income record.",
       "method": "POST",
       "url": "http://localhost:8080/graphql",
       "headers": {
@@ -179,25 +216,28 @@
         "query": "mutation { addIncome(input: { amount: 5000.00, source: \"Salary\", description: \"Monthly salary\", date: \"2025-01-15T00:00:00Z\" }) { income { id amount source description date } errors } }"
       },
       "expected_response": {
-        "data": {
-          "addIncome": {
-            "income": {
-              "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-              "amount": 5000.00,
-              "source": "Salary",
-              "description": "Monthly salary",
-              "date": "2025-01-15T00:00:00Z"
-            },
-            "errors": null
+        "status": 200,
+        "body": {
+          "data": {
+            "addIncome": {
+              "income": {
+                "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                "amount": 5000.00,
+                "source": "Salary",
+                "description": "Monthly salary",
+                "date": "2025-01-15T00:00:00Z"
+              },
+              "errors": null
+            }
           }
         }
       }
     },
 
     {
-      "id": 9,
+      "id": 11,
       "name": "Add Income — Negative Amount",
-      "description": "Should return a validation error.",
+      "description": "Should return validation error in the payload.",
       "method": "POST",
       "url": "http://localhost:8080/graphql",
       "headers": {
@@ -208,19 +248,22 @@
         "query": "mutation { addIncome(input: { amount: -100, source: \"Salary\", description: \"\", date: \"2025-01-15T00:00:00Z\" }) { income { id } errors } }"
       },
       "expected_response": {
-        "data": {
-          "addIncome": {
-            "income": null,
-            "errors": ["Amount must be greater than 0."]
+        "status": 200,
+        "body": {
+          "data": {
+            "addIncome": {
+              "income": null,
+              "errors": ["Amount must be greater than 0."]
+            }
           }
         }
       }
     },
 
     {
-      "id": 10,
+      "id": 12,
       "name": "Add Income — Future Date",
-      "description": "Should return a validation error.",
+      "description": "Should return validation error in the payload.",
       "method": "POST",
       "url": "http://localhost:8080/graphql",
       "headers": {
@@ -231,19 +274,22 @@
         "query": "mutation { addIncome(input: { amount: 1000, source: \"Bonus\", description: \"\", date: \"2099-01-01T00:00:00Z\" }) { income { id } errors } }"
       },
       "expected_response": {
-        "data": {
-          "addIncome": {
-            "income": null,
-            "errors": ["Date cannot be in the future."]
+        "status": 200,
+        "body": {
+          "data": {
+            "addIncome": {
+              "income": null,
+              "errors": ["Date cannot be in the future."]
+            }
           }
         }
       }
     },
 
     {
-      "id": 11,
+      "id": 13,
       "name": "Get All Incomes",
-      "description": "Requires JWT. Returns all income records for the user.",
+      "description": "GraphQL POST — requires JWT. Returns all income records for the user.",
       "method": "POST",
       "url": "http://localhost:8080/graphql",
       "headers": {
@@ -254,24 +300,27 @@
         "query": "{ incomes { id amount source description date } }"
       },
       "expected_response": {
-        "data": {
-          "incomes": [
-            {
-              "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-              "amount": 5000.00,
-              "source": "Salary",
-              "description": "Monthly salary",
-              "date": "2025-01-15T00:00:00Z"
-            }
-          ]
+        "status": 200,
+        "body": {
+          "data": {
+            "incomes": [
+              {
+                "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                "amount": 5000.00,
+                "source": "Salary",
+                "description": "Monthly salary",
+                "date": "2025-01-15T00:00:00Z"
+              }
+            ]
+          }
         }
       }
     },
 
     {
-      "id": 12,
+      "id": 14,
       "name": "Add Expense",
-      "description": "Requires JWT. Adds an expense record.",
+      "description": "GraphQL POST — requires JWT.",
       "method": "POST",
       "url": "http://localhost:8080/graphql",
       "headers": {
@@ -282,25 +331,28 @@
         "query": "mutation { addExpense(input: { amount: 120.50, category: \"Groceries\", description: \"Weekly groceries\", date: \"2025-01-15T00:00:00Z\" }) { expense { id amount category description date } errors } }"
       },
       "expected_response": {
-        "data": {
-          "addExpense": {
-            "expense": {
-              "id": "6ba7b810-9dad-11d1-80b4-00c04fd430c8",
-              "amount": 120.50,
-              "category": "Groceries",
-              "description": "Weekly groceries",
-              "date": "2025-01-15T00:00:00Z"
-            },
-            "errors": null
+        "status": 200,
+        "body": {
+          "data": {
+            "addExpense": {
+              "expense": {
+                "id": "6ba7b810-9dad-11d1-80b4-00c04fd430c8",
+                "amount": 120.50,
+                "category": "Groceries",
+                "description": "Weekly groceries",
+                "date": "2025-01-15T00:00:00Z"
+              },
+              "errors": null
+            }
           }
         }
       }
     },
 
     {
-      "id": 13,
+      "id": 15,
       "name": "Add Expense — Empty Category",
-      "description": "Should return a validation error.",
+      "description": "Should return validation error in the payload.",
       "method": "POST",
       "url": "http://localhost:8080/graphql",
       "headers": {
@@ -311,19 +363,22 @@
         "query": "mutation { addExpense(input: { amount: 50, category: \"\", description: \"\", date: \"2025-01-15T00:00:00Z\" }) { expense { id } errors } }"
       },
       "expected_response": {
-        "data": {
-          "addExpense": {
-            "expense": null,
-            "errors": ["Category is required."]
+        "status": 200,
+        "body": {
+          "data": {
+            "addExpense": {
+              "expense": null,
+              "errors": ["Category is required."]
+            }
           }
         }
       }
     },
 
     {
-      "id": 14,
+      "id": 16,
       "name": "Get All Expenses",
-      "description": "Requires JWT. Returns all expense records for the user.",
+      "description": "GraphQL POST — requires JWT.",
       "method": "POST",
       "url": "http://localhost:8080/graphql",
       "headers": {
@@ -334,24 +389,27 @@
         "query": "{ expenses { id amount category description date } }"
       },
       "expected_response": {
-        "data": {
-          "expenses": [
-            {
-              "id": "6ba7b810-9dad-11d1-80b4-00c04fd430c8",
-              "amount": 120.50,
-              "category": "Groceries",
-              "description": "Weekly groceries",
-              "date": "2025-01-15T00:00:00Z"
-            }
-          ]
+        "status": 200,
+        "body": {
+          "data": {
+            "expenses": [
+              {
+                "id": "6ba7b810-9dad-11d1-80b4-00c04fd430c8",
+                "amount": 120.50,
+                "category": "Groceries",
+                "description": "Weekly groceries",
+                "date": "2025-01-15T00:00:00Z"
+              }
+            ]
+          }
         }
       }
     },
 
     {
-      "id": 15,
+      "id": 17,
       "name": "Create Savings Goal",
-      "description": "Requires JWT. Creates a savings goal. Copy the id for update progress.",
+      "description": "GraphQL POST — requires JWT. Copy the id from the response for update progress.",
       "method": "POST",
       "url": "http://localhost:8080/graphql",
       "headers": {
@@ -362,26 +420,29 @@
         "query": "mutation { createSavingsGoal(input: { name: \"Emergency Fund\", targetAmount: 10000.00, deadline: \"2025-12-31T00:00:00Z\" }) { savingsGoal { id name targetAmount currentAmount progress deadline } errors } }"
       },
       "expected_response": {
-        "data": {
-          "createSavingsGoal": {
-            "savingsGoal": {
-              "id": "550e8400-e29b-41d4-a716-446655440000",
-              "name": "Emergency Fund",
-              "targetAmount": 10000.00,
-              "currentAmount": 0.00,
-              "progress": 0.00,
-              "deadline": "2025-12-31T00:00:00Z"
-            },
-            "errors": null
+        "status": 200,
+        "body": {
+          "data": {
+            "createSavingsGoal": {
+              "savingsGoal": {
+                "id": "550e8400-e29b-41d4-a716-446655440000",
+                "name": "Emergency Fund",
+                "targetAmount": 10000.00,
+                "currentAmount": 0.00,
+                "progress": 0.00,
+                "deadline": "2025-12-31T00:00:00Z"
+              },
+              "errors": null
+            }
           }
         }
       }
     },
 
     {
-      "id": 16,
+      "id": 18,
       "name": "Update Savings Progress",
-      "description": "Requires JWT. Replace <SAVINGS_GOAL_ID> with the id from Create Savings Goal.",
+      "description": "GraphQL POST — requires JWT. Replace <SAVINGS_GOAL_ID> with the id from Create Savings Goal.",
       "method": "POST",
       "url": "http://localhost:8080/graphql",
       "headers": {
@@ -392,25 +453,28 @@
         "query": "mutation { updateSavingsProgress(id: \"<SAVINGS_GOAL_ID>\", newAmount: 2500.00) { savingsGoal { id name currentAmount targetAmount progress } errors } }"
       },
       "expected_response": {
-        "data": {
-          "updateSavingsProgress": {
-            "savingsGoal": {
-              "id": "550e8400-e29b-41d4-a716-446655440000",
-              "name": "Emergency Fund",
-              "currentAmount": 2500.00,
-              "targetAmount": 10000.00,
-              "progress": 25.00
-            },
-            "errors": null
+        "status": 200,
+        "body": {
+          "data": {
+            "updateSavingsProgress": {
+              "savingsGoal": {
+                "id": "550e8400-e29b-41d4-a716-446655440000",
+                "name": "Emergency Fund",
+                "currentAmount": 2500.00,
+                "targetAmount": 10000.00,
+                "progress": 25.00
+              },
+              "errors": null
+            }
           }
         }
       }
     },
 
     {
-      "id": 17,
+      "id": 19,
       "name": "Update Savings Progress — Exceeds Target",
-      "description": "Should return a validation error.",
+      "description": "Should return validation error in the payload.",
       "method": "POST",
       "url": "http://localhost:8080/graphql",
       "headers": {
@@ -421,19 +485,22 @@
         "query": "mutation { updateSavingsProgress(id: \"<SAVINGS_GOAL_ID>\", newAmount: 99999.00) { savingsGoal { id } errors } }"
       },
       "expected_response": {
-        "data": {
-          "updateSavingsProgress": {
-            "savingsGoal": null,
-            "errors": ["Amount cannot exceed the target amount."]
+        "status": 200,
+        "body": {
+          "data": {
+            "updateSavingsProgress": {
+              "savingsGoal": null,
+              "errors": ["Amount cannot exceed the target amount."]
+            }
           }
         }
       }
     },
 
     {
-      "id": 18,
+      "id": 20,
       "name": "Get All Savings Goals",
-      "description": "Requires JWT. Returns all savings goals for the user.",
+      "description": "GraphQL POST — requires JWT.",
       "method": "POST",
       "url": "http://localhost:8080/graphql",
       "headers": {
@@ -444,25 +511,28 @@
         "query": "{ savingsGoals { id name targetAmount currentAmount progress deadline } }"
       },
       "expected_response": {
-        "data": {
-          "savingsGoals": [
-            {
-              "id": "550e8400-e29b-41d4-a716-446655440000",
-              "name": "Emergency Fund",
-              "targetAmount": 10000.00,
-              "currentAmount": 2500.00,
-              "progress": 25.00,
-              "deadline": "2025-12-31T00:00:00Z"
-            }
-          ]
+        "status": 200,
+        "body": {
+          "data": {
+            "savingsGoals": [
+              {
+                "id": "550e8400-e29b-41d4-a716-446655440000",
+                "name": "Emergency Fund",
+                "targetAmount": 10000.00,
+                "currentAmount": 2500.00,
+                "progress": 25.00,
+                "deadline": "2025-12-31T00:00:00Z"
+              }
+            ]
+          }
         }
       }
     },
 
     {
-      "id": 19,
+      "id": 21,
       "name": "Add Loan — Owed (I borrowed)",
-      "description": "Requires JWT. Adds a loan I owe. Copy the id for record repayment.",
+      "description": "GraphQL POST — requires JWT. Copy the id for record repayment.",
       "method": "POST",
       "url": "http://localhost:8080/graphql",
       "headers": {
@@ -473,27 +543,30 @@
         "query": "mutation { addLoan(input: { counterpartyName: \"John Smith\", amount: 2000.00, type: Owed, description: \"Personal loan from John\", date: \"2025-01-01T00:00:00Z\", dueDate: \"2025-06-01T00:00:00Z\" }) { loan { id counterpartyName amount amountRepaid remainingBalance type isSettled } errors } }"
       },
       "expected_response": {
-        "data": {
-          "addLoan": {
-            "loan": {
-              "id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
-              "counterpartyName": "John Smith",
-              "amount": 2000.00,
-              "amountRepaid": 0.00,
-              "remainingBalance": 2000.00,
-              "type": "Owed",
-              "isSettled": false
-            },
-            "errors": null
+        "status": 200,
+        "body": {
+          "data": {
+            "addLoan": {
+              "loan": {
+                "id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+                "counterpartyName": "John Smith",
+                "amount": 2000.00,
+                "amountRepaid": 0.00,
+                "remainingBalance": 2000.00,
+                "type": "Owed",
+                "isSettled": false
+              },
+              "errors": null
+            }
           }
         }
       }
     },
 
     {
-      "id": 20,
+      "id": 22,
       "name": "Add Loan — Given (I lent)",
-      "description": "Requires JWT. Adds a loan I gave to someone.",
+      "description": "GraphQL POST — requires JWT.",
       "method": "POST",
       "url": "http://localhost:8080/graphql",
       "headers": {
@@ -504,25 +577,28 @@
         "query": "mutation { addLoan(input: { counterpartyName: \"Sarah Jones\", amount: 500.00, type: Given, description: \"Lent to Sarah for rent\", date: \"2025-01-10T00:00:00Z\", dueDate: null }) { loan { id counterpartyName amount type remainingBalance } errors } }"
       },
       "expected_response": {
-        "data": {
-          "addLoan": {
-            "loan": {
-              "id": "a3bb189e-8bf9-3888-9912-ace4e6543002",
-              "counterpartyName": "Sarah Jones",
-              "amount": 500.00,
-              "type": "Given",
-              "remainingBalance": 500.00
-            },
-            "errors": null
+        "status": 200,
+        "body": {
+          "data": {
+            "addLoan": {
+              "loan": {
+                "id": "a3bb189e-8bf9-3888-9912-ace4e6543002",
+                "counterpartyName": "Sarah Jones",
+                "amount": 500.00,
+                "type": "Given",
+                "remainingBalance": 500.00
+              },
+              "errors": null
+            }
           }
         }
       }
     },
 
     {
-      "id": 21,
+      "id": 23,
       "name": "Record Repayment",
-      "description": "Requires JWT. Replace <LOAN_ID> with the id from Add Loan.",
+      "description": "GraphQL POST — requires JWT. Replace <LOAN_ID> with the id from Add Loan.",
       "method": "POST",
       "url": "http://localhost:8080/graphql",
       "headers": {
@@ -533,24 +609,27 @@
         "query": "mutation { recordRepayment(input: { loanId: \"<LOAN_ID>\", amount: 500.00 }) { loan { id amountRepaid remainingBalance isSettled } errors } }"
       },
       "expected_response": {
-        "data": {
-          "recordRepayment": {
-            "loan": {
-              "id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
-              "amountRepaid": 500.00,
-              "remainingBalance": 1500.00,
-              "isSettled": false
-            },
-            "errors": null
+        "status": 200,
+        "body": {
+          "data": {
+            "recordRepayment": {
+              "loan": {
+                "id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+                "amountRepaid": 500.00,
+                "remainingBalance": 1500.00,
+                "isSettled": false
+              },
+              "errors": null
+            }
           }
         }
       }
     },
 
     {
-      "id": 22,
+      "id": 24,
       "name": "Record Repayment — Exceeds Balance",
-      "description": "Should return a validation error.",
+      "description": "Should return validation error in the payload.",
       "method": "POST",
       "url": "http://localhost:8080/graphql",
       "headers": {
@@ -561,19 +640,22 @@
         "query": "mutation { recordRepayment(input: { loanId: \"<LOAN_ID>\", amount: 999999.00 }) { loan { id } errors } }"
       },
       "expected_response": {
-        "data": {
-          "recordRepayment": {
-            "loan": null,
-            "errors": ["Repayment amount exceeds the remaining balance of $1,500.00."]
+        "status": 200,
+        "body": {
+          "data": {
+            "recordRepayment": {
+              "loan": null,
+              "errors": ["Repayment amount exceeds the remaining balance of $1,500.00."]
+            }
           }
         }
       }
     },
 
     {
-      "id": 23,
+      "id": 25,
       "name": "Get All Loans",
-      "description": "Requires JWT. Returns all loans for the user.",
+      "description": "GraphQL POST — requires JWT.",
       "method": "POST",
       "url": "http://localhost:8080/graphql",
       "headers": {
@@ -584,28 +666,31 @@
         "query": "{ loans { id counterpartyName amount amountRepaid remainingBalance type isSettled date dueDate } }"
       },
       "expected_response": {
-        "data": {
-          "loans": [
-            {
-              "id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
-              "counterpartyName": "John Smith",
-              "amount": 2000.00,
-              "amountRepaid": 500.00,
-              "remainingBalance": 1500.00,
-              "type": "Owed",
-              "isSettled": false,
-              "date": "2025-01-01T00:00:00Z",
-              "dueDate": "2025-06-01T00:00:00Z"
-            }
-          ]
+        "status": 200,
+        "body": {
+          "data": {
+            "loans": [
+              {
+                "id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+                "counterpartyName": "John Smith",
+                "amount": 2000.00,
+                "amountRepaid": 500.00,
+                "remainingBalance": 1500.00,
+                "type": "Owed",
+                "isSettled": false,
+                "date": "2025-01-01T00:00:00Z",
+                "dueDate": "2025-06-01T00:00:00Z"
+              }
+            ]
+          }
         }
       }
     },
 
     {
-      "id": 24,
+      "id": 26,
       "name": "Get Dashboard",
-      "description": "Requires JWT. Returns the full financial summary in one request.",
+      "description": "GraphQL POST — requires JWT. One request returns the full financial summary.",
       "method": "POST",
       "url": "http://localhost:8080/graphql",
       "headers": {
@@ -616,23 +701,26 @@
         "query": "{ dashboard { totalIncome totalExpenses netBalance savingsProgress { id name targetAmount currentAmount progress } loanSummary { totalOwed totalGiven } } }"
       },
       "expected_response": {
-        "data": {
-          "dashboard": {
-            "totalIncome": 5000.00,
-            "totalExpenses": 120.50,
-            "netBalance": 4879.50,
-            "savingsProgress": [
-              {
-                "id": "550e8400-e29b-41d4-a716-446655440000",
-                "name": "Emergency Fund",
-                "targetAmount": 10000.00,
-                "currentAmount": 2500.00,
-                "progress": 25.00
+        "status": 200,
+        "body": {
+          "data": {
+            "dashboard": {
+              "totalIncome": 5000.00,
+              "totalExpenses": 120.50,
+              "netBalance": 4879.50,
+              "savingsProgress": [
+                {
+                  "id": "550e8400-e29b-41d4-a716-446655440000",
+                  "name": "Emergency Fund",
+                  "targetAmount": 10000.00,
+                  "currentAmount": 2500.00,
+                  "progress": 25.00
+                }
+              ],
+              "loanSummary": {
+                "totalOwed": 1500.00,
+                "totalGiven": 500.00
               }
-            ],
-            "loanSummary": {
-              "totalOwed": 1500.00,
-              "totalGiven": 500.00
             }
           }
         }
@@ -642,29 +730,31 @@
   ],
 
   "testing_order": [
-    "1  — Health Check (no token needed)",
-    "2  — Sign Up (creates your account)",
-    "5  — Sign In (copy the accessToken)",
-    "8  — Add Income",
-    "11 — Get All Incomes",
-    "12 — Add Expense",
-    "14 — Get All Expenses",
-    "15 — Create Savings Goal (copy the id)",
-    "16 — Update Savings Progress (paste the id)",
-    "18 — Get All Savings Goals",
-    "19 — Add Loan Owed (copy the id)",
-    "21 — Record Repayment (paste the id)",
-    "23 — Get All Loans",
-    "24 — Get Dashboard",
-    "--- Validation error tests ---",
+    "1  — Health Check          GET  /health                    (no token)",
+    "2  — Sign Up               POST /api/auth/signup           (no token)",
+    "6  — Sign In               POST /api/auth/signin           (copy accessToken)",
+    "10 — Add Income            POST /graphql                   (paste token)",
+    "13 — Get All Incomes       POST /graphql",
+    "14 — Add Expense           POST /graphql",
+    "16 — Get All Expenses      POST /graphql",
+    "17 — Create Savings Goal   POST /graphql                   (copy id)",
+    "18 — Update Progress       POST /graphql                   (paste id)",
+    "20 — Get All Savings Goals POST /graphql",
+    "21 — Add Loan Owed         POST /graphql                   (copy id)",
+    "23 — Record Repayment      POST /graphql                   (paste id)",
+    "25 — Get All Loans         POST /graphql",
+    "26 — Get Dashboard         POST /graphql",
+    "--- Error / Validation tests ---",
     "3  — Sign Up invalid email",
     "4  — Sign Up short password",
-    "6  — Sign In wrong password",
-    "7  — Protected query no token",
-    "9  — Add Income negative amount",
-    "10 — Add Income future date",
-    "13 — Add Expense empty category",
-    "17 — Update savings exceeds target",
-    "22 — Repayment exceeds balance"
+    "5  — Sign Up duplicate email",
+    "7  — Sign In wrong password",
+    "8  — Sign In user not found",
+    "9  — Protected query no token",
+    "11 — Add Income negative amount",
+    "12 — Add Income future date",
+    "15 — Add Expense empty category",
+    "19 — Update savings exceeds target",
+    "24 — Repayment exceeds balance"
   ]
 }

@@ -22,14 +22,14 @@ public sealed class AuthService(ISupabaseAuthClient authClient) : IAuthService
             return AppResult<AuthPayload>.Fail("Password must be at least 8 characters.");
         }
 
-        return await authClient.SignUpAsync(input.Email, input.Password, ct);
+        return await authClient.SignUpAsync(input.Email.Trim().ToLowerInvariant(), input.Password, ct);
     }
 
     public async Task<AppResult<AuthPayload>> SignInAsync(SignInInput input, CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(input.Email))
+        if (string.IsNullOrWhiteSpace(input.Email) || !_emailRegex.IsMatch(input.Email))
         {
-            return AppResult<AuthPayload>.Fail("Email is required.");
+            return AppResult<AuthPayload>.Fail("A valid email address is required.");
         }
 
         if (string.IsNullOrWhiteSpace(input.Password))
@@ -37,6 +37,6 @@ public sealed class AuthService(ISupabaseAuthClient authClient) : IAuthService
             return AppResult<AuthPayload>.Fail("Password is required.");
         }
 
-        return await authClient.SignInAsync(input.Email, input.Password, ct);
+        return await authClient.SignInAsync(input.Email.Trim().ToLowerInvariant(), input.Password, ct);
     }
 }
