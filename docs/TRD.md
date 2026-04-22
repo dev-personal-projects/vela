@@ -10,7 +10,7 @@
 | API | .NET 10, Hot Chocolate 14 (GraphQL) |
 | Architecture | Clean Architecture |
 | Database | Supabase (PostgreSQL) |
-| Auth | Supabase Auth (JWT) |
+| Auth | Supabase Auth (credential verification) + own JWT tokens |
 | ORM | Entity Framework Core |
 | Mobile | Kotlin + Apollo GraphQL (Phase 2) |
 | Runtime | .NET 10 |

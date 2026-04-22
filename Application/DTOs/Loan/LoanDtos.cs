@@ -10,6 +10,12 @@ public sealed record AddLoanInput(
     DateTime Date,
     DateTime? DueDate);
 
+public sealed record UpdateLoanInput(
+    Guid Id,
+    string CounterpartyName,
+    string Description,
+    DateTime? DueDate);
+
 public sealed record RecordRepaymentInput(
     Guid LoanId,
     decimal Amount);

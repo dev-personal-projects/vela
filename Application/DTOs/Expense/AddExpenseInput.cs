@@ -5,3 +5,10 @@ public sealed record AddExpenseInput(
     string Category,
     string Description,
     DateTime Date);
+
+public sealed record UpdateExpenseInput(
+    Guid Id,
+    decimal Amount,
+    string Category,
+    string Description,
+    DateTime Date);

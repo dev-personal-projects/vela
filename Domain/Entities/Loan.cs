@@ -6,13 +6,13 @@ public sealed class Loan
 {
     public Guid Id { get; }
     public Guid UserId { get; }
-    public string CounterpartyName { get; } = string.Empty;
+    public string CounterpartyName { get; private set; } = string.Empty;
     public decimal Amount { get; }
     public decimal AmountRepaid { get; private set; }
     public LoanType Type { get; }
-    public string Description { get; } = string.Empty;
+    public string Description { get; private set; } = string.Empty;
     public DateTime Date { get; }
-    public DateTime? DueDate { get; }
+    public DateTime? DueDate { get; private set; }
     public DateTime CreatedAt { get; }
 
     public decimal RemainingBalance => Amount - AmountRepaid;
@@ -74,5 +74,22 @@ public sealed class Loan
         }
 
         AmountRepaid += repaymentAmount;
+    }
+
+    public void Update(string counterpartyName, string description, DateTime? dueDate)
+    {
+        if (string.IsNullOrWhiteSpace(counterpartyName))
+        {
+            throw new ArgumentException("CounterpartyName is required.", nameof(counterpartyName));
+        }
+
+        if (dueDate.HasValue && dueDate.Value <= Date)
+        {
+            throw new ArgumentException("DueDate must be after Date.", nameof(dueDate));
+        }
+
+        CounterpartyName = counterpartyName.Trim();
+        Description = description?.Trim() ?? string.Empty;
+        DueDate = dueDate;
     }
 }

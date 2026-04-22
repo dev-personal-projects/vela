@@ -56,6 +56,36 @@ public sealed class Mutation
             : new IncomePayload(null, [result.Error!]);
     }
 
+    [Authorize]
+    public async Task<IncomePayload> UpdateIncome(
+        UpdateIncomeInput input,
+        [Service] IIncomeService service,
+        ClaimsPrincipal claimsPrincipal,
+        CancellationToken cancellationToken)
+    {
+        var userId = claimsPrincipal.GetUserId();
+        var result = await service.UpdateAsync(input, userId, cancellationToken);
+
+        return result.IsSuccess
+            ? new IncomePayload(result.Value, null)
+            : new IncomePayload(null, [result.Error!]);
+    }
+
+    [Authorize]
+    public async Task<DeletePayload> DeleteIncome(
+        Guid id,
+        [Service] IIncomeService service,
+        ClaimsPrincipal claimsPrincipal,
+        CancellationToken cancellationToken)
+    {
+        var userId = claimsPrincipal.GetUserId();
+        var result = await service.DeleteAsync(id, userId, cancellationToken);
+
+        return result.IsSuccess
+            ? new DeletePayload(true, null)
+            : new DeletePayload(false, [result.Error!]);
+    }
+
     // ── Expenses ──────────────────────────────────────────────────────────────
 
     [Authorize]
@@ -73,6 +103,36 @@ public sealed class Mutation
             : new ExpensePayload(null, [result.Error!]);
     }
 
+    [Authorize]
+    public async Task<ExpensePayload> UpdateExpense(
+        UpdateExpenseInput input,
+        [Service] IExpenseService service,
+        ClaimsPrincipal claimsPrincipal,
+        CancellationToken cancellationToken)
+    {
+        var userId = claimsPrincipal.GetUserId();
+        var result = await service.UpdateAsync(input, userId, cancellationToken);
+
+        return result.IsSuccess
+            ? new ExpensePayload(result.Value, null)
+            : new ExpensePayload(null, [result.Error!]);
+    }
+
+    [Authorize]
+    public async Task<DeletePayload> DeleteExpense(
+        Guid id,
+        [Service] IExpenseService service,
+        ClaimsPrincipal claimsPrincipal,
+        CancellationToken cancellationToken)
+    {
+        var userId = claimsPrincipal.GetUserId();
+        var result = await service.DeleteAsync(id, userId, cancellationToken);
+
+        return result.IsSuccess
+            ? new DeletePayload(true, null)
+            : new DeletePayload(false, [result.Error!]);
+    }
+
     // ── Savings Goals ─────────────────────────────────────────────────────────
 
     [Authorize]
@@ -84,6 +144,21 @@ public sealed class Mutation
     {
         var userId = claimsPrincipal.GetUserId();
         var result = await service.CreateAsync(input, userId, cancellationToken);
+
+        return result.IsSuccess
+            ? new SavingsGoalPayload(result.Value, null)
+            : new SavingsGoalPayload(null, [result.Error!]);
+    }
+
+    [Authorize]
+    public async Task<SavingsGoalPayload> UpdateSavingsGoal(
+        UpdateSavingsGoalInput input,
+        [Service] ISavingsGoalService service,
+        ClaimsPrincipal claimsPrincipal,
+        CancellationToken cancellationToken)
+    {
+        var userId = claimsPrincipal.GetUserId();
+        var result = await service.UpdateAsync(input, userId, cancellationToken);
 
         return result.IsSuccess
             ? new SavingsGoalPayload(result.Value, null)
@@ -106,6 +181,21 @@ public sealed class Mutation
             : new SavingsGoalPayload(null, [result.Error!]);
     }
 
+    [Authorize]
+    public async Task<DeletePayload> DeleteSavingsGoal(
+        Guid id,
+        [Service] ISavingsGoalService service,
+        ClaimsPrincipal claimsPrincipal,
+        CancellationToken cancellationToken)
+    {
+        var userId = claimsPrincipal.GetUserId();
+        var result = await service.DeleteAsync(id, userId, cancellationToken);
+
+        return result.IsSuccess
+            ? new DeletePayload(true, null)
+            : new DeletePayload(false, [result.Error!]);
+    }
+
     // ── Loans ─────────────────────────────────────────────────────────────────
 
     [Authorize]
@@ -117,6 +207,21 @@ public sealed class Mutation
     {
         var userId = claimsPrincipal.GetUserId();
         var result = await service.AddAsync(input, userId, cancellationToken);
+
+        return result.IsSuccess
+            ? new LoanPayload(result.Value, null)
+            : new LoanPayload(null, [result.Error!]);
+    }
+
+    [Authorize]
+    public async Task<LoanPayload> UpdateLoan(
+        UpdateLoanInput input,
+        [Service] ILoanService service,
+        ClaimsPrincipal claimsPrincipal,
+        CancellationToken cancellationToken)
+    {
+        var userId = claimsPrincipal.GetUserId();
+        var result = await service.UpdateAsync(input, userId, cancellationToken);
 
         return result.IsSuccess
             ? new LoanPayload(result.Value, null)
@@ -136,5 +241,20 @@ public sealed class Mutation
         return result.IsSuccess
             ? new LoanPayload(result.Value, null)
             : new LoanPayload(null, [result.Error!]);
+    }
+
+    [Authorize]
+    public async Task<DeletePayload> DeleteLoan(
+        Guid id,
+        [Service] ILoanService service,
+        ClaimsPrincipal claimsPrincipal,
+        CancellationToken cancellationToken)
+    {
+        var userId = claimsPrincipal.GetUserId();
+        var result = await service.DeleteAsync(id, userId, cancellationToken);
+
+        return result.IsSuccess
+            ? new DeletePayload(true, null)
+            : new DeletePayload(false, [result.Error!]);
     }
 }

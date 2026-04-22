@@ -13,6 +13,15 @@ public sealed class SavingsGoalService(ISavingsGoalRepository repository) : ISav
         return AppResult<List<SavingsGoal>>.Ok(goals);
     }
 
+    public async Task<AppResult<SavingsGoal>> GetByIdAsync(Guid id, Guid userId, CancellationToken ct = default)
+    {
+        var goal = await repository.GetByIdAsync(id, userId, ct);
+
+        return goal is null
+            ? AppResult<SavingsGoal>.Fail("Savings goal not found.")
+            : AppResult<SavingsGoal>.Ok(goal);
+    }
+
     public async Task<AppResult<SavingsGoal>> CreateAsync(CreateSavingsGoalInput input, Guid userId, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(input.Name))
@@ -28,6 +37,37 @@ public sealed class SavingsGoalService(ISavingsGoalRepository repository) : ISav
         var goal = new SavingsGoal(userId, input.Name, input.TargetAmount, input.Deadline);
 
         await repository.AddAsync(goal, ct);
+
+        return AppResult<SavingsGoal>.Ok(goal);
+    }
+
+    public async Task<AppResult<SavingsGoal>> UpdateAsync(UpdateSavingsGoalInput input, Guid userId, CancellationToken ct = default)
+    {
+        var goal = await repository.GetByIdAsync(input.Id, userId, ct);
+
+        if (goal is null)
+        {
+            return AppResult<SavingsGoal>.Fail("Savings goal not found.");
+        }
+
+        if (string.IsNullOrWhiteSpace(input.Name))
+        {
+            return AppResult<SavingsGoal>.Fail("Name is required.");
+        }
+
+        if (input.TargetAmount <= 0)
+        {
+            return AppResult<SavingsGoal>.Fail("Target amount must be greater than 0.");
+        }
+
+        if (input.TargetAmount < goal.CurrentAmount)
+        {
+            return AppResult<SavingsGoal>.Fail("Target amount cannot be less than the current saved amount.");
+        }
+
+        goal.Update(input.Name, input.TargetAmount, input.Deadline);
+
+        await repository.UpdateAsync(goal, ct);
 
         return AppResult<SavingsGoal>.Ok(goal);
     }
@@ -56,5 +96,19 @@ public sealed class SavingsGoalService(ISavingsGoalRepository repository) : ISav
         await repository.UpdateAsync(goal, ct);
 
         return AppResult<SavingsGoal>.Ok(goal);
+    }
+
+    public async Task<AppResult> DeleteAsync(Guid id, Guid userId, CancellationToken ct = default)
+    {
+        var goal = await repository.GetByIdAsync(id, userId, ct);
+
+        if (goal is null)
+        {
+            return AppResult.Fail("Savings goal not found.");
+        }
+
+        await repository.DeleteAsync(id, userId, ct);
+
+        return AppResult.Ok();
     }
 }

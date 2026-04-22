@@ -23,6 +23,12 @@ public sealed class IncomeRepository(AppDbContext db) : IIncomeRepository
         await db.SaveChangesAsync(ct);
     }
 
+    public async Task UpdateAsync(Income income, CancellationToken ct = default)
+    {
+        db.Incomes.Update(income);
+        await db.SaveChangesAsync(ct);
+    }
+
     public async Task DeleteAsync(Guid id, Guid userId, CancellationToken ct = default)
     {
         var income = await GetByIdAsync(id, userId, ct);

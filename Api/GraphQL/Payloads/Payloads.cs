@@ -15,6 +15,8 @@ public sealed record SavingsGoalPayload(SavingsGoal? SavingsGoal, IReadOnlyList<
 
 public sealed record LoanPayload(Loan? Loan, IReadOnlyList<string>? Errors);
 
+public sealed record DeletePayload(bool Success, IReadOnlyList<string>? Errors);
+
 public sealed record DashboardSummary(
     decimal TotalIncome,
     decimal TotalExpenses,

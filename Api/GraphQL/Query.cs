@@ -22,6 +22,18 @@ public sealed class Query
         return result.Value!;
     }
 
+    [Authorize]
+    public async Task<Income?> Income(
+        Guid id,
+        [Service] IIncomeService service,
+        ClaimsPrincipal claimsPrincipal,
+        CancellationToken cancellationToken)
+    {
+        var userId = claimsPrincipal.GetUserId();
+        var result = await service.GetByIdAsync(id, userId, cancellationToken);
+        return result.IsSuccess ? result.Value : null;
+    }
+
     // ── Expenses ──────────────────────────────────────────────────────────────
 
     [Authorize]
@@ -33,6 +45,18 @@ public sealed class Query
         var userId = claimsPrincipal.GetUserId();
         var result = await service.GetAllAsync(userId, cancellationToken);
         return result.Value!;
+    }
+
+    [Authorize]
+    public async Task<Expense?> Expense(
+        Guid id,
+        [Service] IExpenseService service,
+        ClaimsPrincipal claimsPrincipal,
+        CancellationToken cancellationToken)
+    {
+        var userId = claimsPrincipal.GetUserId();
+        var result = await service.GetByIdAsync(id, userId, cancellationToken);
+        return result.IsSuccess ? result.Value : null;
     }
 
     // ── Savings Goals ─────────────────────────────────────────────────────────
@@ -48,6 +72,18 @@ public sealed class Query
         return result.Value!;
     }
 
+    [Authorize]
+    public async Task<SavingsGoal?> SavingsGoal(
+        Guid id,
+        [Service] ISavingsGoalService service,
+        ClaimsPrincipal claimsPrincipal,
+        CancellationToken cancellationToken)
+    {
+        var userId = claimsPrincipal.GetUserId();
+        var result = await service.GetByIdAsync(id, userId, cancellationToken);
+        return result.IsSuccess ? result.Value : null;
+    }
+
     // ── Loans ─────────────────────────────────────────────────────────────────
 
     [Authorize]
@@ -59,6 +95,18 @@ public sealed class Query
         var userId = claimsPrincipal.GetUserId();
         var result = await service.GetAllAsync(userId, cancellationToken);
         return result.Value!;
+    }
+
+    [Authorize]
+    public async Task<Loan?> Loan(
+        Guid id,
+        [Service] ILoanService service,
+        ClaimsPrincipal claimsPrincipal,
+        CancellationToken cancellationToken)
+    {
+        var userId = claimsPrincipal.GetUserId();
+        var result = await service.GetByIdAsync(id, userId, cancellationToken);
+        return result.IsSuccess ? result.Value : null;
     }
 
     // ── Dashboard ─────────────────────────────────────────────────────────────
