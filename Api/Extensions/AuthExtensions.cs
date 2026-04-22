@@ -6,10 +6,10 @@ namespace FinanceTracker.Api.Extensions;
 
 public static class AuthExtensions
 {
-    public static IServiceCollection AddSupabaseAuth(this IServiceCollection services, IConfiguration config)
+    public static IServiceCollection AddApiAuth(this IServiceCollection services, IConfiguration config)
     {
-        var jwtSecret = config["Supabase:JwtSecret"]
-            ?? throw new InvalidOperationException("Supabase:JwtSecret is not configured.");
+        var jwtSecret = config["Auth:JwtSecret"]
+            ?? throw new InvalidOperationException("Auth:JwtSecret is not configured.");
 
         var keyBytes = GetJwtSecretBytes(jwtSecret);
         var signingKey = new SymmetricSecurityKey(keyBytes);

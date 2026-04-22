@@ -18,7 +18,7 @@ builder.Services.AddControllers()
             return new BadRequestObjectResult(new { error = string.Join(" ", errors) });
         };
     });
-builder.Services.AddSupabaseAuth(builder.Configuration);
+builder.Services.AddApiAuth(builder.Configuration);
 builder.Services.AddSupabaseClient(builder.Configuration);
 builder.Services.AddDatabase(builder.Configuration);
 builder.Services.AddRepositories();
