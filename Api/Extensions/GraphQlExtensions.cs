@@ -1,4 +1,5 @@
 using FinanceTracker.Api.GraphQL;
+using FinanceTracker.Infrastructure.Auth;
 
 namespace FinanceTracker.Api.Extensions;
 
@@ -10,7 +11,8 @@ public static class GraphQlExtensions
             .AddGraphQLServer()
             .AddQueryType<Query>()
             .AddMutationType<Mutation>()
-            .AddAuthorizationCore();
+            .AddAuthorizationCore()
+            .AddAuthorizationHandler<GraphQlAuthorizationHandler>();
 
         if (env.IsDevelopment())
         {
