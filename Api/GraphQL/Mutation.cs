@@ -15,7 +15,7 @@ public sealed class Mutation
 {
     // ── Auth — public ─────────────────────────────────────────────────────────
 
-    public async Task<AuthPayloadResult> SignUp(
+    public async Task<SignUpPayloadResult> SignUp(
         SignUpInput input,
         [Service] IAuthService service,
         CancellationToken cancellationToken)
@@ -23,11 +23,11 @@ public sealed class Mutation
         var result = await service.SignUpAsync(input, cancellationToken);
 
         return result.IsSuccess
-            ? new AuthPayloadResult(result.Value, null)
-            : new AuthPayloadResult(null, [result.Error!]);
+            ? new SignUpPayloadResult(result.Value!.Message, null)
+            : new SignUpPayloadResult(null, [result.Error!]);
     }
 
-    public async Task<AuthPayloadResult> SignIn(
+    public async Task<SignInPayloadResult> SignIn(
         SignInInput input,
         [Service] IAuthService service,
         CancellationToken cancellationToken)
@@ -35,8 +35,8 @@ public sealed class Mutation
         var result = await service.SignInAsync(input, cancellationToken);
 
         return result.IsSuccess
-            ? new AuthPayloadResult(result.Value, null)
-            : new AuthPayloadResult(null, [result.Error!]);
+            ? new SignInPayloadResult(result.Value, null)
+            : new SignInPayloadResult(null, [result.Error!]);
     }
 
     // ── Income ────────────────────────────────────────────────────────────────

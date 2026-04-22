@@ -13,20 +13,9 @@ public sealed class AuthController(IAuthService authService) : ControllerBase
     {
         var result = await authService.SignUpAsync(input, ct);
 
-        // Email confirmation disabled — token returned immediately
-        if (result.IsSuccess)
-        {
-            return StatusCode(201, result.Value);
-        }
-
-        // Email confirmation enabled — user created but needs to confirm
-        if (result.Error!.Contains("confirm your email"))
-        {
-            return StatusCode(201, new { message = result.Error });
-        }
-
-        // Actual failure — validation or duplicate email
-        return BadRequest(new { error = result.Error });
+        return result.IsSuccess
+            ? StatusCode(201, new { message = result.Value!.Message })
+            : BadRequest(new { error = result.Error });
     }
 
     [HttpPost("signin")]

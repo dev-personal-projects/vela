@@ -3,7 +3,9 @@ using FinanceTracker.Domain.Entities;
 
 namespace FinanceTracker.Api.GraphQL.Payloads;
 
-public sealed record AuthPayloadResult(AuthPayload? Auth, IReadOnlyList<string>? Errors);
+public sealed record SignUpPayloadResult(string? Message, IReadOnlyList<string>? Errors);
+
+public sealed record SignInPayloadResult(SignInPayload? SignIn, IReadOnlyList<string>? Errors);
 
 public sealed record IncomePayload(Income? Income, IReadOnlyList<string>? Errors);
 

@@ -5,6 +5,6 @@ namespace FinanceTracker.Application.Interfaces;
 
 public interface ISupabaseAuthClient
 {
-    Task<AppResult<AuthPayload>> SignUpAsync(string email, string password, CancellationToken ct = default);
-    Task<AppResult<AuthPayload>> SignInAsync(string email, string password, CancellationToken ct = default);
+    Task<AppResult<SignUpPayload>> SignUpAsync(string email, string password, CancellationToken ct = default);
+    Task<AppResult<SignInPayload>> SignInAsync(string email, string password, CancellationToken ct = default);
 }
