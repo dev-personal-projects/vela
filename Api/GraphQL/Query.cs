@@ -9,10 +9,6 @@ namespace FinanceTracker.Api.GraphQL;
 
 public sealed class Query
 {
-    // ── Public ────────────────────────────────────────────────────────────────
-
-    public string Health() => "Finance Tracker API is running!";
-
     // ── Income ────────────────────────────────────────────────────────────────
 
     [Authorize]

@@ -2,7 +2,7 @@ using FinanceTracker.Api.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddHttpContextAccessor();
+builder.Services.AddControllers();
 builder.Services.AddSupabaseAuth(builder.Configuration);
 builder.Services.AddSupabaseClient(builder.Configuration);
 builder.Services.AddDatabase(builder.Configuration);
@@ -14,6 +14,7 @@ var app = builder.Build();
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.MapControllers();
 app.MapGraphQL();
 
 app.Run();
