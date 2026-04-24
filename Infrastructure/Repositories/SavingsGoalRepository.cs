@@ -25,7 +25,11 @@ public sealed class SavingsGoalRepository(AppDbContext db) : ISavingsGoalReposit
 
     public async Task UpdateAsync(SavingsGoal goal, CancellationToken ct = default)
     {
-        db.SavingsGoals.Update(goal);
+        if (db.Entry(goal).State == EntityState.Detached)
+        {
+            db.SavingsGoals.Attach(goal);
+        }
+
         await db.SaveChangesAsync(ct);
     }
 

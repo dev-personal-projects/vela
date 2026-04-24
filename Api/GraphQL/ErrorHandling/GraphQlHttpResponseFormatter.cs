@@ -36,6 +36,11 @@ public sealed class GraphQlHttpResponseFormatter : DefaultHttpResponseFormatter
             return HttpStatusCode.Forbidden;
         }
 
+        if (HasErrorCode(result.Errors, "REQUEST_TIMEOUT"))
+        {
+            return HttpStatusCode.GatewayTimeout;
+        }
+
         // If execution failed due to server-side issues, return 5xx.
         if (HasErrorCode(result.Errors, "DB_CONNECTION_STRING_INVALID") ||
             HasErrorCode(result.Errors, "DB_CONNECTION_ERROR") ||
@@ -56,4 +61,3 @@ public sealed class GraphQlHttpResponseFormatter : DefaultHttpResponseFormatter
         public DateTimeOffset UtcNow => DateTimeOffset.UtcNow;
     }
 }
-

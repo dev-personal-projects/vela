@@ -7,9 +7,14 @@ namespace FinanceTracker.Api.Extensions;
 
 public static class GraphQlExtensions
 {
-    public static IServiceCollection AddGraphQl(this IServiceCollection services, IWebHostEnvironment env)
+    public static IServiceCollection AddGraphQl(
+        this IServiceCollection services,
+        IConfiguration config,
+        IWebHostEnvironment env)
     {
         services.AddHttpResponseFormatter<GraphQlHttpResponseFormatter>();
+
+        var executionTimeoutSeconds = config.GetValue<int?>("GraphQL:ExecutionTimeoutSeconds") ?? 60;
 
         var builder = services
             .AddGraphQLServer()
@@ -19,8 +24,13 @@ public static class GraphQlExtensions
             .AddAuthorizationHandler<GraphQlAuthorizationHandler>()
             .AddErrorFilter<GraphQlErrorFilter>();
 
-        // Avoid leaking secrets (e.g., connection strings) through exception details.
-        builder.ModifyRequestOptions(o => o.IncludeExceptionDetails = false);
+        // Avoid leaking secrets through exception details and give slow remote DB writes
+        // more room before GraphQL aborts the whole operation.
+        builder.ModifyRequestOptions(o =>
+        {
+            o.IncludeExceptionDetails = false;
+            o.ExecutionTimeout = TimeSpan.FromSeconds(executionTimeoutSeconds);
+        });
 
         return services;
     }

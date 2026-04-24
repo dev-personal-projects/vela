@@ -11,12 +11,20 @@ public sealed class GraphQlErrorFilter(IHostEnvironment env, ILogger<GraphQlErro
 {
     public IError OnError(IError error)
     {
+        var traceId = Activity.Current?.Id;
+
+        if (IsExecutionTimeout(error))
+        {
+            return LogAndReturn(
+                error,
+                MapTimeout(error, traceId),
+                traceId);
+        }
+
         if (error.Exception is null)
         {
             return error;
         }
-
-        var traceId = Activity.Current?.Id;
 
         var mapped = error.Exception switch
         {
@@ -24,14 +32,23 @@ public sealed class GraphQlErrorFilter(IHostEnvironment env, ILogger<GraphQlErro
                 Map(error, "DB_CONNECTION_STRING_INVALID", "Database configuration error.", traceId),
             ArgumentException =>
                 Map(error, "BAD_REQUEST", "Invalid request.", traceId),
+            OperationCanceledException =>
+                MapTimeout(error, traceId),
+            TimeoutException =>
+                MapTimeout(error, traceId),
             DbUpdateException => Map(error, "DB_ERROR", "Database error. Please try again.", traceId),
             PostgresException => Map(error, "DB_ERROR", "Database error. Please try again.", traceId),
             NpgsqlException => Map(error, "DB_CONNECTION_ERROR", "Database connection error. Please try again.", traceId),
             _ => Map(error, "UNEXPECTED", "Unexpected server error. Please try again.", traceId)
         };
 
+        return LogAndReturn(error, mapped, traceId);
+    }
+
+    private IError LogAndReturn(IError original, IError mapped, string? traceId)
+    {
         logger.LogError(
-            error.Exception,
+            original.Exception,
             "GraphQL error {Code}. TraceId={TraceId}",
             mapped.Code ?? "UNKNOWN",
             traceId ?? "n/a");
@@ -63,6 +80,30 @@ public sealed class GraphQlErrorFilter(IHostEnvironment env, ILogger<GraphQlErro
 
         return mapped;
     }
+
+    private static IError MapTimeout(IError error, string? traceId)
+    {
+        var mapped = Map(
+            error,
+            "REQUEST_TIMEOUT",
+            "The operation timed out while the server was waiting on the database. The final write status may be unknown, so fetch the record before retrying.",
+            traceId);
+
+        mapped = mapped.SetExtension("retryable", true);
+        mapped = mapped.SetExtension("outcomeUnknown", true);
+
+        if (!string.IsNullOrWhiteSpace(error.Code) &&
+            !string.Equals(error.Code, "REQUEST_TIMEOUT", StringComparison.OrdinalIgnoreCase))
+        {
+            mapped = mapped.SetExtension("sourceCode", error.Code);
+        }
+
+        return mapped;
+    }
+
+    private static bool IsExecutionTimeout(IError error) =>
+        string.Equals(error.Code, "HC0045", StringComparison.OrdinalIgnoreCase) ||
+        error.Message.Contains("configured timeout", StringComparison.OrdinalIgnoreCase);
 
     private static bool LooksLikeConnectionStringIssue(ArgumentException ex)
     {

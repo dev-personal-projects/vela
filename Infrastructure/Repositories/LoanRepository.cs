@@ -25,7 +25,11 @@ public sealed class LoanRepository(AppDbContext db) : ILoanRepository
 
     public async Task UpdateAsync(Loan loan, CancellationToken ct = default)
     {
-        db.Loans.Update(loan);
+        if (db.Entry(loan).State == EntityState.Detached)
+        {
+            db.Loans.Attach(loan);
+        }
+
         await db.SaveChangesAsync(ct);
     }
 

@@ -8,6 +8,8 @@ using FinanceTracker.Application.DTOs.Loan;
 using FinanceTracker.Application.DTOs.Savings;
 using FinanceTracker.Application.Interfaces;
 using HotChocolate.Authorization;
+using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 namespace FinanceTracker.Api.GraphQL;
 
@@ -52,8 +54,8 @@ public sealed class Mutation
         var result = await service.AddAsync(input, userId, cancellationToken);
 
         return result.IsSuccess
-            ? new IncomePayload(result.Value, null)
-            : new IncomePayload(null, [result.Error!]);
+            ? new IncomePayload(result.Value, null, "Income added successfully.")
+            : new IncomePayload(null, [result.Error!], null);
     }
 
     [Authorize]
@@ -64,11 +66,12 @@ public sealed class Mutation
         CancellationToken cancellationToken)
     {
         var userId = claimsPrincipal.GetUserId();
-        var result = await service.UpdateAsync(input, userId, cancellationToken);
-
-        return result.IsSuccess
-            ? new IncomePayload(result.Value, null)
-            : new IncomePayload(null, [result.Error!]);
+        return await ExecuteUpdateAsync(
+            () => service.UpdateAsync(input, userId, cancellationToken),
+            value => new IncomePayload(value, null, "Income updated successfully."),
+            errors => new IncomePayload(null, errors, null),
+            "income",
+            cancellationToken);
     }
 
     [Authorize]
@@ -82,8 +85,8 @@ public sealed class Mutation
         var result = await service.DeleteAsync(id, userId, cancellationToken);
 
         return result.IsSuccess
-            ? new DeletePayload(true, null)
-            : new DeletePayload(false, [result.Error!]);
+            ? new DeletePayload(true, null, "Income deleted successfully.")
+            : new DeletePayload(false, [result.Error!], null);
     }
 
     // ── Expenses ──────────────────────────────────────────────────────────────
@@ -99,8 +102,8 @@ public sealed class Mutation
         var result = await service.AddAsync(input, userId, cancellationToken);
 
         return result.IsSuccess
-            ? new ExpensePayload(result.Value, null)
-            : new ExpensePayload(null, [result.Error!]);
+            ? new ExpensePayload(result.Value, null, "Expense added successfully.")
+            : new ExpensePayload(null, [result.Error!], null);
     }
 
     [Authorize]
@@ -111,11 +114,12 @@ public sealed class Mutation
         CancellationToken cancellationToken)
     {
         var userId = claimsPrincipal.GetUserId();
-        var result = await service.UpdateAsync(input, userId, cancellationToken);
-
-        return result.IsSuccess
-            ? new ExpensePayload(result.Value, null)
-            : new ExpensePayload(null, [result.Error!]);
+        return await ExecuteUpdateAsync(
+            () => service.UpdateAsync(input, userId, cancellationToken),
+            value => new ExpensePayload(value, null, "Expense updated successfully."),
+            errors => new ExpensePayload(null, errors, null),
+            "expense",
+            cancellationToken);
     }
 
     [Authorize]
@@ -129,8 +133,8 @@ public sealed class Mutation
         var result = await service.DeleteAsync(id, userId, cancellationToken);
 
         return result.IsSuccess
-            ? new DeletePayload(true, null)
-            : new DeletePayload(false, [result.Error!]);
+            ? new DeletePayload(true, null, "Expense deleted successfully.")
+            : new DeletePayload(false, [result.Error!], null);
     }
 
     // ── Savings Goals ─────────────────────────────────────────────────────────
@@ -146,8 +150,8 @@ public sealed class Mutation
         var result = await service.CreateAsync(input, userId, cancellationToken);
 
         return result.IsSuccess
-            ? new SavingsGoalPayload(result.Value, null)
-            : new SavingsGoalPayload(null, [result.Error!]);
+            ? new SavingsGoalPayload(result.Value, null, "Savings goal created successfully.")
+            : new SavingsGoalPayload(null, [result.Error!], null);
     }
 
     [Authorize]
@@ -158,11 +162,12 @@ public sealed class Mutation
         CancellationToken cancellationToken)
     {
         var userId = claimsPrincipal.GetUserId();
-        var result = await service.UpdateAsync(input, userId, cancellationToken);
-
-        return result.IsSuccess
-            ? new SavingsGoalPayload(result.Value, null)
-            : new SavingsGoalPayload(null, [result.Error!]);
+        return await ExecuteUpdateAsync(
+            () => service.UpdateAsync(input, userId, cancellationToken),
+            value => new SavingsGoalPayload(value, null, "Savings goal updated successfully."),
+            errors => new SavingsGoalPayload(null, errors, null),
+            "savings goal",
+            cancellationToken);
     }
 
     [Authorize]
@@ -174,11 +179,12 @@ public sealed class Mutation
         CancellationToken cancellationToken)
     {
         var userId = claimsPrincipal.GetUserId();
-        var result = await service.UpdateProgressAsync(id, newAmount, userId, cancellationToken);
-
-        return result.IsSuccess
-            ? new SavingsGoalPayload(result.Value, null)
-            : new SavingsGoalPayload(null, [result.Error!]);
+        return await ExecuteUpdateAsync(
+            () => service.UpdateProgressAsync(id, newAmount, userId, cancellationToken),
+            value => new SavingsGoalPayload(value, null, "Savings progress updated successfully."),
+            errors => new SavingsGoalPayload(null, errors, null),
+            "savings progress",
+            cancellationToken);
     }
 
     [Authorize]
@@ -192,8 +198,8 @@ public sealed class Mutation
         var result = await service.DeleteAsync(id, userId, cancellationToken);
 
         return result.IsSuccess
-            ? new DeletePayload(true, null)
-            : new DeletePayload(false, [result.Error!]);
+            ? new DeletePayload(true, null, "Savings goal deleted successfully.")
+            : new DeletePayload(false, [result.Error!], null);
     }
 
     // ── Loans ─────────────────────────────────────────────────────────────────
@@ -209,8 +215,8 @@ public sealed class Mutation
         var result = await service.AddAsync(input, userId, cancellationToken);
 
         return result.IsSuccess
-            ? new LoanPayload(result.Value, null)
-            : new LoanPayload(null, [result.Error!]);
+            ? new LoanPayload(result.Value, null, "Loan added successfully.")
+            : new LoanPayload(null, [result.Error!], null);
     }
 
     [Authorize]
@@ -221,11 +227,12 @@ public sealed class Mutation
         CancellationToken cancellationToken)
     {
         var userId = claimsPrincipal.GetUserId();
-        var result = await service.UpdateAsync(input, userId, cancellationToken);
-
-        return result.IsSuccess
-            ? new LoanPayload(result.Value, null)
-            : new LoanPayload(null, [result.Error!]);
+        return await ExecuteUpdateAsync(
+            () => service.UpdateAsync(input, userId, cancellationToken),
+            value => new LoanPayload(value, null, "Loan updated successfully."),
+            errors => new LoanPayload(null, errors, null),
+            "loan",
+            cancellationToken);
     }
 
     [Authorize]
@@ -236,11 +243,12 @@ public sealed class Mutation
         CancellationToken cancellationToken)
     {
         var userId = claimsPrincipal.GetUserId();
-        var result = await service.RecordRepaymentAsync(input, userId, cancellationToken);
-
-        return result.IsSuccess
-            ? new LoanPayload(result.Value, null)
-            : new LoanPayload(null, [result.Error!]);
+        return await ExecuteUpdateAsync(
+            () => service.RecordRepaymentAsync(input, userId, cancellationToken),
+            value => new LoanPayload(value, null, "Repayment recorded successfully."),
+            errors => new LoanPayload(null, errors, null),
+            "loan repayment",
+            cancellationToken);
     }
 
     [Authorize]
@@ -254,7 +262,52 @@ public sealed class Mutation
         var result = await service.DeleteAsync(id, userId, cancellationToken);
 
         return result.IsSuccess
-            ? new DeletePayload(true, null)
-            : new DeletePayload(false, [result.Error!]);
+            ? new DeletePayload(true, null, "Loan deleted successfully.")
+            : new DeletePayload(false, [result.Error!], null);
+    }
+
+    private static async Task<TPayload> ExecuteUpdateAsync<TValue, TPayload>(
+        Func<Task<Domain.Common.AppResult<TValue>>> action,
+        Func<TValue, TPayload> onSuccess,
+        Func<IReadOnlyList<string>, TPayload> onFailure,
+        string resourceName,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var result = await action();
+
+            return result.IsSuccess
+                ? onSuccess(result.Value!)
+                : onFailure([result.Error!]);
+        }
+        catch (ArgumentException ex)
+        {
+            return onFailure([ex.Message]);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            return onFailure([$"Updating your {resourceName} is taking longer than expected. Refresh to check whether the change was saved before trying again."]);
+        }
+        catch (TimeoutException)
+        {
+            return onFailure([$"Updating your {resourceName} timed out. Refresh to verify the latest data before retrying."]);
+        }
+        catch (DbUpdateException)
+        {
+            return onFailure([$"We couldn't save your {resourceName} right now. Please try again in a moment."]);
+        }
+        catch (PostgresException)
+        {
+            return onFailure([$"We hit a database error while updating your {resourceName}. Please try again shortly."]);
+        }
+        catch (NpgsqlException)
+        {
+            return onFailure([$"We couldn't reach the database while updating your {resourceName}. Please try again shortly."]);
+        }
+        catch
+        {
+            return onFailure([$"Something went wrong while updating your {resourceName}. Please try again."]);
+        }
     }
 }

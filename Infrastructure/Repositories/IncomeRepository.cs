@@ -25,7 +25,13 @@ public sealed class IncomeRepository(AppDbContext db) : IIncomeRepository
 
     public async Task UpdateAsync(Income income, CancellationToken ct = default)
     {
-        db.Incomes.Update(income);
+        // The entity is usually already tracked (loaded via this same DbContext).
+        // Calling Update(...) marks *all* properties as modified and forces a full-row UPDATE.
+        if (db.Entry(income).State == EntityState.Detached)
+        {
+            db.Incomes.Attach(income);
+        }
+
         await db.SaveChangesAsync(ct);
     }
 

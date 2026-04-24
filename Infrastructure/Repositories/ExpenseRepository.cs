@@ -25,7 +25,11 @@ public sealed class ExpenseRepository(AppDbContext db) : IExpenseRepository
 
     public async Task UpdateAsync(Expense expense, CancellationToken ct = default)
     {
-        db.Expenses.Update(expense);
+        if (db.Entry(expense).State == EntityState.Detached)
+        {
+            db.Expenses.Attach(expense);
+        }
+
         await db.SaveChangesAsync(ct);
     }
 

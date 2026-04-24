@@ -1,6 +1,7 @@
 using FinanceTracker.Domain.Entities;
 using FinanceTracker.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
 
 namespace FinanceTracker.Infrastructure.Data;
 
@@ -24,6 +25,11 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
             e.Property(x => x.Description).HasColumnName("description").IsRequired();
             e.Property(x => x.Date).HasColumnName("date").IsRequired();
             e.Property(x => x.CreatedAt).HasColumnName("created_at").IsRequired();
+
+            // Immutable columns: never update after insert.
+            e.Property(x => x.UserId).Metadata.SetAfterSaveBehavior(PropertySaveBehavior.Ignore);
+            e.Property(x => x.CreatedAt).ValueGeneratedOnAdd();
+            e.Property(x => x.CreatedAt).Metadata.SetAfterSaveBehavior(PropertySaveBehavior.Ignore);
         });
 
         modelBuilder.Entity<Expense>(e =>
@@ -37,6 +43,10 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
             e.Property(x => x.Description).HasColumnName("description").IsRequired();
             e.Property(x => x.Date).HasColumnName("date").IsRequired();
             e.Property(x => x.CreatedAt).HasColumnName("created_at").IsRequired();
+
+            e.Property(x => x.UserId).Metadata.SetAfterSaveBehavior(PropertySaveBehavior.Ignore);
+            e.Property(x => x.CreatedAt).ValueGeneratedOnAdd();
+            e.Property(x => x.CreatedAt).Metadata.SetAfterSaveBehavior(PropertySaveBehavior.Ignore);
         });
 
         modelBuilder.Entity<SavingsGoal>(e =>
@@ -51,6 +61,10 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
             e.Property(x => x.Deadline).HasColumnName("deadline");
             e.Property(x => x.CreatedAt).HasColumnName("created_at").IsRequired();
             e.Ignore(x => x.Progress);
+
+            e.Property(x => x.UserId).Metadata.SetAfterSaveBehavior(PropertySaveBehavior.Ignore);
+            e.Property(x => x.CreatedAt).ValueGeneratedOnAdd();
+            e.Property(x => x.CreatedAt).Metadata.SetAfterSaveBehavior(PropertySaveBehavior.Ignore);
         });
 
         modelBuilder.Entity<Loan>(e =>
@@ -69,6 +83,10 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
             e.Property(x => x.CreatedAt).HasColumnName("created_at").IsRequired();
             e.Ignore(x => x.RemainingBalance);
             e.Ignore(x => x.IsSettled);
+
+            e.Property(x => x.UserId).Metadata.SetAfterSaveBehavior(PropertySaveBehavior.Ignore);
+            e.Property(x => x.CreatedAt).ValueGeneratedOnAdd();
+            e.Property(x => x.CreatedAt).Metadata.SetAfterSaveBehavior(PropertySaveBehavior.Ignore);
         });
     }
 }

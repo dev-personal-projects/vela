@@ -10,9 +10,12 @@ public static class DatabaseExtensions
     {
         var connectionString = config.GetConnectionString("Default")
             ?? throw new InvalidOperationException("ConnectionStrings:Default is not configured.");
+        var commandTimeoutSeconds = config.GetValue<int?>("Database:CommandTimeoutSeconds") ?? 60;
 
         services.AddDbContext<AppDbContext>(options =>
-            options.UseNpgsql(NormalizePostgresConnectionString(connectionString)));
+            options.UseNpgsql(
+                NormalizePostgresConnectionString(connectionString),
+                npgsql => npgsql.CommandTimeout(commandTimeoutSeconds)));
 
         return services;
     }
