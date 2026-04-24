@@ -1,51 +1,84 @@
-# Finance Tracker API (GraphQL + .NET)
+# Finance Tracker API
 
-Backend service for personal finance tracking: incomes, expenses, savings goals, loans, and a dashboard summary. Built with .NET + Hot Chocolate GraphQL using a Clean Architecture-style layering.
+Backend API for personal finance tracking (incomes, expenses, savings goals, loans) with a GraphQL surface and a small REST auth/health layer. Built in .NET with a Clean Architecture-style separation.
 
-## Features
-- Income: add/update/list/get/delete
-- Expense: add/update/list/get/delete
-- Savings goals: create/update/progress/list/get/delete
-- Loans: add/update/repay/list/get/delete
-- Dashboard: aggregated totals and summaries
+## Contents
+- Overview
+- Architecture
+- Getting started
+- Configuration
+- Endpoints
+- Documentation and lessons
+- Testing
 
-## Tech Stack
-- .NET 10
-- Hot Chocolate GraphQL
-- EF Core + PostgreSQL (Supabase-compatible)
-- JWT auth (Supabase used for credential verification; API issues its own access token)
+## Overview
+Core capabilities:
+- Income, expense, savings goal, and loan CRUD (user-scoped)
+- Dashboard summary aggregates
+- JWT-protected GraphQL operations
 
-## Repo Layout
-```
-Api/            HTTP + GraphQL (queries/mutations, controllers, auth wiring)
-Application/    Services (business rules) + DTOs + interfaces
-Domain/         Entities + enums + result types
-Infrastructure/ EF Core DbContext + repository implementations + auth adapters
-docs/           PRD/TRD, test plan, Postman examples
-scripts/        SQL setup scripts and utilities
-```
+## Architecture
+Layering:
+- `Domain/`: entities and core types
+- `Application/`: service-level business rules and interfaces
+- `Infrastructure/`: EF Core/Postgres repositories and adapters
+- `Api/`: HTTP controllers + GraphQL queries/mutations and middleware
 
-## Run Locally
-Prereqs: .NET 10 SDK and a PostgreSQL database (local or Supabase).
+## Getting started
+Prereqs:
+- .NET 10 SDK
+- PostgreSQL (local Docker or Supabase Postgres)
 
-1. Configure settings (via `appsettings.json` or env vars):
-   - `Auth:JwtSecret` (>= 32 chars)
-   - `ConnectionStrings:Default` (Postgres connection string or URI)
-   - `Supabase:Url`, `Supabase:AnonKey` (required for `/api/auth/*` sign-in/sign-up)
-
-2. Run:
+Run:
 ```bash
 dotnet run
 ```
 
-Default endpoints:
+Verify:
+```bash
+curl -s http://localhost:8080/health
+```
+
+## Configuration
+Config can be set via `appsettings.json`, `appsettings.Development.json`, or environment variables.
+
+Required:
+- `Auth:JwtSecret` (>= 32 chars)
+- `ConnectionStrings:Default` (Postgres connection string or URI)
+
+For `/api/auth/*` sign-up/sign-in:
+- `Supabase:Url`
+- `Supabase:AnonKey`
+
+Environment variable equivalents (examples):
+- `Auth__JwtSecret`
+- `ConnectionStrings__Default`
+- `Supabase__Url`
+- `Supabase__AnonKey`
+
+## Endpoints
+Default (see console output / launch settings for the bound URL/port):
 - Health: `GET /health`
 - Auth: `POST /api/auth/signup`, `POST /api/auth/signin`
 - GraphQL: `POST /graphql`
 
-## Postman Examples
-Use `docs/postman/test-examples.json` for a guided request sequence, including JWT usage and GraphQL queries/mutations.
+Postman:
+- `docs/postman/test-examples.json`
+
+## Documentation and lessons
+Product/technical docs:
+- PRD: `docs/PRD.md`
+- TRD: `docs/TRD.md`
+
+Lessons (guided learning path built around this codebase):
+- Lesson index: `docs/lessons/README.md`
+- Fundamentals: `docs/lessons/LESSON-1-graphql-fundamentals.md`
+- Queries/mutations (Hot Chocolate): `docs/lessons/LESSON-2-queries-and-mutations.md`
+- Error handling: `docs/lessons/LESSON-5-error-handling.md`
+- Auth and security: `docs/lessons/LESSON-6-authentication-and-security.md`
+- Architecture: `docs/lessons/LESSON-7-clean-architecture-and-graphql.md`
 
 ## Testing
-- Test strategy and coverage matrix: `docs/TEST-PLAN.md`
-- E2E quickstart (DB + env vars + JWT strategy): `docs/E2E-QUICKSTART.md`
+Test plan and coverage:
+- `docs/TEST-PLAN.md`
+- E2E quickstart: `docs/E2E-QUICKSTART.md`
