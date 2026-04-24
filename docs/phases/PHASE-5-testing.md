@@ -3,6 +3,10 @@
 ## Goal
 Validate the entire backend end-to-end. Cover every service's happy and failure paths, verify repository data scoping, test GraphQL resolvers, and confirm no data leaks between users.
 
+## Test Plan
+Use the detailed plan for what to test, where to test it, and exit criteria:
+- `docs/TEST-PLAN.md`
+
 ---
 
 ## Checklist
