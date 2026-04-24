@@ -4,3 +4,9 @@ public sealed record CreateSavingsGoalInput(
     string Name,
     decimal TargetAmount,
     DateTime? Deadline);
+
+public sealed record UpdateSavingsGoalInput(
+    Guid Id,
+    string Name,
+    decimal TargetAmount,
+    DateTime? Deadline);

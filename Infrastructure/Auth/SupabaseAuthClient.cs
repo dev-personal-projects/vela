@@ -8,14 +8,14 @@ namespace FinanceTracker.Infrastructure.Auth;
 
 public sealed class SupabaseAuthClient(HttpClient httpClient) : ISupabaseAuthClient
 {
-    public async Task<AppResult<AuthPayload>> SignUpAsync(string email, string password, CancellationToken ct = default)
+    public async Task<AppResult<SignUpPayload>> SignUpAsync(string email, string password, CancellationToken ct = default)
     {
         var response = await httpClient.PostAsJsonAsync("auth/v1/signup", new { email, password }, ct);
 
         return await ParseSignUpResponseAsync(response, ct);
     }
 
-    public async Task<AppResult<AuthPayload>> SignInAsync(string email, string password, CancellationToken ct = default)
+    public async Task<AppResult<SignInPayload>> SignInAsync(string email, string password, CancellationToken ct = default)
     {
         var url = "auth/v1/token?grant_type=password";
         var response = await httpClient.PostAsJsonAsync(url, new { email, password }, ct);
@@ -23,11 +23,12 @@ public sealed class SupabaseAuthClient(HttpClient httpClient) : ISupabaseAuthCli
         return await ParseResponseAsync(response, ct);
     }
 
-    private static async Task<AppResult<AuthPayload>> ParseSignUpResponseAsync(HttpResponseMessage response, CancellationToken ct)
+    private static async Task<AppResult<SignUpPayload>> ParseSignUpResponseAsync(HttpResponseMessage response, CancellationToken ct)
     {
         if (!response.IsSuccessStatusCode)
         {
-            return await ParseErrorAsync(response, ct);
+            var errorResult = await ParseErrorAsync(response, ct);
+            return AppResult<SignUpPayload>.Fail(errorResult.Error!);
         }
 
         var rawContent = await response.Content.ReadAsStringAsync(ct);
@@ -39,36 +40,31 @@ public sealed class SupabaseAuthClient(HttpClient httpClient) : ISupabaseAuthCli
         }
         catch { }
 
-        // Email confirmation disabled — token returned immediately
-        if (data?.AccessToken is not null)
+        // User created successfully — whether confirmation is on or off
+        if (data?.AccessToken is not null || data?.Id is not null)
         {
-            return AppResult<AuthPayload>.Ok(new AuthPayload(data.AccessToken, data.RefreshToken ?? string.Empty, data.TokenType ?? "bearer"));
+            return AppResult<SignUpPayload>.Ok(new SignUpPayload("Account created successfully. Please sign in."));
         }
 
-        // Email confirmation enabled — user created but no token yet
-        if (data?.Id is not null)
-        {
-            return AppResult<AuthPayload>.Fail("Account created. Please check your email to confirm your account before signing in.");
-        }
-
-        return AppResult<AuthPayload>.Fail("Sign up failed. Please try again.");
+        return AppResult<SignUpPayload>.Fail("Sign up failed. Please try again.");
     }
 
-    private static async Task<AppResult<AuthPayload>> ParseResponseAsync(HttpResponseMessage response, CancellationToken ct)
+    private static async Task<AppResult<SignInPayload>> ParseResponseAsync(HttpResponseMessage response, CancellationToken ct)
     {
         if (!response.IsSuccessStatusCode)
         {
-            return await ParseErrorAsync(response, ct);
+            var errorResult = await ParseErrorAsync(response, ct);
+            return AppResult<SignInPayload>.Fail(errorResult.Error!);
         }
 
         var data = await response.Content.ReadFromJsonAsync<SupabaseAuthResponse>(cancellationToken: ct);
 
         return data?.AccessToken is null
-            ? AppResult<AuthPayload>.Fail("Authentication failed — no token returned.")
-            : AppResult<AuthPayload>.Ok(new AuthPayload(data.AccessToken, data.RefreshToken ?? string.Empty, data.TokenType ?? "bearer"));
+            ? AppResult<SignInPayload>.Fail("Authentication failed — no token returned.")
+            : AppResult<SignInPayload>.Ok(new SignInPayload(data.AccessToken, data.RefreshToken ?? string.Empty, data.TokenType ?? "bearer"));
     }
 
-    private static async Task<AppResult<AuthPayload>> ParseErrorAsync(HttpResponseMessage response, CancellationToken ct)
+    private static async Task<AppResult<SignInPayload>> ParseErrorAsync(HttpResponseMessage response, CancellationToken ct)
     {
         var rawContent = await response.Content.ReadAsStringAsync(ct);
         SupabaseErrorResponse? error = null;
@@ -86,7 +82,7 @@ public sealed class SupabaseAuthClient(HttpClient httpClient) : ISupabaseAuthCli
         var rawDescription = error?.ErrorDescription ?? string.Empty;
         var rawCode        = error?.ErrorCode ?? string.Empty;
 
-        return AppResult<AuthPayload>.Fail(MapErrorMessage(response.StatusCode, rawMessage, rawDescription, rawCode));
+        return AppResult<SignInPayload>.Fail(MapErrorMessage(response.StatusCode, rawMessage, rawDescription, rawCode));
     }
 
     private static string MapErrorMessage(

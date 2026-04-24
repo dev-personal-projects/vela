@@ -23,6 +23,12 @@ public sealed class ExpenseRepository(AppDbContext db) : IExpenseRepository
         await db.SaveChangesAsync(ct);
     }
 
+    public async Task UpdateAsync(Expense expense, CancellationToken ct = default)
+    {
+        db.Expenses.Update(expense);
+        await db.SaveChangesAsync(ct);
+    }
+
     public async Task DeleteAsync(Guid id, Guid userId, CancellationToken ct = default)
     {
         var expense = await GetByIdAsync(id, userId, ct);

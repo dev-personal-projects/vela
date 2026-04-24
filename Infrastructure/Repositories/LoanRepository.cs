@@ -28,4 +28,15 @@ public sealed class LoanRepository(AppDbContext db) : ILoanRepository
         db.Loans.Update(loan);
         await db.SaveChangesAsync(ct);
     }
+
+    public async Task DeleteAsync(Guid id, Guid userId, CancellationToken ct = default)
+    {
+        var loan = await GetByIdAsync(id, userId, ct);
+
+        if (loan is not null)
+        {
+            db.Loans.Remove(loan);
+            await db.SaveChangesAsync(ct);
+        }
+    }
 }

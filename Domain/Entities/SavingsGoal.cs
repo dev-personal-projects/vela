@@ -4,10 +4,10 @@ public sealed class SavingsGoal
 {
     public Guid Id { get; }
     public Guid UserId { get; }
-    public string Name { get; } = string.Empty;
-    public decimal TargetAmount { get; }
+    public string Name { get; private set; } = string.Empty;
+    public decimal TargetAmount { get; private set; }
     public decimal CurrentAmount { get; private set; }
-    public DateTime? Deadline { get; }
+    public DateTime? Deadline { get; private set; }
     public DateTime CreatedAt { get; }
 
     public decimal Progress =>
@@ -39,6 +39,28 @@ public sealed class SavingsGoal
         CurrentAmount = 0;
         Deadline = deadline;
         CreatedAt = DateTime.UtcNow;
+    }
+
+    public void Update(string name, decimal targetAmount, DateTime? deadline)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            throw new ArgumentException("Name is required.", nameof(name));
+        }
+
+        if (targetAmount <= 0)
+        {
+            throw new ArgumentException("TargetAmount must be greater than 0.", nameof(targetAmount));
+        }
+
+        if (targetAmount < CurrentAmount)
+        {
+            throw new ArgumentException("TargetAmount cannot be less than the current saved amount.", nameof(targetAmount));
+        }
+
+        Name = name.Trim();
+        TargetAmount = targetAmount;
+        Deadline = deadline;
     }
 
     public void UpdateProgress(decimal newAmount)

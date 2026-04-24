@@ -28,4 +28,15 @@ public sealed class SavingsGoalRepository(AppDbContext db) : ISavingsGoalReposit
         db.SavingsGoals.Update(goal);
         await db.SaveChangesAsync(ct);
     }
+
+    public async Task DeleteAsync(Guid id, Guid userId, CancellationToken ct = default)
+    {
+        var goal = await GetByIdAsync(id, userId, ct);
+
+        if (goal is not null)
+        {
+            db.SavingsGoals.Remove(goal);
+            await db.SaveChangesAsync(ct);
+        }
+    }
 }

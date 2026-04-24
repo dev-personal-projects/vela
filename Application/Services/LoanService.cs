@@ -13,6 +13,15 @@ public sealed class LoanService(ILoanRepository repository) : ILoanService
         return AppResult<List<Loan>>.Ok(loans);
     }
 
+    public async Task<AppResult<Loan>> GetByIdAsync(Guid id, Guid userId, CancellationToken ct = default)
+    {
+        var loan = await repository.GetByIdAsync(id, userId, ct);
+
+        return loan is null
+            ? AppResult<Loan>.Fail("Loan not found.")
+            : AppResult<Loan>.Ok(loan);
+    }
+
     public async Task<AppResult<Loan>> AddAsync(AddLoanInput input, Guid userId, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(input.CounterpartyName))
@@ -30,16 +39,35 @@ public sealed class LoanService(ILoanRepository repository) : ILoanService
             return AppResult<Loan>.Fail("Due date must be after the loan date.");
         }
 
-        var loan = new Loan(
-            userId,
-            input.CounterpartyName,
-            input.Amount,
-            input.Type,
-            input.Description,
-            input.Date,
-            input.DueDate);
+        var loan = new Loan(userId, input.CounterpartyName, input.Amount, input.Type, input.Description, input.Date, input.DueDate);
 
         await repository.AddAsync(loan, ct);
+
+        return AppResult<Loan>.Ok(loan);
+    }
+
+    public async Task<AppResult<Loan>> UpdateAsync(UpdateLoanInput input, Guid userId, CancellationToken ct = default)
+    {
+        var loan = await repository.GetByIdAsync(input.Id, userId, ct);
+
+        if (loan is null)
+        {
+            return AppResult<Loan>.Fail("Loan not found.");
+        }
+
+        if (string.IsNullOrWhiteSpace(input.CounterpartyName))
+        {
+            return AppResult<Loan>.Fail("Counterparty name is required.");
+        }
+
+        if (input.DueDate.HasValue && input.DueDate.Value <= loan.Date)
+        {
+            return AppResult<Loan>.Fail("Due date must be after the loan date.");
+        }
+
+        loan.Update(input.CounterpartyName, input.Description, input.DueDate);
+
+        await repository.UpdateAsync(loan, ct);
 
         return AppResult<Loan>.Ok(loan);
     }
@@ -68,5 +96,19 @@ public sealed class LoanService(ILoanRepository repository) : ILoanService
         await repository.UpdateAsync(loan, ct);
 
         return AppResult<Loan>.Ok(loan);
+    }
+
+    public async Task<AppResult> DeleteAsync(Guid id, Guid userId, CancellationToken ct = default)
+    {
+        var loan = await repository.GetByIdAsync(id, userId, ct);
+
+        if (loan is null)
+        {
+            return AppResult.Fail("Loan not found.");
+        }
+
+        await repository.DeleteAsync(id, userId, ct);
+
+        return AppResult.Ok();
     }
 }
