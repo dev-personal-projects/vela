@@ -35,14 +35,12 @@ public sealed class IncomeRepository(AppDbContext db) : IIncomeRepository
         await db.SaveChangesAsync(ct);
     }
 
-    public async Task DeleteAsync(Guid id, Guid userId, CancellationToken ct = default)
+    public async Task<bool> DeleteAsync(Guid id, Guid userId, CancellationToken ct = default)
     {
-        var income = await GetByIdAsync(id, userId, ct);
+        var affected = await db.Incomes
+            .Where(x => x.Id == id && x.UserId == userId)
+            .ExecuteDeleteAsync(ct);
 
-        if (income is not null)
-        {
-            db.Incomes.Remove(income);
-            await db.SaveChangesAsync(ct);
-        }
+        return affected > 0;
     }
 }

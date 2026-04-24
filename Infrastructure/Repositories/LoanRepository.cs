@@ -33,14 +33,12 @@ public sealed class LoanRepository(AppDbContext db) : ILoanRepository
         await db.SaveChangesAsync(ct);
     }
 
-    public async Task DeleteAsync(Guid id, Guid userId, CancellationToken ct = default)
+    public async Task<bool> DeleteAsync(Guid id, Guid userId, CancellationToken ct = default)
     {
-        var loan = await GetByIdAsync(id, userId, ct);
+        var affected = await db.Loans
+            .Where(x => x.Id == id && x.UserId == userId)
+            .ExecuteDeleteAsync(ct);
 
-        if (loan is not null)
-        {
-            db.Loans.Remove(loan);
-            await db.SaveChangesAsync(ct);
-        }
+        return affected > 0;
     }
 }

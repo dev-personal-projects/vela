@@ -100,15 +100,7 @@ public sealed class LoanService(ILoanRepository repository) : ILoanService
 
     public async Task<AppResult> DeleteAsync(Guid id, Guid userId, CancellationToken ct = default)
     {
-        var loan = await repository.GetByIdAsync(id, userId, ct);
-
-        if (loan is null)
-        {
-            return AppResult.Fail("Loan not found.");
-        }
-
-        await repository.DeleteAsync(id, userId, ct);
-
-        return AppResult.Ok();
+        var deleted = await repository.DeleteAsync(id, userId, ct);
+        return deleted ? AppResult.Ok() : AppResult.Fail("Loan not found.");
     }
 }

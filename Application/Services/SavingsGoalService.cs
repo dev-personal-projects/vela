@@ -100,15 +100,7 @@ public sealed class SavingsGoalService(ISavingsGoalRepository repository) : ISav
 
     public async Task<AppResult> DeleteAsync(Guid id, Guid userId, CancellationToken ct = default)
     {
-        var goal = await repository.GetByIdAsync(id, userId, ct);
-
-        if (goal is null)
-        {
-            return AppResult.Fail("Savings goal not found.");
-        }
-
-        await repository.DeleteAsync(id, userId, ct);
-
-        return AppResult.Ok();
+        var deleted = await repository.DeleteAsync(id, userId, ct);
+        return deleted ? AppResult.Ok() : AppResult.Fail("Savings goal not found.");
     }
 }

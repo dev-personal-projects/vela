@@ -33,14 +33,12 @@ public sealed class ExpenseRepository(AppDbContext db) : IExpenseRepository
         await db.SaveChangesAsync(ct);
     }
 
-    public async Task DeleteAsync(Guid id, Guid userId, CancellationToken ct = default)
+    public async Task<bool> DeleteAsync(Guid id, Guid userId, CancellationToken ct = default)
     {
-        var expense = await GetByIdAsync(id, userId, ct);
+        var affected = await db.Expenses
+            .Where(x => x.Id == id && x.UserId == userId)
+            .ExecuteDeleteAsync(ct);
 
-        if (expense is not null)
-        {
-            db.Expenses.Remove(expense);
-            await db.SaveChangesAsync(ct);
-        }
+        return affected > 0;
     }
 }

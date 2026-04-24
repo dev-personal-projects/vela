@@ -79,15 +79,7 @@ public sealed class ExpenseService(IExpenseRepository repository) : IExpenseServ
 
     public async Task<AppResult> DeleteAsync(Guid id, Guid userId, CancellationToken ct = default)
     {
-        var expense = await repository.GetByIdAsync(id, userId, ct);
-
-        if (expense is null)
-        {
-            return AppResult.Fail("Expense record not found.");
-        }
-
-        await repository.DeleteAsync(id, userId, ct);
-
-        return AppResult.Ok();
+        var deleted = await repository.DeleteAsync(id, userId, ct);
+        return deleted ? AppResult.Ok() : AppResult.Fail("Expense record not found.");
     }
 }

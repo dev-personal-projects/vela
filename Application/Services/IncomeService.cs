@@ -79,15 +79,7 @@ public sealed class IncomeService(IIncomeRepository repository) : IIncomeService
 
     public async Task<AppResult> DeleteAsync(Guid id, Guid userId, CancellationToken ct = default)
     {
-        var income = await repository.GetByIdAsync(id, userId, ct);
-
-        if (income is null)
-        {
-            return AppResult.Fail("Income record not found.");
-        }
-
-        await repository.DeleteAsync(id, userId, ct);
-
-        return AppResult.Ok();
+        var deleted = await repository.DeleteAsync(id, userId, ct);
+        return deleted ? AppResult.Ok() : AppResult.Fail("Income record not found.");
     }
 }

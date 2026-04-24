@@ -162,7 +162,7 @@
       "url": "http://localhost:8080/graphql",
       "headers": { "Content-Type": "application/json", "Authorization": "Bearer <JWT_TOKEN>" },
       "body": {
-        "query": "mutation { updateIncome(input: { id: \"<PASTE_ID>\", amount: 5500.00, source: \"Salary\", description: \"Monthly salary - updated\", date: \"2025-01-15T00:00:00Z\" }) { income { id amount source description date } errors } }"
+        "query": "mutation { updateIncome(input: { id: \"<PASTE_ID>\", amount: 5500.00, source: \"Salary\", description: \"Monthly salary - updated\", date: \"2025-01-15T00:00:00Z\" }) { income { id amount source description date } message errors } }"
       },
       "expected_response": {
         "status": 200,
@@ -178,7 +178,7 @@
       "url": "http://localhost:8080/graphql",
       "headers": { "Content-Type": "application/json", "Authorization": "Bearer <JWT_TOKEN>" },
       "body": {
-        "query": "mutation { updateIncome(input: { id: \"00000000-0000-0000-0000-000000000000\", amount: 1000, source: \"Test\", description: \"\", date: \"2025-01-15T00:00:00Z\" }) { income { id } errors } }"
+        "query": "mutation { updateIncome(input: { id: \"00000000-0000-0000-0000-000000000000\", amount: 1000, source: \"Test\", description: \"\", date: \"2025-01-15T00:00:00Z\" }) { income { id } message errors } }"
       },
       "expected_response": {
         "status": 200,
@@ -193,7 +193,7 @@
       "method": "POST",
       "url": "http://localhost:8080/graphql",
       "headers": { "Content-Type": "application/json", "Authorization": "Bearer <JWT_TOKEN>" },
-      "body": { "query": "mutation { deleteIncome(id: \"<PASTE_ID>\") { success errors } }" },
+      "body": { "query": "mutation { deleteIncome(id: \"<PASTE_ID>\") { success message errors } }" },
       "expected_response": {
         "status": 200,
         "body": { "data": { "deleteIncome": { "success": true, "errors": null } } }
@@ -207,7 +207,7 @@
       "method": "POST",
       "url": "http://localhost:8080/graphql",
       "headers": { "Content-Type": "application/json", "Authorization": "Bearer <JWT_TOKEN>" },
-      "body": { "query": "mutation { deleteIncome(id: \"00000000-0000-0000-0000-000000000000\") { success errors } }" },
+      "body": { "query": "mutation { deleteIncome(id: \"00000000-0000-0000-0000-000000000000\") { success message errors } }" },
       "expected_response": {
         "status": 200,
         "body": { "data": { "deleteIncome": { "success": false, "errors": ["Income record not found."] } } }
@@ -264,7 +264,7 @@
       "url": "http://localhost:8080/graphql",
       "headers": { "Content-Type": "application/json", "Authorization": "Bearer <JWT_TOKEN>" },
       "body": {
-        "query": "mutation { updateExpense(input: { id: \"<PASTE_ID>\", amount: 150.00, category: \"Groceries\", description: \"Weekly groceries - updated\", date: \"2025-01-15T00:00:00Z\" }) { expense { id amount category description } errors } }"
+        "query": "mutation { updateExpense(input: { id: \"<PASTE_ID>\", amount: 150.00, category: \"Groceries\", description: \"Weekly groceries - updated\", date: \"2025-01-15T00:00:00Z\" }) { expense { id amount category description } message errors } }"
       },
       "expected_response": {
         "status": 200,
@@ -278,7 +278,7 @@
       "method": "POST",
       "url": "http://localhost:8080/graphql",
       "headers": { "Content-Type": "application/json", "Authorization": "Bearer <JWT_TOKEN>" },
-      "body": { "query": "mutation { deleteExpense(id: \"<PASTE_ID>\") { success errors } }" },
+      "body": { "query": "mutation { deleteExpense(id: \"<PASTE_ID>\") { success message errors } }" },
       "expected_response": {
         "status": 200,
         "body": { "data": { "deleteExpense": { "success": true, "errors": null } } }
@@ -335,7 +335,7 @@
       "url": "http://localhost:8080/graphql",
       "headers": { "Content-Type": "application/json", "Authorization": "Bearer <JWT_TOKEN>" },
       "body": {
-        "query": "mutation { updateSavingsGoal(input: { id: \"<PASTE_ID>\", name: \"Emergency Fund - Updated\", targetAmount: 15000.00, deadline: \"2026-06-30T00:00:00Z\" }) { savingsGoal { id name targetAmount deadline } errors } }"
+        "query": "mutation { updateSavingsGoal(input: { id: \"<PASTE_ID>\", name: \"Emergency Fund - Updated\", targetAmount: 15000.00, deadline: \"2026-06-30T00:00:00Z\" }) { savingsGoal { id name targetAmount deadline } message errors } }"
       },
       "expected_response": {
         "status": 200,
@@ -365,7 +365,7 @@
       "method": "POST",
       "url": "http://localhost:8080/graphql",
       "headers": { "Content-Type": "application/json", "Authorization": "Bearer <JWT_TOKEN>" },
-      "body": { "query": "mutation { deleteSavingsGoal(id: \"<PASTE_ID>\") { success errors } }" },
+      "body": { "query": "mutation { deleteSavingsGoal(id: \"<PASTE_ID>\") { success message errors } }" },
       "expected_response": {
         "status": 200,
         "body": { "data": { "deleteSavingsGoal": { "success": true, "errors": null } } }
@@ -422,7 +422,7 @@
       "url": "http://localhost:8080/graphql",
       "headers": { "Content-Type": "application/json", "Authorization": "Bearer <JWT_TOKEN>" },
       "body": {
-        "query": "mutation { updateLoan(input: { id: \"<PASTE_ID>\", counterpartyName: \"John Smith\", description: \"Updated description\", dueDate: \"2025-09-01T00:00:00Z\" }) { loan { id counterpartyName description dueDate } errors } }"
+        "query": "mutation { updateLoan(input: { id: \"<PASTE_ID>\", counterpartyName: \"John Smith\", description: \"Updated description\", dueDate: \"2025-09-01T00:00:00Z\" }) { loan { id counterpartyName description dueDate } message errors } }"
       },
       "expected_response": {
         "status": 200,
@@ -437,7 +437,7 @@
       "url": "http://localhost:8080/graphql",
       "headers": { "Content-Type": "application/json", "Authorization": "Bearer <JWT_TOKEN>" },
       "body": {
-        "query": "mutation { recordRepayment(input: { loanId: \"<PASTE_ID>\", amount: 500.00 }) { loan { id amountRepaid remainingBalance isSettled } errors } }"
+        "query": "mutation { recordRepayment(input: { loanId: \"<PASTE_ID>\", amount: 500.00 }) { loan { id amountRepaid remainingBalance isSettled } message errors } }"
       },
       "expected_response": {
         "status": 200,
@@ -452,7 +452,7 @@
       "url": "http://localhost:8080/graphql",
       "headers": { "Content-Type": "application/json", "Authorization": "Bearer <JWT_TOKEN>" },
       "body": {
-        "query": "mutation { recordRepayment(input: { loanId: \"<PASTE_ID>\", amount: 999999.00 }) { loan { id } errors } }"
+        "query": "mutation { recordRepayment(input: { loanId: \"<PASTE_ID>\", amount: 999999.00 }) { loan { id } message errors } }"
       },
       "expected_response": {
         "status": 200,
@@ -466,7 +466,7 @@
       "method": "POST",
       "url": "http://localhost:8080/graphql",
       "headers": { "Content-Type": "application/json", "Authorization": "Bearer <JWT_TOKEN>" },
-      "body": { "query": "mutation { deleteLoan(id: \"<PASTE_ID>\") { success errors } }" },
+      "body": { "query": "mutation { deleteLoan(id: \"<PASTE_ID>\") { success message errors } }" },
       "expected_response": {
         "status": 200,
         "body": { "data": { "deleteLoan": { "success": true, "errors": null } } }
