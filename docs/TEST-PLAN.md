@@ -18,12 +18,71 @@ This plan is written so that a new contributor can implement tests incrementally
 
 ## Non-Goals
 - Load testing at production scale (separate performance workstream).
-- UI/mobile testing (handled in Kotlin/mobile phase).
+- UI/client testing (out of scope for this backend repo).
 
 ## Testing Pyramid (Recommended Split)
 - Unit tests (majority): `Application/Services/*` and small pure helpers.
 - Integration tests (some): `Infrastructure/*` and DB behaviors.
 - API/E2E (some): `Api/GraphQL/*` and auth enforcement using in-process HTTP.
+
+## End-to-End (E2E) Tests
+E2E tests validate that the entire system behaves correctly from an external client perspective:
+
+- HTTP request -> auth middleware -> GraphQL pipeline -> services -> repositories -> real database
+- Real serialization/deserialization and HTTP status codes
+- Real cross-user isolation guarantees
+
+### What Counts As E2E Here
+Recommended (fast and reliable):
+- In-process server using `WebApplicationFactory` with a real Postgres test database
+
+Optional (slower, but closer to prod):
+- Out-of-process server (`dotnet run`) + tests hit `http://localhost:8080` (smoke suite)
+
+Not recommended for PR gating:
+- Calling real Supabase Auth in E2E tests (flaky external dependency). Prefer test JWTs.
+
+### E2E Setup Strategy
+E2E tests should:
+- Use a real Postgres database (container/service) with a clean schema per run.
+- Use a fixed `Auth:JwtSecret` and generate JWTs in tests (no Supabase dependency).
+- Seed minimal data per scenario and clean up between tests (transaction rollback or database reset).
+
+Quickstart commands and env vars:
+- `docs/E2E-QUICKSTART.md`
+
+### E2E Scenarios (Must-Have)
+These tests should use HTTP requests (GraphQL POST) and assert both response body and status code.
+
+Auth and Access Control:
+- Unauthenticated request to protected query/mutation returns 401.
+- Expired token returns 401.
+- Valid token returns 200.
+
+Cross-User Isolation:
+- User A creates income/expense/savings/loan.
+- User B cannot read it (list excludes it; get-by-id returns null).
+- User B cannot update/delete it (payload returns not found; data remains unchanged).
+
+Mutation Contracts (User-Friendly Responses):
+- Successful update returns payload with `message` and `errors == null`.
+- Validation failure returns payload with `errors` and `message == null`.
+
+CRUD Journeys (Happy Path):
+- Income: add -> list -> update -> get-by-id -> delete -> verify missing.
+- Expense: add -> list -> update -> delete -> verify missing.
+- Savings: create -> update progress -> update fields -> delete -> verify missing.
+- Loan: add -> record repayment -> update -> delete -> verify missing.
+
+Dashboard:
+- Seed known records and assert totals match expected sums.
+
+Resilience/Timeout (Regression Guard):
+- Simulate a slow DB call and verify the API returns a timeout error with guidance to refresh before retrying.
+
+### E2E Project (Proposed)
+Add `Tests/FinanceTracker.E2ETests/` if you want E2E explicitly separated from API tests.
+If you prefer fewer projects, keep E2E inside `FinanceTracker.ApiTests` and tag E2E tests via trait/category.
 
 ## Tooling
 - Test framework: `xUnit`
@@ -260,6 +319,7 @@ Proposed commands (once projects exist):
 - `dotnet test Tests/FinanceTracker.UnitTests/FinanceTracker.UnitTests.csproj`
 - `dotnet test Tests/FinanceTracker.IntegrationTests/FinanceTracker.IntegrationTests.csproj`
 - `dotnet test Tests/FinanceTracker.ApiTests/FinanceTracker.ApiTests.csproj`
+- `dotnet test Tests/FinanceTracker.E2ETests/FinanceTracker.E2ETests.csproj`
 
 ### Test Configuration (Recommended)
 Prefer injecting config in tests rather than relying on developer machine settings:
@@ -270,6 +330,7 @@ Prefer injecting config in tests rather than relying on developer machine settin
 ## CI Recommendations
 - Run unit tests on every PR.
 - Run integration + API tests on PRs that touch `Infrastructure/`, `Api/`, or migrations/scripts.
+- Run E2E tests on PRs for backend changes (or nightly if runtime is too slow).
 - Cache NuGet packages.
 - Use a Postgres service container for integration tests (preferred).
 
@@ -297,6 +358,7 @@ services:
 - Integration tests must not rely on shared external environments unless explicitly marked and excluded from PR runs.
 - Prefer polling with a short timeout for “eventual consistency” over fixed sleeps.
 - Keep timeouts explicit and generous enough for CI, but short enough to fail fast on deadlocks.
+- Keep E2E suite lean: 1-2 journeys per feature + isolation + dashboard is usually enough.
 
 ## Exit Criteria
 - All tests pass locally and in CI.

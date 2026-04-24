@@ -1,156 +1,51 @@
-# 💸 Finance Tracker (GraphQL + .NET + Kotlin)
+# Finance Tracker API (GraphQL + .NET)
 
-## 📌 Overview
+Backend service for personal finance tracking: incomes, expenses, savings goals, loans, and a dashboard summary. Built with .NET + Hot Chocolate GraphQL using a Clean Architecture-style layering.
 
-This project is a **personal finance tracking system** designed to help users manage and understand their money through a simple and structured approach.
+## Features
+- Income: add/update/list/get/delete
+- Expense: add/update/list/get/delete
+- Savings goals: create/update/progress/list/get/delete
+- Loans: add/update/repay/list/get/delete
+- Dashboard: aggregated totals and summaries
 
-It allows users to track:
+## Tech Stack
+- .NET 10
+- Hot Chocolate GraphQL
+- EF Core + PostgreSQL (Supabase-compatible)
+- JWT auth (Supabase used for credential verification; API issues its own access token)
 
-* Income
-* Expenses
-* Savings
-* Loans (money owed and money lent)
-
-The system is being built primarily to explore:
-
-* GraphQL API design
-* Clean Architecture in .NET
-* Mobile-backend integration (Kotlin – later phase)
-
----
-
-## 🧱 Project Structure
-
+## Repo Layout
 ```
-/backend   → .NET GraphQL API (current focus)
-/mobile    → Kotlin mobile app (planned)
-/docs      → Project documentation and notes
-README.md
+Api/            HTTP + GraphQL (queries/mutations, controllers, auth wiring)
+Application/    Services (business rules) + DTOs + interfaces
+Domain/         Entities + enums + result types
+Infrastructure/ EF Core DbContext + repository implementations + auth adapters
+docs/           PRD/TRD, test plan, Postman examples
+scripts/        SQL setup scripts and utilities
 ```
 
----
+## Run Locally
+Prereqs: .NET 10 SDK and a PostgreSQL database (local or Supabase).
 
-## 🚧 Current Focus: Backend
+1. Configure settings (via `appsettings.json` or env vars):
+   - `Auth:JwtSecret` (>= 32 chars)
+   - `ConnectionStrings:Default` (Postgres connection string or URI)
+   - `Supabase:Url`, `Supabase:AnonKey` (required for `/api/auth/*` sign-in/sign-up)
 
-We are currently building the **backend API** using:
-
-* .NET (Clean Architecture)
-* GraphQL (Hot Chocolate)
-
-### Goals:
-
-* Design a clean and scalable API
-* Model real-world financial data
-* Implement core finance features
-
----
-
-## 🎯 Core Features (MVP)
-
-### 💰 Income
-
-* Add income records
-* View and filter income
-
-### 💸 Expenses
-
-* Add expenses
-* Categorize spending
-* Filter by date and category
-
-### 🏦 Savings
-
-* Create savings goals
-* Track progress toward goals
-
-### 💳 Loans
-
-#### Loans Owed (Liabilities)
-
-* Track borrowed money
-* Monitor repayment progress
-
-#### Loans Given (Assets)
-
-* Track money lent to others
-* Monitor repayment status
-
-### 📊 Dashboard
-
-* Total income
-* Total expenses
-* Net balance
-* Savings progress
-* Loan summaries
-
----
-
-## ⚙️ Architecture
-
-The backend follows **Clean Architecture principles**:
-
-```
-Domain        → Core business models
-Application   → Business logic & services
-Infrastructure→ Database & repositories
-API           → GraphQL layer
+2. Run:
+```bash
+dotnet run
 ```
 
-### Key Rules:
+Default endpoints:
+- Health: `GET /health`
+- Auth: `POST /api/auth/signup`, `POST /api/auth/signin`
+- GraphQL: `POST /graphql`
 
-* Business logic lives in services
-* Data access via repositories
-* GraphQL handles request/response only
+## Postman Examples
+Use `docs/postman/test-examples.json` for a guided request sequence, including JWT usage and GraphQL queries/mutations.
 
----
-
-## 📡 API Design (GraphQL)
-
-The API will expose:
-
-* Queries → Fetch data
-* Mutations → Create/update data
-
-Examples:
-
-* Add income
-* Add expense
-* Create savings goal
-* Manage loans
-
----
-
-## 🚫 Out of Scope (for now)
-
-* Payment integrations
-* Bank syncing
-* Notifications
-* Advanced analytics
-* Multi-user/shared accounts
-
----
-
-## 🚀 Future Improvements
-
-* Mobile app (Kotlin + Apollo GraphQL)
-* Notifications (loan reminders, alerts)
-* Analytics and reports
-* Offline support
-* Event-driven features
-
----
-
-## 🧠 Purpose
-
-This project is designed to:
-
-* Build strong backend architecture skills
-* Learn GraphQL in a real-world context
-* Practice designing scalable systems
-
----
-
-## 🏁 Status
-
-🚧 Backend development in progress
-📱 Mobile app planned for later phase
+## Testing
+- Test strategy and coverage matrix: `docs/TEST-PLAN.md`
+- E2E quickstart (DB + env vars + JWT strategy): `docs/E2E-QUICKSTART.md`
