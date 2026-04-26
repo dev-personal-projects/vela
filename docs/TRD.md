@@ -314,6 +314,7 @@ Npgsql provider]
 
 > We never create a users table. Supabase Auth manages `auth.users` entirely.  
 > Our tables reference `auth.users.id` via `user_id` foreign keys.
+> For this long-lived .NET backend, prefer a direct Postgres connection when possible, or the Supabase session pooler on port `5432`. Avoid the transaction pooler on port `6543` for normal EF Core / Npgsql traffic unless you have a specific reason to use transaction mode.
 
 ---
 

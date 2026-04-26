@@ -132,10 +132,15 @@ flowchart TB
     "JwtSecret": "<supabase-jwt-secret>"
   },
   "ConnectionStrings": {
-    "Default": "Host=db.<project-ref>.supabase.co;Port=5432;Database=postgres;Username=postgres.<project-ref>;Password=<db-password>;SSL Mode=Require;Trust Server Certificate=true"
+    "Default": "postgresql://<user>:<password>@<session-pooler-host>:5432/postgres?sslmode=require"
   }
 }
 ```
+
+For this backend, the recommended Supabase connection options are:
+- direct Postgres connection when available
+- otherwise the Supabase session pooler on port `5432`
+- avoid the transaction pooler on port `6543` for normal EF Core / Npgsql backend traffic
 
 ---
 

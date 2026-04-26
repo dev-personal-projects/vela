@@ -46,6 +46,11 @@ Required:
 - `Auth:JwtSecret` (>= 32 chars)
 - `ConnectionStrings:Default` (Postgres connection string or URI)
 
+Recommended for this persistent backend:
+- Use a direct Postgres connection if available
+- Otherwise use the Supabase session pooler on port `5432`
+- Avoid the transaction pooler on port `6543` for normal EF Core / Npgsql backend traffic unless you specifically need transaction-mode pooling
+
 For `/api/auth/*` sign-up/sign-in:
 - `Supabase:Url`
 - `Supabase:AnonKey`

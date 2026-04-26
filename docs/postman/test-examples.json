@@ -9,9 +9,11 @@
       "Step 4 — Paste it as: Authorization: Bearer <accessToken>",
       "Step 5 — For GraphQL requests, send the value inside requests[n].body.query as the POST body JSON",
       "Step 6 — Use expected_response only as a reference for what should come back, not as the request body",
-      "Step 7 — Run requests in the testing_order below"
+      "Step 7 — If you are using a remote Supabase database, increase Postman Request timeout above 60000ms or set it to 0 (no timeout)",
+      "Step 8 — Wait for each request to finish before clicking Send again, otherwise the earlier request may be canceled client-side",
+      "Step 9 — Run requests in the testing_order below"
     ],
-    "note": "Always copy the id from an Add or GetAll response before running GetById, Update, or Delete. For GraphQL, the request you send is always the JSON object in body, usually with a query property."
+    "note": "Always copy the id from an Add or GetAll response before running GetById, Update, or Delete. For GraphQL, the request you send is always the JSON object in body, usually with a query property. If you see HTTP 499 in the server logs, the client canceled the request before the API finished."
   },
 
   "requests": [

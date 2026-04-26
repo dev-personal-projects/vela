@@ -32,7 +32,7 @@ public static class DatabaseExtensions
                 throw new InvalidOperationException("ConnectionStrings:Default is not a valid PostgreSQL URI.");
             }
 
-            // Example: postgresql://user:pass@host:6543/db?sslmode=require
+            // Example: postgresql://user:pass@session-pooler-host:5432/db?sslmode=require
             var (username, password) = ParseUserInfo(uri.UserInfo);
 
             var builder = new NpgsqlConnectionStringBuilder
