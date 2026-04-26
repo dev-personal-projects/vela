@@ -8,9 +8,9 @@ Expose all features through a clean, authenticated GraphQL API. Resolvers are th
 ## Checklist
 
 - [x] JWT Bearer + Hot Chocolate authorization wired in `Program.cs`
-- [x] `signUp` mutation calls Supabase Auth and returns JWT
+- [x] `signUp` mutation calls Supabase Auth and returns a success payload
 - [x] `signIn` mutation calls Supabase Auth and returns JWT
-- [x] All queries protected with `[Authorize]`
+- [x] All data queries protected with `[Authorize]`
 - [x] All mutations except `signUp` and `signIn` protected with `[Authorize]`
 - [x] `UserId` extracted from `ClaimsPrincipal` in every protected resolver
 - [x] `health` query remains public
@@ -36,7 +36,7 @@ Application/
     └── Auth/
         ├── SignUpInput.cs
         ├── SignInInput.cs
-        └── AuthPayload.cs
+        └── AuthDtos.cs
 ```
 
 ---
@@ -47,21 +47,34 @@ Application/
 flowchart TB
     subgraph Queries
         QH[health\npublic]
-        QI[incomes\nauthenticated]
-        QE[expenses\nauthenticated]
+        QI[incomes\noptional fromDate / toDate / source\nauthenticated]
+        QE[expenses\noptional fromDate / toDate / category\nauthenticated]
         QS[savingsGoals\nauthenticated]
-        QL[loans\nauthenticated]
+        QL[loans\noptional type\nauthenticated]
         QD[dashboard\nauthenticated]
+        QI1[income by id\nauthenticated]
+        QE1[expense by id\nauthenticated]
+        QS1[savingsGoal by id\nauthenticated]
+        QL1[loan by id\nauthenticated]
     end
 
     subgraph Mutations
         MSU[signUp\npublic]
         MSI[signIn\npublic]
         MI[addIncome\nauthenticated]
+        MIU[updateIncome\nauthenticated]
+        MID[deleteIncome\nauthenticated]
         ME[addExpense\nauthenticated]
+        MEU[updateExpense\nauthenticated]
+        MED[deleteExpense\nauthenticated]
         MS[createSavingsGoal\nauthenticated]
+        MSU2[updateSavingsGoal\nauthenticated]
+        MSP[updateSavingsProgress\nauthenticated]
+        MSD[deleteSavingsGoal\nauthenticated]
         ML[addLoan\nauthenticated]
+        MLU[updateLoan\nauthenticated]
         MR[recordRepayment\nauthenticated]
+        MLD[deleteLoan\nauthenticated]
     end
 ```
 
@@ -94,8 +107,8 @@ flowchart TD
 ```mermaid
 flowchart LR
     subgraph Mutations - public
-        MSU[signUp\nSignUpInput\nreturns AuthPayload]
-        MSI[signIn\nSignInInput\nreturns AuthPayload]
+        MSU[signUp\nSignUpInput\nreturns SignUpPayloadResult]
+        MSI[signIn\nSignInInput\nreturns SignInPayloadResult]
     end
 
     MSU --> AS[AuthService.SignUpAsync\ncalls Supabase Auth API]
@@ -118,9 +131,9 @@ sequenceDiagram
     AuthService->>SupabaseAuth: POST /auth/v1/signup
     SupabaseAuth->>SupabaseAuth: hash password
     SupabaseAuth->>SupabaseAuth: create auth.users row
-    SupabaseAuth-->>AuthService: JWT access_token
-    AuthService-->>Mutation: Result.Ok(token)
-    Mutation-->>Client: AuthPayload with token
+    SupabaseAuth-->>AuthService: auth result
+    AuthService-->>Mutation: Result.Ok(message)
+    Mutation-->>Client: SignUpPayloadResult with message
 ```
 
 ---
@@ -139,8 +152,8 @@ sequenceDiagram
     AuthService->>SupabaseAuth: POST /auth/v1/token
     SupabaseAuth->>SupabaseAuth: verify password
     SupabaseAuth-->>AuthService: JWT access_token
-    AuthService-->>Mutation: Result.Ok(token)
-    Mutation-->>Client: AuthPayload with token
+    AuthService-->>Mutation: Result.Ok(signInPayload)
+    Mutation-->>Client: SignInPayloadResult with accessToken
 ```
 
 ---
@@ -150,7 +163,7 @@ sequenceDiagram
 ```mermaid
 flowchart LR
     subgraph Query
-        QI[incomes\nreturns list of Income]
+        QI[incomes\noptional fromDate / toDate / source\nreturns list of Income]
     end
 
     subgraph Mutation
@@ -168,7 +181,7 @@ flowchart LR
 ```mermaid
 flowchart LR
     subgraph Query
-        QE[expenses\nfilter by date and category\nreturns list of Expense]
+        QE[expenses\noptional fromDate / toDate / category\nreturns list of Expense]
     end
 
     subgraph Mutation
@@ -204,7 +217,7 @@ flowchart LR
 ```mermaid
 flowchart LR
     subgraph Query
-        QL[loans\nfilter by type\nreturns list of Loan]
+        QL[loans\noptional type\nreturns list of Loan]
     end
 
     subgraph Mutations
@@ -278,10 +291,14 @@ sequenceDiagram
 | Query | Auth | Returns |
 |---|---|---|
 | `health` | public | String |
-| `incomes` | required | list of Income |
-| `expenses` | required | list of Expense |
+| `incomes(fromDate?, toDate?, source?)` | required | list of Income |
+| `income(id)` | required | Income or null |
+| `expenses(fromDate?, toDate?, category?)` | required | list of Expense |
+| `expense(id)` | required | Expense or null |
 | `savingsGoals` | required | list of SavingsGoal |
-| `loans` | required | list of Loan |
+| `savingsGoal(id)` | required | SavingsGoal or null |
+| `loans(type?)` | required | list of Loan |
+| `loan(id)` | required | Loan or null |
 | `dashboard` | required | DashboardSummary |
 
 ---
@@ -290,13 +307,22 @@ sequenceDiagram
 
 | Mutation | Auth | Input | Returns |
 |---|---|---|---|
-| `signUp` | public | `SignUpInput` | `AuthPayload` |
-| `signIn` | public | `SignInInput` | `AuthPayload` |
+| `signUp` | public | `SignUpInput` | `SignUpPayloadResult` |
+| `signIn` | public | `SignInInput` | `SignInPayloadResult` |
 | `addIncome` | required | `AddIncomeInput` | `IncomePayload` |
+| `updateIncome` | required | `UpdateIncomeInput` | `IncomePayload` |
+| `deleteIncome` | required | `id` | `DeletePayload` |
 | `addExpense` | required | `AddExpenseInput` | `ExpensePayload` |
+| `updateExpense` | required | `UpdateExpenseInput` | `ExpensePayload` |
+| `deleteExpense` | required | `id` | `DeletePayload` |
 | `createSavingsGoal` | required | `CreateSavingsGoalInput` | `SavingsGoalPayload` |
+| `updateSavingsGoal` | required | `UpdateSavingsGoalInput` | `SavingsGoalPayload` |
+| `updateSavingsProgress` | required | `id`, `newAmount` | `SavingsGoalPayload` |
+| `deleteSavingsGoal` | required | `id` | `DeletePayload` |
 | `addLoan` | required | `AddLoanInput` | `LoanPayload` |
+| `updateLoan` | required | `UpdateLoanInput` | `LoanPayload` |
 | `recordRepayment` | required | `RecordRepaymentInput` | `LoanPayload` |
+| `deleteLoan` | required | `id` | `DeletePayload` |
 
 ---
 

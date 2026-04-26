@@ -150,12 +150,14 @@ The generated schema looks like this:
 ```graphql
 type Query {
   health: String!
-  incomes: [Income!]!
-  expenses: [Expense!]!
+  incomes(fromDate: DateTime, toDate: DateTime, source: String): [Income!]!
+  expenses(fromDate: DateTime, toDate: DateTime, category: String): [Expense!]!
+  loans(type: LoanType): [Loan!]!
 }
 
 type Mutation {
-  signUp(input: SignUpInput!): AuthPayload!
+  signUp(input: SignUpInput!): SignUpPayloadResult!
+  signIn(input: SignInInput!): SignInPayloadResult!
   addIncome(input: AddIncomeInput!): IncomePayload!
 }
 
@@ -215,12 +217,21 @@ public sealed class Query
     // This is a resolver for the "incomes" field
     [Authorize]
     public async Task<List<Income>> Incomes(
+        DateTime? fromDate,
+        DateTime? toDate,
+        string? source,
         [Service] IIncomeService service,
-        ClaimsPrincipal claimsPrincipal)
+        ClaimsPrincipal claimsPrincipal,
+        CancellationToken cancellationToken)
     {
         var userId = claimsPrincipal.GetUserId();
-        var result = await service.GetAllAsync(userId);
-        return result.Value!;
+        var result = await service.GetAllAsync(userId, cancellationToken);
+
+        return result.Value!
+            .Where(x => !fromDate.HasValue || x.Date >= fromDate.Value)
+            .Where(x => !toDate.HasValue || x.Date <= toDate.Value)
+            .Where(x => string.IsNullOrWhiteSpace(source) || x.Source == source)
+            .ToList();
     }
 }
 ```
@@ -243,6 +254,12 @@ Queries can accept arguments for filtering:
 
 ```graphql
 query {
+  incomes(fromDate: "2025-01-01T00:00:00Z", source: "Salary") {
+    id
+    amount
+    source
+    date
+  }
   loans(type: Owed) {
     id
     counterpartyName
@@ -282,6 +299,7 @@ A best practice in GraphQL is to return a **payload type** from every mutation i
 type IncomePayload {
   income: Income        # null if failed
   errors: [String!]     # null if succeeded
+  message: String       # optional success message
 }
 ```
 
@@ -294,6 +312,16 @@ flowchart LR
     S -- yes --> P[IncomePayload\nincome = entity\nerrors = null]
     S -- no --> E[IncomePayload\nincome = null\nerrors = message]
 ```
+
+---
+
+## When To Use These Concepts
+
+- Use a plain query like `dashboard` when the client only needs to read data and nothing should change in the database.
+- Use query arguments like `fromDate`, `toDate`, `source`, and `type` when the client wants a narrower slice of data without creating new endpoints.
+- Use an enum argument like `LoanType` when the client should choose from a fixed set of valid values such as `Owed` or `Given`.
+- Use a mutation payload with `errors` and `message` when the operation can fail for business reasons and the client needs a predictable response shape.
+- Use the public `health` query when you want a simple connectivity check from Postman, Banana Cake Pop, or a deployment smoke test.
 
 ---
 

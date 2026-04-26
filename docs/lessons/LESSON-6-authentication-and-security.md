@@ -8,7 +8,7 @@ We use a hybrid approach — REST for auth, GraphQL for everything else.
 flowchart TB
     subgraph Step 1 - Get a token via REST
         SIGNUP["POST /api/auth/signup\n{ email, password }\n→ { message }"]
-        SIGNIN["POST /api/auth/signin\n{ email, password }\n→ { accessToken, refreshToken }"]
+        SIGNIN["POST /api/auth/signin\n{ email, password }\n→ { accessToken, tokenType }"]
     end
 
     subgraph Step 2 - Use token with GraphQL
@@ -83,51 +83,52 @@ sequenceDiagram
 
 ---
 
-## Access Token vs Refresh Token
+## Current Token Model In This Project
 
 ```mermaid
-flowchart LR
-    subgraph Access Token
-        AT[Short-lived\n60 minutes\nUsed for every API request\nAuthorization: Bearer token]
-    end
+flowchart TB
+    S1[User signs in via REST]
+    S2[API verifies credentials through Supabase]
+    S3[API issues its own JWT access token]
+    S4[Client sends Bearer token to /graphql]
 
-    subgraph Refresh Token
-        RT[Long-lived\n60 days\nUsed only to get a new access token\nStored securely on device]
-    end
+    S1 --> S2 --> S3 --> S4
 ```
 
-### Why two tokens?
+Today this backend is built around a single API access token:
 
-If the access token is stolen, it expires in 60 minutes — limited damage.
-If you only had one long-lived token and it was stolen, the attacker has access for 60 days.
+- The API issues its own JWT after successful sign-in.
+- The token lifetime is controlled by `Auth:AccessTokenMinutes` and defaults to 60 minutes.
+- The client sends that token in the `Authorization: Bearer <token>` header for GraphQL requests.
+- There is no `/api/auth/refresh` endpoint implemented in this codebase right now.
 
-### The refresh flow on Android
+### What should a client do when the token expires?
 
 ```kotlin
-// Access token expired — get a new one silently
-suspend fun refreshTokens(refreshToken: String): SignInPayload {
-    val response = httpClient.post("$baseUrl/api/auth/refresh") {
-        setBody(mapOf("refreshToken" to refreshToken))
-    }
-    return response.body()
-}
-
-// Apollo interceptor — runs before every request
+// Apollo interceptor — attach token when available
 class AuthInterceptor : HttpInterceptor {
     override suspend fun intercept(request: HttpRequest, chain: HttpInterceptorChain): HttpResponse {
         val token = tokenStore.getAccessToken()
 
-        if (tokenStore.isExpired(token)) {
-            val newTokens = refreshTokens(tokenStore.getRefreshToken())
-            tokenStore.save(newTokens)
+        val authenticatedRequest = request.newBuilder().apply {
+            if (!token.isNullOrBlank()) {
+                addHeader("Authorization", "Bearer $token")
+            }
+        }.build()
+
+        val response = chain.proceed(authenticatedRequest)
+
+        if (response.statusCode == 401) {
+            tokenStore.clear()
+            // Redirect user to sign in again or trigger your app's re-auth flow.
         }
 
-        return chain.proceed(request.newBuilder()
-            .addHeader("Authorization", "Bearer ${tokenStore.getAccessToken()}")
-            .build())
+        return response
     }
 }
 ```
+
+If you add refresh-token support later, that should be documented as a new auth flow, not assumed by default.
 
 ---
 
@@ -171,7 +172,6 @@ public Task<List<Income>> GetAllAsync(Guid userId, CancellationToken ct) =>
 public sealed class Query
 {
     // Public — no token needed
-    // GET /health is also public but lives in REST
     public string Health() => "Finance Tracker API is running!";
 
     // Protected — valid JWT required
@@ -245,7 +245,6 @@ Benefits:
 | Practice | How we apply it |
 |---|---|
 | Short-lived access tokens | 60 minutes — configurable via `Auth:AccessTokenMinutes` |
-| Refresh tokens | Long-lived, stored securely on device |
 | JWT signature validation | Every request validated with `Auth:JwtSecret` |
 | UserId from token only | Never trust UserId from request body |
 | Data scoping | Every DB query filters by `UserId` |
@@ -265,14 +264,24 @@ sequenceDiagram
     AndroidApp->>API: POST /graphql\nBearer expired_token
     API-->>AndroidApp: 401 Unauthorized
 
-    AndroidApp->>API: POST /api/auth/refresh\n{ refreshToken }
-    API-->>AndroidApp: { accessToken, refreshToken }
-
-    AndroidApp->>API: POST /graphql\nBearer new_token
+    AndroidApp->>AndroidApp: Clear token / mark session expired
+    AndroidApp->>API: POST /api/auth/signin\nemail + password
+    API-->>AndroidApp: { accessToken, tokenType }
+    AndroidApp->>API: POST /graphql\nBearer new_access_token
     API-->>AndroidApp: data
 ```
 
-The Android app should handle `401` responses by automatically refreshing the token. Apollo's `AuthInterceptor` does this transparently — the user never sees a login screen.
+The current backend contract is simple: expired token means the request is rejected, and the client must obtain a fresh token by signing in again. That keeps the auth story easy to understand while the API is still focused on the core finance flows.
+
+---
+
+## When To Use These Security Concepts
+
+- Use REST sign-in first whenever you need a token for GraphQL, because `/graphql` is for domain operations, not credential exchange.
+- Use `[Authorize]` on resolvers that read or mutate user-owned financial data such as `incomes`, `expenses`, `loans`, and `dashboard`.
+- Use `claimsPrincipal.GetUserId()` whenever the authenticated user should drive the query, which prevents cross-user data access.
+- Use the public `health` query when you want to check whether the GraphQL endpoint is reachable before debugging auth problems.
+- Use short-lived access tokens when you want a simpler, safer MVP auth model before introducing refresh-token complexity.
 
 ---
 
@@ -283,7 +292,6 @@ The Android app should handle `401` responses by automatically refreshing the to
 | JWT | Self-contained token with user claims — no DB lookup needed |
 | `sub` claim | The user's ID — extracted as `UserId` in every resolver |
 | Access token | Short-lived — used for every API request |
-| Refresh token | Long-lived — used to get new access tokens silently |
 | `[Authorize]` | Rejects requests without a valid JWT |
 | `GetUserId()` | Extracts `sub` claim from `ClaimsPrincipal` |
 | Data scoping | Every query filters by `UserId` — cross-user access impossible |

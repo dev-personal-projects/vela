@@ -65,6 +65,9 @@ In Hot Chocolate resolvers you inject them **per method** using `[Service]`:
 ```csharp
 [Authorize]
 public async Task<List<Income>> Incomes(
+    DateTime? fromDate,                   // GraphQL argument
+    DateTime? toDate,                     // GraphQL argument
+    string? source,                       // GraphQL argument
     [Service] IIncomeService service,       // injected from DI
     ClaimsPrincipal claimsPrincipal,        // injected by Hot Chocolate
     CancellationToken cancellationToken)    // injected automatically
@@ -151,7 +154,8 @@ Every mutation in this project returns a **payload** — never the entity direct
 ```csharp
 public sealed record IncomePayload(
     Income? Income,
-    IReadOnlyList<string>? Errors);
+    IReadOnlyList<string>? Errors,
+    string? Message);
 ```
 
 Generated GraphQL:
@@ -160,6 +164,7 @@ Generated GraphQL:
 type IncomePayload {
   income: Income
   errors: [String!]
+  message: String
 }
 ```
 
@@ -266,13 +271,15 @@ public async Task<DashboardSummary> Dashboard(
 {
     var userId = claimsPrincipal.GetUserId();
 
-    var incomes  = (await incomeService.GetAllAsync(userId, cancellationToken)).Value!;
+    var incomes = (await incomeService.GetAllAsync(userId, cancellationToken)).Value!;
     var expenses = (await expenseService.GetAllAsync(userId, cancellationToken)).Value!;
+    var totalIncome = incomes.Sum(x => x.Amount);
+    var totalExpenses = expenses.Sum(x => x.Amount);
     // ...
 
     return new DashboardSummary(
-        TotalIncome:   incomes.Sum(x => x.Amount),
-        TotalExpenses: expenses.Sum(x => x.Amount),
+        TotalIncome:   totalIncome,
+        TotalExpenses: totalExpenses,
         NetBalance:    totalIncome - totalExpenses,
         ...);
 }
@@ -308,7 +315,7 @@ This is one of GraphQL's biggest advantages over REST — **one request, all the
 ```graphql
 mutation {
   signUp(input: { email: "user@example.com", password: "password123" }) {
-    auth { accessToken }
+    message
     errors
   }
 }
@@ -318,7 +325,7 @@ mutation {
 ```graphql
 mutation {
   signIn(input: { email: "user@example.com", password: "password123" }) {
-    auth { accessToken }
+    signIn { accessToken tokenType }
     errors
   }
 }
@@ -351,6 +358,44 @@ query {
 }
 ```
 
+### Filter Income By Date And Source
+```graphql
+query {
+  incomes(fromDate: "2025-01-01T00:00:00Z", toDate: "2025-12-31T23:59:59Z", source: "Salary") {
+    id
+    amount
+    source
+    date
+  }
+}
+```
+
+### Fetch Two Loan Views In One Request
+```graphql
+query {
+  owed: loans(type: Owed) {
+    id
+    counterpartyName
+    remainingBalance
+  }
+  given: loans(type: Given) {
+    id
+    counterpartyName
+    remainingBalance
+  }
+}
+```
+
+---
+
+## When To Use Each Pattern
+
+- Use resolver arguments when you want flexible filtering without creating separate queries like `salaryIncomes`, `groceryExpenses`, and `owedLoans`.
+- Use `[Service]` injection when the resolver needs application logic such as validation, persistence, or aggregation.
+- Use `ClaimsPrincipal` when the result must be scoped to the authenticated user instead of trusting a client-supplied `userId`.
+- Use payload types when the client should always receive a stable shape with either data or friendly validation errors.
+- Use a composed query like `dashboard` when the UI needs totals, savings progress, and loan summaries in one round trip.
+
 ---
 
 ## Key Takeaways
@@ -363,7 +408,7 @@ query {
 | `ClaimsPrincipal` | Injected automatically — holds the JWT claims |
 | `[Authorize]` | Protects a resolver — rejects requests without JWT |
 | Input type | C# record → GraphQL `input` type automatically |
-| Payload type | C# record wrapping entity + errors |
+| Payload type | C# record wrapping entity + errors + optional message |
 | `GetUserId()` | Extension method — DRY UserId extraction |
 | Dashboard | One query aggregating data from 4 services |
 
@@ -371,5 +416,5 @@ query {
 
 ## Next Lesson
 
-**Lesson 3 — Testing GraphQL with Banana Cake Pop**
-We will run the API and test every query and mutation using the built-in GraphQL IDE.
+**Lesson 3 — GraphQL Engineering Deep Dive**
+We’ll go one level deeper into execution, variables, aliases, introspection, and why GraphQL fits a client like this finance app so well.

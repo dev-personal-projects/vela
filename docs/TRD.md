@@ -7,7 +7,7 @@
 
 | Layer | Technology |
 |---|---|
-| API | .NET 10, Hot Chocolate 14 (GraphQL) |
+| API | .NET 10, Hot Chocolate 15 (GraphQL) |
 | Architecture | Clean Architecture |
 | Database | Supabase (PostgreSQL) |
 | Auth | Supabase Auth (credential verification) + own JWT tokens |
@@ -27,7 +27,7 @@ flowchart TB
 
     subgraph API Layer
         GQL[GraphQL\nQuery / Mutation]
-        AUTH[JWT Middleware\nSupabase token validation]
+        AUTH[JWT Middleware\nAPI token validation]
     end
 
     subgraph Application Layer
@@ -57,7 +57,7 @@ flowchart TB
     SVC --> REP
     REP --> EF
     EF --> SUPA_DB
-    AUTH -.validates token.-> SUPA_AUTH
+    AUTH -.signs in via auth service.-> SUPA_AUTH
     SVC --> RES
 ```
 
@@ -192,10 +192,10 @@ flowchart LR
     Q[Query Root\n🔒 Authenticated]
 
     Q --> QH[health: String\n🔓 public]
-    Q --> QI[incomes: Income list\nfilter by date / source]
-    Q --> QE[expenses: Expense list\nfilter by date / category]
+    Q --> QI[incomes: Income list\noptional fromDate / toDate / source]
+    Q --> QE[expenses: Expense list\noptional fromDate / toDate / category]
     Q --> QS[savingsGoals: SavingsGoal list]
-    Q --> QL[loans: Loan list\nfilter by type]
+    Q --> QL[loans: Loan list\noptional type]
     Q --> QD[dashboard: DashboardSummary]
 ```
 
