@@ -10,3 +10,7 @@ public sealed record UpdateSavingsGoalInput(
     string Name,
     decimal TargetAmount,
     DateTime? Deadline);
+
+public sealed record AddSavingsContributionInput(
+    Guid Id,
+    decimal Amount);

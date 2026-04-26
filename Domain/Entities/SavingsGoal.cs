@@ -77,4 +77,19 @@ public sealed class SavingsGoal
 
         CurrentAmount = newAmount;
     }
+
+    public void AddContribution(decimal amount)
+    {
+        if (amount <= 0)
+        {
+            throw new ArgumentException("Contribution amount must be greater than 0.", nameof(amount));
+        }
+
+        if (CurrentAmount + amount > TargetAmount)
+        {
+            throw new ArgumentException("Contribution would exceed the target amount.", nameof(amount));
+        }
+
+        CurrentAmount += amount;
+    }
 }

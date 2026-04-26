@@ -159,6 +159,7 @@ type Mutation {
   signUp(input: SignUpInput!): SignUpPayloadResult!
   signIn(input: SignInInput!): SignInPayloadResult!
   addIncome(input: AddIncomeInput!): IncomePayload!
+  addSavingsContribution(input: AddSavingsContributionInput!): SavingsGoalPayload!
 }
 
 type Income {
@@ -373,6 +374,7 @@ flowchart TB
         IM[addIncome mutation]
         EM[addExpense mutation]
         SM[createSavingsGoal mutation]
+        SCM[addSavingsContribution mutation]
         LM[addLoan mutation]
         RM[recordRepayment mutation]
     end

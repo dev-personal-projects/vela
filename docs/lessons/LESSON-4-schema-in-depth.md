@@ -38,6 +38,7 @@ type Mutation {
   addIncome(input: AddIncomeInput!): IncomePayload!
   addExpense(input: AddExpenseInput!): ExpensePayload!
   createSavingsGoal(input: CreateSavingsGoalInput!): SavingsGoalPayload!
+  addSavingsContribution(input: AddSavingsContributionInput!): SavingsGoalPayload!
   addLoan(input: AddLoanInput!): LoanPayload!
   recordRepayment(input: RecordRepaymentInput!): LoanPayload!
 }
@@ -343,9 +344,10 @@ flowchart TB
         M1[addIncome]
         M2[addExpense]
         M3[createSavingsGoal]
-        M4[addLoan]
-        M5[recordRepayment]
-        M6[updateSavingsProgress]
+        M4[addSavingsContribution]
+        M5[addLoan]
+        M6[recordRepayment]
+        M7[updateSavingsProgress]
     end
 
     subgraph Object Types
@@ -362,8 +364,9 @@ flowchart TB
         I1[AddIncomeInput]
         I2[AddExpenseInput]
         I3[CreateSavingsGoalInput]
-        I4[AddLoanInput]
-        I5[RecordRepaymentInput]
+        I4[AddSavingsContributionInput]
+        I5[AddLoanInput]
+        I6[RecordRepaymentInput]
     end
 
     subgraph Payload Types

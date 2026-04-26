@@ -208,6 +208,7 @@ flowchart LR
     M --> MI[addIncome\nAddIncomeInput\n→ IncomePayload]
     M --> ME[addExpense\nAddExpenseInput\n→ ExpensePayload]
     M --> MS[createSavingsGoal\nCreateSavingsGoalInput\n→ SavingsGoalPayload]
+    M --> MS2[addSavingsContribution\nAddSavingsContributionInput\n→ SavingsGoalPayload]
     M --> ML1[addLoan\nAddLoanInput\n→ LoanPayload]
     M --> ML2[recordRepayment\nRecordRepaymentInput\n→ LoanPayload]
 ```

@@ -171,6 +171,22 @@ public sealed class Mutation
     }
 
     [Authorize]
+    public async Task<SavingsGoalPayload> AddSavingsContribution(
+        AddSavingsContributionInput input,
+        [Service] ISavingsGoalService service,
+        ClaimsPrincipal claimsPrincipal,
+        CancellationToken cancellationToken)
+    {
+        var userId = claimsPrincipal.GetUserId();
+        return await ExecuteUpdateAsync(
+            () => service.AddContributionAsync(input, userId, cancellationToken),
+            value => new SavingsGoalPayload(value, null, "Savings contribution added successfully."),
+            errors => new SavingsGoalPayload(null, errors, null),
+            "savings contribution",
+            cancellationToken);
+    }
+
+    [Authorize]
     public async Task<SavingsGoalPayload> UpdateSavingsProgress(
         Guid id,
         decimal newAmount,

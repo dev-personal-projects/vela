@@ -69,6 +69,7 @@ flowchart TB
         MED[deleteExpense\nauthenticated]
         MS[createSavingsGoal\nauthenticated]
         MSU2[updateSavingsGoal\nauthenticated]
+        MSC[addSavingsContribution\nauthenticated]
         MSP[updateSavingsProgress\nauthenticated]
         MSD[deleteSavingsGoal\nauthenticated]
         ML[addLoan\nauthenticated]
@@ -204,10 +205,12 @@ flowchart LR
 
     subgraph Mutation
         MS[createSavingsGoal\nCreateSavingsGoalInput\nreturns SavingsGoalPayload]
+        MSC[addSavingsContribution\nAddSavingsContributionInput\nreturns SavingsGoalPayload]
     end
 
     QS --> SS[SavingsGoalService.GetAllAsync]
     MS --> SS2[SavingsGoalService.CreateAsync]
+    MSC --> SS3[SavingsGoalService.AddContributionAsync]
 ```
 
 ---
@@ -317,6 +320,7 @@ sequenceDiagram
 | `deleteExpense` | required | `id` | `DeletePayload` |
 | `createSavingsGoal` | required | `CreateSavingsGoalInput` | `SavingsGoalPayload` |
 | `updateSavingsGoal` | required | `UpdateSavingsGoalInput` | `SavingsGoalPayload` |
+| `addSavingsContribution` | required | `AddSavingsContributionInput` | `SavingsGoalPayload` |
 | `updateSavingsProgress` | required | `id`, `newAmount` | `SavingsGoalPayload` |
 | `deleteSavingsGoal` | required | `id` | `DeletePayload` |
 | `addLoan` | required | `AddLoanInput` | `LoanPayload` |

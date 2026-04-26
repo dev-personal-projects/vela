@@ -72,6 +72,32 @@ public sealed class SavingsGoalService(ISavingsGoalRepository repository) : ISav
         return AppResult<SavingsGoal>.Ok(goal);
     }
 
+    public async Task<AppResult<SavingsGoal>> AddContributionAsync(AddSavingsContributionInput input, Guid userId, CancellationToken ct = default)
+    {
+        var goal = await repository.GetByIdAsync(input.Id, userId, ct);
+
+        if (goal is null)
+        {
+            return AppResult<SavingsGoal>.Fail("Savings goal not found.");
+        }
+
+        if (input.Amount <= 0)
+        {
+            return AppResult<SavingsGoal>.Fail("Contribution amount must be greater than 0.");
+        }
+
+        if (goal.CurrentAmount + input.Amount > goal.TargetAmount)
+        {
+            return AppResult<SavingsGoal>.Fail("Contribution would exceed the target amount.");
+        }
+
+        goal.AddContribution(input.Amount);
+
+        await repository.UpdateAsync(goal, ct);
+
+        return AppResult<SavingsGoal>.Ok(goal);
+    }
+
     public async Task<AppResult<SavingsGoal>> UpdateProgressAsync(Guid id, decimal newAmount, Guid userId, CancellationToken ct = default)
     {
         var goal = await repository.GetByIdAsync(id, userId, ct);

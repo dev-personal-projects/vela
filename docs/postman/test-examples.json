@@ -7,9 +7,11 @@
       "Step 2 — Sign In (request 6) to get your JWT token",
       "Step 3 — Copy the accessToken from the Sign In response",
       "Step 4 — Paste it as: Authorization: Bearer <accessToken>",
-      "Step 5 — Run requests in the testing_order below"
+      "Step 5 — For GraphQL requests, send the value inside requests[n].body.query as the POST body JSON",
+      "Step 6 — Use expected_response only as a reference for what should come back, not as the request body",
+      "Step 7 — Run requests in the testing_order below"
     ],
-    "note": "Always copy the id from an Add or GetAll response before running GetById, Update, or Delete"
+    "note": "Always copy the id from an Add or GetAll response before running GetById, Update, or Delete. For GraphQL, the request you send is always the JSON object in body, usually with a query property."
   },
 
   "requests": [
@@ -344,18 +346,34 @@
     },
 
     {
-      "id": 26,
-      "name": "Update Savings Progress",
-      "description": "Updates the current saved amount toward the goal.",
+      "id": 40,
+      "name": "Add Savings Contribution",
+      "description": "Adds a contribution amount to the current saved balance. Use this for normal contributions toward the goal.",
       "method": "POST",
       "url": "http://localhost:8080/graphql",
       "headers": { "Content-Type": "application/json", "Authorization": "Bearer <JWT_TOKEN>" },
       "body": {
-        "query": "mutation { updateSavingsProgress(id: \"<PASTE_ID>\", newAmount: 2500.00) { savingsGoal { id name currentAmount targetAmount progress } message errors } }"
+        "query": "mutation { addSavingsContribution(input: { id: \"<PASTE_ID>\", amount: 2500.00 }) { savingsGoal { id name currentAmount targetAmount progress } message errors } }"
       },
       "expected_response": {
         "status": 200,
-        "body": { "data": { "updateSavingsProgress": { "savingsGoal": { "id": "<uuid>", "name": "Emergency Fund - Updated", "currentAmount": 2500.00, "targetAmount": 15000.00, "progress": 16.67 }, "message": "Savings progress updated successfully.", "errors": null } } }
+        "body": { "data": { "addSavingsContribution": { "savingsGoal": { "id": "<uuid>", "name": "Emergency Fund - Updated", "currentAmount": 2500.00, "targetAmount": 15000.00, "progress": 16.67 }, "message": "Savings contribution added successfully.", "errors": null } } }
+      }
+    },
+
+    {
+      "id": 26,
+      "name": "Update Savings Progress",
+      "description": "Sets the total saved amount directly. Use this when you want to correct or override the saved balance.",
+      "method": "POST",
+      "url": "http://localhost:8080/graphql",
+      "headers": { "Content-Type": "application/json", "Authorization": "Bearer <JWT_TOKEN>" },
+      "body": {
+        "query": "mutation { updateSavingsProgress(id: \"<PASTE_ID>\", newAmount: 6500.00) { savingsGoal { id name currentAmount targetAmount progress } message errors } }"
+      },
+      "expected_response": {
+        "status": 200,
+        "body": { "data": { "updateSavingsProgress": { "savingsGoal": { "id": "<uuid>", "name": "Emergency Fund - Updated", "currentAmount": 6500.00, "targetAmount": 15000.00, "progress": 43.33 }, "message": "Savings progress updated successfully.", "errors": null } } }
       }
     },
 
@@ -484,7 +502,7 @@
       },
       "expected_response": {
         "status": 200,
-        "body": { "data": { "dashboard": { "totalIncome": 5000.00, "totalExpenses": 120.50, "netBalance": 4879.50, "savingsProgress": [{ "name": "Emergency Fund - Updated", "progress": 16.67 }], "loanSummary": { "totalOwed": 1500.00, "totalGiven": 0.00 } } } }
+        "body": { "data": { "dashboard": { "totalIncome": 5000.00, "totalExpenses": 120.50, "netBalance": 4879.50, "savingsProgress": [{ "name": "Emergency Fund - Updated", "progress": 43.33 }], "loanSummary": { "totalOwed": 1500.00, "totalGiven": 0.00 } } } }
       }
     },
 
@@ -576,6 +594,7 @@
     "23 — Get All Savings Goals       POST /graphql",
     "24 — Get Savings Goal By Id      POST /graphql             → paste id",
     "25 — Update Savings Goal         POST /graphql             → paste id",
+    "40 — Add Savings Contribution    POST /graphql             → paste id",
     "26 — Update Savings Progress     POST /graphql             → paste id",
     "27 — Delete Savings Goal         POST /graphql             → paste id",
     "--- Loans (full CRUD) ---",
