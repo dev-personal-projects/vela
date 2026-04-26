@@ -53,6 +53,15 @@ type Income {
   createdAt: DateTime!
 }
 
+type SavingsGoal {
+  id: UUID!
+  name: String!
+  targetAmount: Decimal!
+  currentAmount: Decimal!
+  remainingAmount: Decimal!
+  progress: Decimal!
+}
+
 # Input types — used only in mutations
 input AddIncomeInput {
   amount: Decimal!

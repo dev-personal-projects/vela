@@ -10,6 +10,8 @@ public sealed class SavingsGoal
     public DateTime? Deadline { get; private set; }
     public DateTime CreatedAt { get; }
 
+    public decimal RemainingAmount => TargetAmount - CurrentAmount;
+
     public decimal Progress =>
         TargetAmount == 0 ? 0 : Math.Round(CurrentAmount / TargetAmount * 100, 2);
 

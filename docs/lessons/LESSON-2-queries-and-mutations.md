@@ -295,6 +295,7 @@ query {
     netBalance
     savingsProgress {
       name
+      remainingAmount
       progress
     }
     loanSummary {
@@ -394,7 +395,7 @@ query {
 - Use `[Service]` injection when the resolver needs application logic such as validation, persistence, or aggregation.
 - Use `ClaimsPrincipal` when the result must be scoped to the authenticated user instead of trusting a client-supplied `userId`.
 - Use payload types when the client should always receive a stable shape with either data or friendly validation errors.
-- Use a composed query like `dashboard` when the UI needs totals, savings progress, and loan summaries in one round trip.
+- Use a composed query like `dashboard` when the UI needs totals, savings progress, remaining amounts, and loan summaries in one round trip.
 
 ---
 

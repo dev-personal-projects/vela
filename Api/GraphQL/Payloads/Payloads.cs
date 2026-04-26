@@ -29,6 +29,7 @@ public sealed record SavingsGoalProgress(
     string Name,
     decimal TargetAmount,
     decimal CurrentAmount,
+    decimal RemainingAmount,
     decimal Progress);
 
 public sealed record LoanSummary(decimal TotalOwed, decimal TotalGiven);

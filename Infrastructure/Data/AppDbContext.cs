@@ -60,6 +60,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
             e.Property(x => x.CurrentAmount).HasColumnName("current_amount").HasColumnType("numeric(18,2)").IsRequired();
             e.Property(x => x.Deadline).HasColumnName("deadline");
             e.Property(x => x.CreatedAt).HasColumnName("created_at").IsRequired();
+            e.Ignore(x => x.RemainingAmount);
             e.Ignore(x => x.Progress);
 
             e.Property(x => x.UserId).Metadata.SetAfterSaveBehavior(PropertySaveBehavior.Ignore);

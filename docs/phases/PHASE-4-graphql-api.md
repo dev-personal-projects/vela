@@ -244,7 +244,7 @@ flowchart TD
     DQ --> TI[totalIncome\nSUM of all income amounts]
     DQ --> TE[totalExpenses\nSUM of all expense amounts]
     DQ --> NB[netBalance\ntotalIncome minus totalExpenses]
-    DQ --> SP[savingsProgress\nlist of goals with percentage]
+    DQ --> SP[savingsProgress\nlist of goals with current / remaining / percentage]
     DQ --> LS[loanSummary\ntotalOwed and totalGiven]
 ```
 

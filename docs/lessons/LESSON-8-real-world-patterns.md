@@ -123,6 +123,9 @@ public sealed class SavingsGoal
     public decimal CurrentAmount { get; private set; }
 
     // Computed — not stored in DB
+    public decimal RemainingAmount => TargetAmount - CurrentAmount;
+
+    // Computed — not stored in DB
     public decimal Progress =>
         TargetAmount == 0 ? 0 : Math.Round(CurrentAmount / TargetAmount * 100, 2);
 }
@@ -133,11 +136,12 @@ In `AppDbContext` we tell EF Core to ignore them:
 ```csharp
 modelBuilder.Entity<SavingsGoal>(e =>
 {
+    e.Ignore(x => x.RemainingAmount); // ← not a column
     e.Ignore(x => x.Progress);  // ← not a column
 });
 ```
 
-But Hot Chocolate still exposes them in the GraphQL schema — the client can query `progress` and gets the calculated value.
+But Hot Chocolate still exposes them in the GraphQL schema — the client can query `remainingAmount` and `progress` and gets the calculated values.
 
 ```graphql
 query {
@@ -145,6 +149,7 @@ query {
     name
     targetAmount
     currentAmount
+    remainingAmount
     progress    # calculated in C#, not stored in DB
   }
 }

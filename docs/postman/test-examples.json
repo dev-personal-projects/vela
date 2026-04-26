@@ -297,11 +297,11 @@
       "url": "http://localhost:8080/graphql",
       "headers": { "Content-Type": "application/json", "Authorization": "Bearer <JWT_TOKEN>" },
       "body": {
-        "query": "mutation { createSavingsGoal(input: { name: \"Emergency Fund\", targetAmount: 10000.00, deadline: \"2025-12-31T00:00:00Z\" }) { savingsGoal { id name targetAmount currentAmount progress deadline } message errors } }"
+        "query": "mutation { createSavingsGoal(input: { name: \"Emergency Fund\", targetAmount: 10000.00, deadline: \"2025-12-31T00:00:00Z\" }) { savingsGoal { id name targetAmount currentAmount remainingAmount progress deadline } message errors } }"
       },
       "expected_response": {
         "status": 200,
-        "body": { "data": { "createSavingsGoal": { "savingsGoal": { "id": "<uuid>", "name": "Emergency Fund", "targetAmount": 10000.00, "currentAmount": 0.00, "progress": 0.00, "deadline": "2025-12-31T00:00:00Z" }, "message": "Savings goal created successfully.", "errors": null } } }
+        "body": { "data": { "createSavingsGoal": { "savingsGoal": { "id": "<uuid>", "name": "Emergency Fund", "targetAmount": 10000.00, "currentAmount": 0.00, "remainingAmount": 10000.00, "progress": 0.00, "deadline": "2025-12-31T00:00:00Z" }, "message": "Savings goal created successfully.", "errors": null } } }
       }
     },
 
@@ -311,10 +311,10 @@
       "method": "POST",
       "url": "http://localhost:8080/graphql",
       "headers": { "Content-Type": "application/json", "Authorization": "Bearer <JWT_TOKEN>" },
-      "body": { "query": "{ savingsGoals { id name targetAmount currentAmount progress deadline } }" },
+      "body": { "query": "{ savingsGoals { id name targetAmount currentAmount remainingAmount progress deadline } }" },
       "expected_response": {
         "status": 200,
-        "body": { "data": { "savingsGoals": [{ "id": "<uuid>", "name": "Emergency Fund", "targetAmount": 10000.00, "currentAmount": 0.00, "progress": 0.00 }] } }
+        "body": { "data": { "savingsGoals": [{ "id": "<uuid>", "name": "Emergency Fund", "targetAmount": 10000.00, "currentAmount": 0.00, "remainingAmount": 10000.00, "progress": 0.00 }] } }
       }
     },
 
@@ -324,17 +324,17 @@
       "method": "POST",
       "url": "http://localhost:8080/graphql",
       "headers": { "Content-Type": "application/json", "Authorization": "Bearer <JWT_TOKEN>" },
-      "body": { "query": "{ savingsGoal(id: \"<PASTE_ID>\") { id name targetAmount currentAmount progress deadline } }" },
+      "body": { "query": "{ savingsGoal(id: \"<PASTE_ID>\") { id name targetAmount currentAmount remainingAmount progress deadline } }" },
       "expected_response": {
         "status": 200,
-        "body": { "data": { "savingsGoal": { "id": "<uuid>", "name": "Emergency Fund", "targetAmount": 10000.00, "currentAmount": 0.00, "progress": 0.00 } } }
+        "body": { "data": { "savingsGoal": { "id": "<uuid>", "name": "Emergency Fund", "targetAmount": 10000.00, "currentAmount": 0.00, "remainingAmount": 10000.00, "progress": 0.00 } } }
       }
     },
 
     {
       "id": 25,
       "name": "Update Savings Goal",
-      "description": "Updates name, targetAmount and deadline. Cannot set targetAmount below currentAmount.",
+      "description": "Updates name, targetAmount and deadline. Cannot set targetAmount below currentAmount. Query remainingAmount if you want the updated balance left to save.",
       "method": "POST",
       "url": "http://localhost:8080/graphql",
       "headers": { "Content-Type": "application/json", "Authorization": "Bearer <JWT_TOKEN>" },
@@ -355,27 +355,27 @@
       "url": "http://localhost:8080/graphql",
       "headers": { "Content-Type": "application/json", "Authorization": "Bearer <JWT_TOKEN>" },
       "body": {
-        "query": "mutation { addSavingsContribution(input: { id: \"<PASTE_ID>\", amount: 2500.00 }) { savingsGoal { id name currentAmount targetAmount progress } message errors } }"
+        "query": "mutation { addSavingsContribution(input: { id: \"<PASTE_ID>\", amount: 2500.00 }) { savingsGoal { id name currentAmount targetAmount remainingAmount progress } message errors } }"
       },
       "expected_response": {
         "status": 200,
-        "body": { "data": { "addSavingsContribution": { "savingsGoal": { "id": "<uuid>", "name": "Emergency Fund - Updated", "currentAmount": 2500.00, "targetAmount": 15000.00, "progress": 16.67 }, "message": "Savings contribution added successfully.", "errors": null } } }
+        "body": { "data": { "addSavingsContribution": { "savingsGoal": { "id": "<uuid>", "name": "Emergency Fund - Updated", "currentAmount": 2500.00, "targetAmount": 15000.00, "remainingAmount": 12500.00, "progress": 16.67 }, "message": "Savings contribution added successfully.", "errors": null } } }
       }
     },
 
     {
       "id": 26,
       "name": "Update Savings Progress",
-      "description": "Sets the total saved amount directly. Use this when you want to correct or override the saved balance.",
+      "description": "Sets the total saved amount directly. Use this when you want to correct or override the saved balance. Query remainingAmount if you also want the amount still left to save.",
       "method": "POST",
       "url": "http://localhost:8080/graphql",
       "headers": { "Content-Type": "application/json", "Authorization": "Bearer <JWT_TOKEN>" },
       "body": {
-        "query": "mutation { updateSavingsProgress(id: \"<PASTE_ID>\", newAmount: 6500.00) { savingsGoal { id name currentAmount targetAmount progress } message errors } }"
+        "query": "mutation { updateSavingsProgress(id: \"<PASTE_ID>\", newAmount: 6500.00) { savingsGoal { id name currentAmount targetAmount remainingAmount progress } message errors } }"
       },
       "expected_response": {
         "status": 200,
-        "body": { "data": { "updateSavingsProgress": { "savingsGoal": { "id": "<uuid>", "name": "Emergency Fund - Updated", "currentAmount": 6500.00, "targetAmount": 15000.00, "progress": 43.33 }, "message": "Savings progress updated successfully.", "errors": null } } }
+        "body": { "data": { "updateSavingsProgress": { "savingsGoal": { "id": "<uuid>", "name": "Emergency Fund - Updated", "currentAmount": 6500.00, "targetAmount": 15000.00, "remainingAmount": 8500.00, "progress": 43.33 }, "message": "Savings progress updated successfully.", "errors": null } } }
       }
     },
 
@@ -500,11 +500,11 @@
       "url": "http://localhost:8080/graphql",
       "headers": { "Content-Type": "application/json", "Authorization": "Bearer <JWT_TOKEN>" },
       "body": {
-        "query": "{ dashboard { totalIncome totalExpenses netBalance savingsProgress { id name targetAmount currentAmount progress } loanSummary { totalOwed totalGiven } } }"
+        "query": "{ dashboard { totalIncome totalExpenses netBalance savingsProgress { id name targetAmount currentAmount remainingAmount progress } loanSummary { totalOwed totalGiven } } }"
       },
       "expected_response": {
         "status": 200,
-        "body": { "data": { "dashboard": { "totalIncome": 5000.00, "totalExpenses": 120.50, "netBalance": 4879.50, "savingsProgress": [{ "name": "Emergency Fund - Updated", "progress": 43.33 }], "loanSummary": { "totalOwed": 1500.00, "totalGiven": 0.00 } } } }
+        "body": { "data": { "dashboard": { "totalIncome": 5000.00, "totalExpenses": 120.50, "netBalance": 4879.50, "savingsProgress": [{ "name": "Emergency Fund - Updated", "targetAmount": 15000.00, "currentAmount": 6500.00, "remainingAmount": 8500.00, "progress": 43.33 }], "loanSummary": { "totalOwed": 1500.00, "totalGiven": 0.00 } } } }
       }
     },
 

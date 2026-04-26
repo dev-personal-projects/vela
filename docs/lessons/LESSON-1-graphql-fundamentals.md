@@ -266,6 +266,11 @@ query {
     counterpartyName
     remainingBalance
   }
+  savingsGoals {
+    id
+    name
+    remainingAmount
+  }
 }
 ```
 

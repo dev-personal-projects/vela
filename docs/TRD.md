@@ -133,6 +133,7 @@ classDiagram
         +string Name
         +decimal TargetAmount
         +decimal CurrentAmount
+        +decimal RemainingAmount()
         +DateTime Deadline
         +DateTime CreatedAt
         +decimal Progress()
@@ -266,7 +267,7 @@ flowchart TD
     DQ --> TI[totalIncome\nSUM of all income]
     DQ --> TE[totalExpenses\nSUM of all expenses]
     DQ --> NB[netBalance\ntotalIncome - totalExpenses]
-    DQ --> SP[savingsProgress\nlist of goals with % progress]
+    DQ --> SP[savingsProgress\nlist of goals with current, remaining, and % progress]
     DQ --> LS[loanSummary\ntotal owed / total given]
 ```
 

@@ -152,7 +152,7 @@ public sealed class Query
         var totalExpenses = expenses.Sum(x => x.Amount);
 
         var savingsProgress = savingsGoals
-            .Select(g => new SavingsGoalProgress(g.Id, g.Name, g.TargetAmount, g.CurrentAmount, g.Progress))
+            .Select(g => new SavingsGoalProgress(g.Id, g.Name, g.TargetAmount, g.CurrentAmount, g.RemainingAmount, g.Progress))
             .ToList();
 
         var loanSummary = new LoanSummary(

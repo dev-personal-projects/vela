@@ -452,7 +452,7 @@ query {
     totalIncome
     totalExpenses
     netBalance
-    savingsProgress { name progress }
+    savingsProgress { name remainingAmount progress }
     loanSummary { totalOwed totalGiven }
   }
 }
