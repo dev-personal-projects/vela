@@ -26,6 +26,10 @@ public sealed class DashboardCacheService(
     {
         if (!_options.Enabled)
         {
+            logger.LogDebug(
+                "Dashboard cache disabled for user {UserId}. Filters={Filters}",
+                userId,
+                FormatFilters(fromDate, toDate, activityLimit));
             return null;
         }
 
@@ -35,16 +39,45 @@ public sealed class DashboardCacheService(
 
         if (string.IsNullOrWhiteSpace(payload))
         {
+            logger.LogInformation(
+                "Dashboard cache miss for user {UserId}. Filters={Filters} Version={Version}",
+                userId,
+                FormatFilters(fromDate, toDate, activityLimit),
+                version);
             return null;
         }
 
         try
         {
-            return JsonSerializer.Deserialize<DashboardSummary>(payload, _jsonOptions);
+            var dashboard = JsonSerializer.Deserialize<DashboardSummary>(payload, _jsonOptions);
+
+            if (dashboard is null)
+            {
+                logger.LogWarning(
+                    "Dashboard cache payload deserialized to null for user {UserId}. Filters={Filters} Version={Version}",
+                    userId,
+                    FormatFilters(fromDate, toDate, activityLimit),
+                    version);
+                await cache.RemoveAsync(cacheKey, ct);
+                return null;
+            }
+
+            logger.LogInformation(
+                "Dashboard cache hit for user {UserId}. Filters={Filters} Version={Version}",
+                userId,
+                FormatFilters(fromDate, toDate, activityLimit),
+                version);
+
+            return dashboard;
         }
         catch (JsonException ex)
         {
-            logger.LogWarning(ex, "Failed to deserialize cached dashboard response for user {UserId}.", userId);
+            logger.LogWarning(
+                ex,
+                "Failed to deserialize cached dashboard response for user {UserId}. Filters={Filters} Version={Version}",
+                userId,
+                FormatFilters(fromDate, toDate, activityLimit),
+                version);
             await cache.RemoveAsync(cacheKey, ct);
             return null;
         }
@@ -60,6 +93,10 @@ public sealed class DashboardCacheService(
     {
         if (!_options.Enabled)
         {
+            logger.LogDebug(
+                "Dashboard cache store skipped because caching is disabled for user {UserId}. Filters={Filters}",
+                userId,
+                FormatFilters(fromDate, toDate, activityLimit));
             return;
         }
 
@@ -75,23 +112,38 @@ public sealed class DashboardCacheService(
                 AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(Math.Max(1, _options.TtlSeconds))
             },
             ct);
+
+        logger.LogInformation(
+            "Dashboard cache stored for user {UserId}. Filters={Filters} Version={Version} TtlSeconds={TtlSeconds}",
+            userId,
+            FormatFilters(fromDate, toDate, activityLimit),
+            version,
+            Math.Max(1, _options.TtlSeconds));
     }
 
     public async Task InvalidateUserAsync(Guid userId, CancellationToken ct = default)
     {
         if (!_options.Enabled)
         {
+            logger.LogDebug("Dashboard cache invalidation skipped because caching is disabled for user {UserId}.", userId);
             return;
         }
 
+        var newVersion = Guid.NewGuid().ToString("N");
+
         await cache.SetStringAsync(
             BuildVersionKey(userId),
-            Guid.NewGuid().ToString("N"),
+            newVersion,
             new DistributedCacheEntryOptions
             {
                 AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(Math.Max(1, _options.VersionTtlHours))
             },
             ct);
+
+        logger.LogInformation(
+            "Dashboard cache invalidated for user {UserId}. NewVersion={Version}",
+            userId,
+            newVersion);
     }
 
     private async Task<string> GetVersionTokenAsync(Guid userId, CancellationToken ct)
@@ -115,6 +167,8 @@ public sealed class DashboardCacheService(
             },
             ct);
 
+        logger.LogDebug("Dashboard cache version initialized for user {UserId}. Version={Version}", userId, version);
+
         return version;
     }
 
@@ -137,4 +191,7 @@ public sealed class DashboardCacheService(
 
     private static string FormatDateSegment(DateTime? value) =>
         value.HasValue ? value.Value.ToUniversalTime().ToString("O") : "none";
+
+    private static string FormatFilters(DateTime? fromDate, DateTime? toDate, int activityLimit) =>
+        $"from={FormatDateSegment(fromDate)},to={FormatDateSegment(toDate)},activityLimit={activityLimit}";
 }
