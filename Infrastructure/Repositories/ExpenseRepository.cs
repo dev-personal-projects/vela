@@ -9,6 +9,7 @@ public sealed class ExpenseRepository(AppDbContext db) : IExpenseRepository
 {
     public Task<List<Expense>> GetAllAsync(Guid userId, CancellationToken ct = default) =>
         db.Expenses
+          .AsNoTracking()
           .Where(x => x.UserId == userId)
           .OrderByDescending(x => x.Date)
           .ToListAsync(ct);

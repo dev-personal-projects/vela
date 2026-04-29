@@ -13,6 +13,7 @@ public sealed class LoanRepository(AppDbContext db) : ILoanRepository
 
     public Task<List<Loan>> GetAllAsync(Guid userId, LoanType? type, CancellationToken ct = default) =>
         db.Loans
+          .AsNoTracking()
           .Where(x => x.UserId == userId)
           .Where(x => !type.HasValue || x.Type == type.Value)
           .OrderByDescending(x => x.Date)

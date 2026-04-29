@@ -8,12 +8,12 @@
 
 | Phase | Name | Focus | Status |
 |---|---|---|---|
-| [Phase 0](./PHASE-0-foundation.md) | Foundation | Project setup, Supabase, JWT, EF Core | 🚧 In Progress |
-| [Phase 1](./PHASE-1-domain.md) | Domain | Entities, enums, business rules | ⏳ Pending |
-| [Phase 2](./PHASE-2-infrastructure.md) | Infrastructure | DbContext, SQL migrations, repositories | ⏳ Pending |
-| [Phase 3](./PHASE-3-application.md) | Application | Services, DTOs, validation | ⏳ Pending |
-| [Phase 4](./PHASE-4-graphql-api.md) | GraphQL API | Queries, mutations, dashboard | ⏳ Pending |
-| [Phase 5](./PHASE-5-testing.md) | Testing | Unit, integration, auth isolation | ⏳ Pending |
+| [Phase 0](./PHASE-0-foundation.md) | Foundation | Project setup, Supabase, JWT, EF Core | ✅ Complete |
+| [Phase 1](./PHASE-1-domain.md) | Domain | Entities, enums, business rules | ✅ Complete |
+| [Phase 2](./PHASE-2-infrastructure.md) | Infrastructure | DbContext, SQL migrations, repositories, dashboard read model, caching infra | ✅ Complete |
+| [Phase 3](./PHASE-3-application.md) | Application | Services, DTOs, validation, dashboard orchestration, cache invalidation | ✅ Complete |
+| [Phase 4](./PHASE-4-graphql-api.md) | GraphQL API | Queries, mutations, dashboard, auth-protected resolver layer | ✅ Complete |
+| [Phase 5](./PHASE-5-testing.md) | Testing | Unit, integration, auth isolation | 🚧 Planned / Partial |
 
 ---
 
@@ -63,6 +63,8 @@ flowchart TB
         R2[ExpenseRepository]
         R3[SavingsGoalRepository]
         R4[LoanRepository]
+        R5[DashboardRepository]
+        R6[DashboardCacheService]
     end
 
     subgraph Phase 3 - Application
@@ -70,6 +72,7 @@ flowchart TB
         S2[ExpenseService]
         S3[SavingsGoalService]
         S4[LoanService]
+        S5[DashboardService]
     end
 
     subgraph Phase 4 - API
@@ -84,7 +87,7 @@ flowchart TB
     F2 --> D2 --> R2 --> S2 --> A2
     F3 --> D3 --> R3 --> S3 --> A3
     F4 --> D4 --> R4 --> S4 --> A4
-    F5 --> A5
+    F5 --> R5 --> S5 --> A5
 ```
 
 ---
@@ -188,3 +191,4 @@ gantt
 - Every repository query is scoped by `UserId`
 - No business logic in resolvers — services own all logic
 - No EF Core references in Domain or Application layers
+- Dashboard caching lives behind an application interface and infrastructure implementation

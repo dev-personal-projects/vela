@@ -5,7 +5,9 @@ using FinanceTracker.Domain.Entities;
 
 namespace FinanceTracker.Application.Services;
 
-public sealed class ExpenseService(IExpenseRepository repository) : IExpenseService
+public sealed class ExpenseService(
+    IExpenseRepository repository,
+    IDashboardCacheService dashboardCacheService) : IExpenseService
 {
     public async Task<AppResult<List<Expense>>> GetAllAsync(Guid userId, CancellationToken ct = default)
     {
@@ -42,6 +44,7 @@ public sealed class ExpenseService(IExpenseRepository repository) : IExpenseServ
         var expense = new Expense(userId, input.Amount, input.Category, input.Description, input.Date);
 
         await repository.AddAsync(expense, ct);
+        await dashboardCacheService.InvalidateUserAsync(userId, ct);
 
         return AppResult<Expense>.Ok(expense);
     }
@@ -73,6 +76,7 @@ public sealed class ExpenseService(IExpenseRepository repository) : IExpenseServ
         expense.Update(input.Amount, input.Category, input.Description, input.Date);
 
         await repository.UpdateAsync(expense, ct);
+        await dashboardCacheService.InvalidateUserAsync(userId, ct);
 
         return AppResult<Expense>.Ok(expense);
     }
@@ -80,6 +84,12 @@ public sealed class ExpenseService(IExpenseRepository repository) : IExpenseServ
     public async Task<AppResult> DeleteAsync(Guid id, Guid userId, CancellationToken ct = default)
     {
         var deleted = await repository.DeleteAsync(id, userId, ct);
+
+        if (deleted)
+        {
+            await dashboardCacheService.InvalidateUserAsync(userId, ct);
+        }
+
         return deleted ? AppResult.Ok() : AppResult.Fail("Expense record not found.");
     }
 }

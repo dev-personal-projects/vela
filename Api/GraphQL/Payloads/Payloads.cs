@@ -16,20 +16,3 @@ public sealed record SavingsGoalPayload(SavingsGoal? SavingsGoal, IReadOnlyList<
 public sealed record LoanPayload(Loan? Loan, IReadOnlyList<string>? Errors, string? Message);
 
 public sealed record DeletePayload(bool Success, IReadOnlyList<string>? Errors, string? Message);
-
-public sealed record DashboardSummary(
-    decimal TotalIncome,
-    decimal TotalExpenses,
-    decimal NetBalance,
-    IReadOnlyList<SavingsGoalProgress> SavingsProgress,
-    LoanSummary LoanSummary);
-
-public sealed record SavingsGoalProgress(
-    Guid Id,
-    string Name,
-    decimal TargetAmount,
-    decimal CurrentAmount,
-    decimal RemainingAmount,
-    decimal Progress);
-
-public sealed record LoanSummary(decimal TotalOwed, decimal TotalGiven);

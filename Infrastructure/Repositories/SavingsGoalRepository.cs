@@ -9,6 +9,7 @@ public sealed class SavingsGoalRepository(AppDbContext db) : ISavingsGoalReposit
 {
     public Task<List<SavingsGoal>> GetAllAsync(Guid userId, CancellationToken ct = default) =>
         db.SavingsGoals
+          .AsNoTracking()
           .Where(x => x.UserId == userId)
           .OrderByDescending(x => x.CreatedAt)
           .ToListAsync(ct);

@@ -14,6 +14,7 @@ public static class ServiceExtensions
         services.AddScoped<IExpenseService, ExpenseService>();
         services.AddScoped<ISavingsGoalService, SavingsGoalService>();
         services.AddScoped<ILoanService, LoanService>();
+        services.AddScoped<IDashboardService, DashboardService>();
 
         return services;
     }

@@ -54,7 +54,10 @@ public sealed class AuthService(ISupabaseAuthClient authClient, IApiTokenService
 
         var apiAccessToken = apiTokenService.CreateAccessToken(userId.Value);
 
-        return AppResult<SignInPayload>.Ok(new SignInPayload(apiAccessToken, string.Empty, "bearer"));
+        return AppResult<SignInPayload>.Ok(new SignInPayload(
+            apiAccessToken,
+            result.Value.RefreshToken,
+            result.Value.TokenType));
     }
 
     private static Guid? TryGetUserIdFromJwt(string token)

@@ -5,7 +5,9 @@ using FinanceTracker.Domain.Entities;
 
 namespace FinanceTracker.Application.Services;
 
-public sealed class SavingsGoalService(ISavingsGoalRepository repository) : ISavingsGoalService
+public sealed class SavingsGoalService(
+    ISavingsGoalRepository repository,
+    IDashboardCacheService dashboardCacheService) : ISavingsGoalService
 {
     public async Task<AppResult<List<SavingsGoal>>> GetAllAsync(Guid userId, CancellationToken ct = default)
     {
@@ -37,6 +39,7 @@ public sealed class SavingsGoalService(ISavingsGoalRepository repository) : ISav
         var goal = new SavingsGoal(userId, input.Name, input.TargetAmount, input.Deadline);
 
         await repository.AddAsync(goal, ct);
+        await dashboardCacheService.InvalidateUserAsync(userId, ct);
 
         return AppResult<SavingsGoal>.Ok(goal);
     }
@@ -68,6 +71,7 @@ public sealed class SavingsGoalService(ISavingsGoalRepository repository) : ISav
         goal.Update(input.Name, input.TargetAmount, input.Deadline);
 
         await repository.UpdateAsync(goal, ct);
+        await dashboardCacheService.InvalidateUserAsync(userId, ct);
 
         return AppResult<SavingsGoal>.Ok(goal);
     }
@@ -94,6 +98,7 @@ public sealed class SavingsGoalService(ISavingsGoalRepository repository) : ISav
         goal.AddContribution(input.Amount);
 
         await repository.UpdateAsync(goal, ct);
+        await dashboardCacheService.InvalidateUserAsync(userId, ct);
 
         return AppResult<SavingsGoal>.Ok(goal);
     }
@@ -120,6 +125,7 @@ public sealed class SavingsGoalService(ISavingsGoalRepository repository) : ISav
         goal.UpdateProgress(newAmount);
 
         await repository.UpdateAsync(goal, ct);
+        await dashboardCacheService.InvalidateUserAsync(userId, ct);
 
         return AppResult<SavingsGoal>.Ok(goal);
     }
@@ -127,6 +133,12 @@ public sealed class SavingsGoalService(ISavingsGoalRepository repository) : ISav
     public async Task<AppResult> DeleteAsync(Guid id, Guid userId, CancellationToken ct = default)
     {
         var deleted = await repository.DeleteAsync(id, userId, ct);
+
+        if (deleted)
+        {
+            await dashboardCacheService.InvalidateUserAsync(userId, ct);
+        }
+
         return deleted ? AppResult.Ok() : AppResult.Fail("Savings goal not found.");
     }
 }
