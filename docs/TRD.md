@@ -197,8 +197,9 @@ flowchart LR
     Q --> QI[incomes: Income list\noptional fromDate / toDate / source]
     Q --> QE[expenses: Expense list\noptional fromDate / toDate / category]
     Q --> QS[savingsGoals: SavingsGoal list]
-    Q --> QL[loans: Loan list\noptional type]
+    Q --> QL[loans: Loan list\noptional type / status]
     Q --> QD[dashboard: DashboardSummary]
+    Q --> QR[loanRepaymentHistory: LoanRepayment list]
 ```
 
 ### Mutations
@@ -213,6 +214,7 @@ flowchart LR
     M --> MS2[addSavingsContribution\nAddSavingsContributionInput\n→ SavingsGoalPayload]
     M --> ML1[addLoan\nAddLoanInput\n→ LoanPayload]
     M --> ML2[recordRepayment\nRecordRepaymentInput\n→ LoanPayload]
+    M --> ML3[settleLoan\nSettleLoanInput\n→ LoanPayload]
 ```
 
 ---

@@ -268,6 +268,22 @@ public sealed class Mutation
     }
 
     [Authorize]
+    public async Task<LoanPayload> SettleLoan(
+        SettleLoanInput input,
+        [Service] ILoanService service,
+        ClaimsPrincipal claimsPrincipal,
+        CancellationToken cancellationToken)
+    {
+        var userId = claimsPrincipal.GetUserId();
+        return await ExecuteUpdateAsync(
+            () => service.SettleAsync(input, userId, cancellationToken),
+            value => new LoanPayload(value, null, "Loan settled successfully."),
+            errors => new LoanPayload(null, errors, null),
+            "loan settlement",
+            cancellationToken);
+    }
+
+    [Authorize]
     public async Task<DeletePayload> DeleteLoan(
         Guid id,
         [Service] ILoanService service,

@@ -42,6 +42,7 @@ Finance Tracker is a personal finance management system that helps users take co
 - As a user, I want to record money I owe so I can track my liabilities
 - As a user, I want to record money I lent so I can track what others owe me
 - As a user, I want to see repayment progress for each loan
+- As a user, I want to see repayment history for each loan
 
 ### 📊 Dashboard
 - As a user, I want to see my total income, expenses, and net balance at a glance

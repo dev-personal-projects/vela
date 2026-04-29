@@ -11,6 +11,7 @@ public static class RepositoryExtensions
         services.AddScoped<IExpenseRepository, ExpenseRepository>();
         services.AddScoped<ISavingsGoalRepository, SavingsGoalRepository>();
         services.AddScoped<ILoanRepository, LoanRepository>();
+        services.AddScoped<ILoanRepaymentRepository, LoanRepaymentRepository>();
 
         return services;
     }

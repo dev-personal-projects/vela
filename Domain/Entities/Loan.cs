@@ -18,6 +18,12 @@ public sealed class Loan
 
     public decimal RemainingBalance => Amount - AmountRepaid;
     public bool IsSettled => AmountRepaid >= Amount;
+    public bool IsOverdue => !IsSettled && DueDate.HasValue && DueDate.Value < DateTime.UtcNow;
+    public LoanStatus Status => IsSettled
+        ? LoanStatus.Settled
+        : IsOverdue
+            ? LoanStatus.Overdue
+            : LoanStatus.Active;
 
     private Loan() { }
 
@@ -77,6 +83,21 @@ public sealed class Loan
         }
 
         AmountRepaid += repaymentAmount;
+    }
+
+    public void ReverseRepayment(decimal repaymentAmount)
+    {
+        if (repaymentAmount <= 0)
+        {
+            throw new ArgumentException("Repayment amount must be greater than 0.", nameof(repaymentAmount));
+        }
+
+        if (repaymentAmount > AmountRepaid)
+        {
+            throw new ArgumentException("Cannot reverse more than the amount already repaid.", nameof(repaymentAmount));
+        }
+
+        AmountRepaid -= repaymentAmount;
     }
 
     public void Update(string counterpartyName, string? counterpartyPhoneNumber, decimal amount, string description, DateTime? dueDate)

@@ -2,14 +2,27 @@ using FinanceTracker.Application.DTOs.Loan;
 using FinanceTracker.Application.Interfaces;
 using FinanceTracker.Domain.Common;
 using FinanceTracker.Domain.Entities;
+using FinanceTracker.Domain.Enums;
 
 namespace FinanceTracker.Application.Services;
 
-public sealed class LoanService(ILoanRepository repository) : ILoanService
+public sealed class LoanService(ILoanRepository repository, ILoanRepaymentRepository repaymentRepository) : ILoanService
 {
     public async Task<AppResult<List<Loan>>> GetAllAsync(Guid userId, CancellationToken ct = default)
     {
         var loans = await repository.GetAllAsync(userId, ct);
+        return AppResult<List<Loan>>.Ok(loans);
+    }
+
+    public async Task<AppResult<List<Loan>>> GetAllAsync(Guid userId, LoanType? type, LoanStatus? status, CancellationToken ct = default)
+    {
+        var loans = await repository.GetAllAsync(userId, type, ct);
+
+        if (status.HasValue)
+        {
+            loans = loans.Where(x => x.Status == status.Value).ToList();
+        }
+
         return AppResult<List<Loan>>.Ok(loans);
     }
 
@@ -20,6 +33,19 @@ public sealed class LoanService(ILoanRepository repository) : ILoanService
         return loan is null
             ? AppResult<Loan>.Fail("Loan not found.")
             : AppResult<Loan>.Ok(loan);
+    }
+
+    public async Task<AppResult<List<LoanRepayment>>> GetRepaymentHistoryAsync(Guid loanId, Guid userId, CancellationToken ct = default)
+    {
+        var loan = await repository.GetByIdAsync(loanId, userId, ct);
+
+        if (loan is null)
+        {
+            return AppResult<List<LoanRepayment>>.Fail("Loan not found.");
+        }
+
+        var repayments = await repaymentRepository.GetByLoanIdAsync(loanId, ct);
+        return AppResult<List<LoanRepayment>>.Ok(repayments);
     }
 
     public async Task<AppResult<Loan>> AddAsync(AddLoanInput input, Guid userId, CancellationToken ct = default)
@@ -101,9 +127,47 @@ public sealed class LoanService(ILoanRepository repository) : ILoanService
             return AppResult<Loan>.Fail($"Repayment amount exceeds the remaining balance of {loan.RemainingBalance:C}.");
         }
 
-        loan.Repay(input.Amount);
+        var repaymentDate = input.Date ?? DateTime.UtcNow;
 
-        await repository.UpdateAsync(loan, ct);
+        if (repaymentDate < loan.Date)
+        {
+            return AppResult<Loan>.Fail("Repayment date cannot be before the loan date.");
+        }
+
+        loan.Repay(input.Amount);
+        var repayment = new LoanRepayment(loan.Id, input.Amount, repaymentDate, input.Note);
+
+        await repaymentRepository.AddAsync(repayment, ct);
+
+        return AppResult<Loan>.Ok(loan);
+    }
+
+    public async Task<AppResult<Loan>> SettleAsync(SettleLoanInput input, Guid userId, CancellationToken ct = default)
+    {
+        var loan = await repository.GetByIdAsync(input.LoanId, userId, ct);
+
+        if (loan is null)
+        {
+            return AppResult<Loan>.Fail("Loan not found.");
+        }
+
+        if (loan.IsSettled)
+        {
+            return AppResult<Loan>.Fail("Loan is already settled.");
+        }
+
+        var settlementAmount = loan.RemainingBalance;
+        var settlementDate = input.Date ?? DateTime.UtcNow;
+
+        if (settlementDate < loan.Date)
+        {
+            return AppResult<Loan>.Fail("Repayment date cannot be before the loan date.");
+        }
+
+        loan.Repay(settlementAmount);
+        var repayment = new LoanRepayment(loan.Id, settlementAmount, settlementDate, input.Note);
+
+        await repaymentRepository.AddAsync(repayment, ct);
 
         return AppResult<Loan>.Ok(loan);
     }

@@ -21,4 +21,11 @@ public sealed record UpdateLoanInput(
 
 public sealed record RecordRepaymentInput(
     Guid LoanId,
-    decimal Amount);
+    decimal Amount,
+    DateTime? Date = null,
+    string? Note = null);
+
+public sealed record SettleLoanInput(
+    Guid LoanId,
+    DateTime? Date = null,
+    string? Note = null);
