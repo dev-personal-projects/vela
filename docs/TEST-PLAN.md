@@ -9,6 +9,28 @@ This document defines a practical, end-to-end testing strategy for the Finance T
 
 This plan is written so that a new contributor can implement tests incrementally without guessing what to cover.
 
+Related focused plans:
+- [UNIT-TEST-PLAN.md](/workspaces/finance-tracker-graphql/docs/UNIT-TEST-PLAN.md)
+- [INTEGRATION-TEST-PLAN.md](/workspaces/finance-tracker-graphql/docs/INTEGRATION-TEST-PLAN.md)
+- [TESTING-CONVENTIONS.md](/workspaces/finance-tracker-graphql/docs/TESTING-CONVENTIONS.md)
+- [CI-PLAN.md](/workspaces/finance-tracker-graphql/docs/CI-PLAN.md)
+
+## Testing Standard
+
+This codebase standardizes on **xUnit.net v3** for automated tests.
+
+That is the default and recommended framework for:
+- unit tests
+- integration tests
+- future API/E2E test layers
+
+Why xUnit:
+- modern .NET ecosystem alignment
+- strong IDE and `dotnet test` support
+- simple attribute model
+- clean parallelization and trait support
+- good fit for long-term maintainability in a professional .NET codebase
+
 ## Goals (What “Works Perfectly” Means)
 - Correctness: every feature behaves as specified on happy and failure paths.
 - Isolation: users can never read or modify another user’s data.
@@ -20,117 +42,282 @@ This plan is written so that a new contributor can implement tests incrementally
 - Load testing at production scale (separate performance workstream).
 - UI/client testing (out of scope for this backend repo).
 
-## Testing Pyramid (Recommended Split)
+## Current Scope
+For the next testing phase, the focus is:
+
+- unit tests
+- integration tests
+
+E2E coverage is intentionally deferred to a later iteration.
+
+## Testing Pyramid (Current Split)
 - Unit tests (majority): `Application/Services/*` and small pure helpers.
-- Integration tests (some): `Infrastructure/*` and DB behaviors.
-- API/E2E (some): `Api/GraphQL/*` and auth enforcement using in-process HTTP.
+- Integration tests (some): `Infrastructure/*`, database behavior, and cache integration behavior.
+- E2E/API tests: planned later, not part of the immediate implementation scope.
 
-## End-to-End (E2E) Tests
-E2E tests validate that the entire system behaves correctly from an external client perspective:
+## E2E Status
+E2E coverage is planned later.
 
-- HTTP request -> auth middleware -> GraphQL pipeline -> services -> repositories -> real database
-- Real serialization/deserialization and HTTP status codes
-- Real cross-user isolation guarantees
-
-### What Counts As E2E Here
-Recommended (fast and reliable):
-- In-process server using `WebApplicationFactory` with a real Postgres test database
-
-Optional (slower, but closer to prod):
-- Out-of-process server (`dotnet run`) + tests hit `http://localhost:8080` (smoke suite)
-
-Not recommended for PR gating:
-- Calling real Supabase Auth in E2E tests (flaky external dependency). Prefer test JWTs.
-
-### E2E Setup Strategy
-E2E tests should:
-- Use a real Postgres database (container/service) with a clean schema per run.
-- Use a fixed `Auth:JwtSecret` and generate JWTs in tests (no Supabase dependency).
-- Seed minimal data per scenario and clean up between tests (transaction rollback or database reset).
-
-Quickstart commands and env vars:
-- `docs/E2E-QUICKSTART.md`
-
-### E2E Scenarios (Must-Have)
-These tests should use HTTP requests (GraphQL POST) and assert both response body and status code.
-
-Auth and Access Control:
-- Unauthenticated request to protected query/mutation returns 401.
-- Expired token returns 401.
-- Valid token returns 200.
-- Sign-in response includes:
-  - non-empty API `accessToken`
-  - non-empty `refreshToken`
-  - `tokenType == "bearer"`
-
-Cross-User Isolation:
-- User A creates income/expense/savings/loan.
-- User B cannot read it (list excludes it; get-by-id returns null).
-- User B cannot update/delete it (payload returns not found; data remains unchanged).
-
-Mutation Contracts (User-Friendly Responses):
-- Successful update returns payload with `message` and `errors == null`.
-- Validation failure returns payload with `errors` and `message == null`.
-
-CRUD Journeys (Happy Path):
-- Income: add -> list -> update -> get-by-id -> delete -> verify missing.
-- Expense: add -> list -> update -> delete -> verify missing.
-- Savings: create -> update progress -> update fields -> delete -> verify missing.
-- Loan: add -> record repayment -> update -> delete -> verify missing.
-- Loan advanced flow: add -> record repayment with note/date -> query repayment history -> settle -> filter by status.
-
-Dashboard:
-- Seed known records and assert totals match expected sums.
-- Repeated dashboard request hits cache after the first read.
-- Dashboard cache is invalidated after successful dashboard-affecting writes.
-
-Resilience/Timeout (Regression Guard):
-- Simulate a slow DB call and verify the API returns a timeout error with guidance to refresh before retrying.
-
-### E2E Project (Proposed)
-Add `Tests/FinanceTracker.E2ETests/` if you want E2E explicitly separated from API tests.
-If you prefer fewer projects, keep E2E inside `FinanceTracker.ApiTests` and tag E2E tests via trait/category.
+Notes for later:
+- keep the current `docs/e2e-quickstart.md` guide as the starting point
+- do not let E2E planning block unit and integration implementation
+- when E2E work starts, reuse the auth, dashboard, and isolation scenarios already documented below
 
 ## Tooling
-- Test framework: `xUnit`
+- Test framework: `xUnit.net v3`
 - Mocking: `Moq` (or `NSubstitute` if preferred, but pick one)
-- Assertions: built-in xUnit assertions (optionally add FluentAssertions later)
-- API integration: `Microsoft.AspNetCore.Mvc.Testing` (`WebApplicationFactory`)
+- Assertions: built-in xUnit assertions by default
 - DB integration:
   - Preferred: local Postgres container for tests (Testcontainers or docker-compose)
   - Acceptable: dedicated Supabase “test” project (never production)
 
+### Recommended Package Baseline
+For the initial test projects, use:
+
+- `Microsoft.NET.Test.Sdk` `18.4.0`
+- `xunit.v3` `3.2.2`
+- `xunit.runner.visualstudio` `3.1.5`
+- `Moq` `4.20.72`
+
+Optional:
+
+- `FluentAssertions` `8.9.0`
+
+Why this baseline:
+- xUnit v3 keeps the project on the latest stable xUnit line
+- `xunit.runner.visualstudio` keeps local IDE and `dotnet test` discovery straightforward
+- `Microsoft.NET.Test.Sdk` stays current with modern test-host tooling
+- `Moq` is enough for service-layer isolation without overcomplicating setup
+- built-in xUnit assertions keep the first test phase consistent and lightweight
+
+---
+
+## Test Identification and Traceability
+
+Every meaningful test should be easy to track in logs, CI output, PR discussion, and failure triage.
+
+### Required Test Identity Pattern
+
+Each test should carry a unique case identifier in the method name, display name, or both.
+
+Recommended format:
+
+```text
+UT-<FEATURE>-<AREA>-<NUMBER>
+IT-<FEATURE>-<AREA>-<NUMBER>
+```
+
+Examples:
+- `UT-AUTH-SIGNIN-001`
+- `UT-DASHBOARD-CACHE-003`
+- `IT-DASHBOARD-REPOSITORY-005`
+- `IT-LOAN-REPAYMENT-002`
+
+### Naming Standard
+
+Use test names that include:
+- the unique identifier
+- the scenario
+- the expected outcome
+
+Recommended style:
+
+```text
+UT_DASHBOARD_CACHE_001_ReturnsCachedSummary_WhenCacheHit
+IT_LOAN_REPOSITORY_002_DeletesOnlyCurrentUsersLoan
+```
+
+### xUnit Display Names
+
+Use xUnit display names for readability in test runners and CI output.
+
+Recommended pattern:
+
+```text
+[Fact(DisplayName = "UT-DASHBOARD-CACHE-001 returns cached summary when cache hit occurs")]
+```
+
+### Traits
+
+Use traits for consistent filtering and reporting:
+- `Suite`: `Unit` or `Integration`
+- `Feature`: `Auth`, `Dashboard`, `Income`, `Expense`, `Savings`, `Loan`
+- `CaseId`: unique test identifier
+
+This makes it easier to filter failures and build reports locally and in CI.
+
+---
+
+## Failure Diagnostics Standard
+
+When a test fails, the output should make it obvious:
+- which test failed
+- what business rule or repository behavior was expected
+- what actual result was observed
+- what data setup or identifier is relevant
+
+### Required Failure Clarity
+
+Tests should be written so that failures answer:
+- what was the expected outcome?
+- what was the actual outcome?
+- what scenario was under test?
+- which case ID does this correspond to?
+
+### Recommended Practices
+
+- use clear arrange/act/assert structure
+- prefer one behavioral responsibility per test
+- avoid giant test methods with multiple unrelated assertions
+- include explicit assertion messages where the failure could be ambiguous
+- log seeded IDs, dates, and user identifiers when integration setup matters
+
+### For Unit Tests
+
+Prefer:
+- deterministic inputs
+- small mocks
+- exact verification of important interactions
+
+### For Integration Tests
+
+Log enough context to debug quickly:
+- current user id
+- seeded entity ids
+- filter values
+- relevant timestamps
+
+Use test output helpers or shared test logging utilities where needed.
+
+---
+
+## Console Output and Tracking
+
+Test execution should be easy to follow in the console.
+
+### Local Run Expectations
+
+Local test runs should provide:
+- visible test names
+- clear pass/fail status
+- failure stack traces
+- enough verbosity to identify the failed case ID quickly
+
+Recommended commands:
+
+```bash
+dotnet test Tests/UnitTests/UnitTests.csproj --logger "console;verbosity=detailed" --logger "trx;LogFileName=unit-tests.trx"
+dotnet test Tests/IntegrationTests/IntegrationTests.csproj --logger "console;verbosity=detailed" --logger "trx;LogFileName=integration-tests.trx"
+```
+
+Why:
+- detailed console logs make failures easier to trace immediately
+- TRX output gives machine-readable results for CI and artifact review
+
+### Tracking Standard
+
+During execution, a developer should be able to tell:
+- which suite is running
+- which feature area is running
+- which specific test case failed
+- whether the issue is validation, data setup, repository behavior, or cache behavior
+
+---
+
+## End-of-Run Summary Standard
+
+When the tests finish, the output should provide a clear summary that is easy to scan.
+
+### Required Summary Information
+
+At minimum, the final summary should show:
+- total tests run
+- passed count
+- failed count
+- skipped count
+- duration
+- failed test case identifiers
+- suite-level grouping when possible
+
+### Recommended Reporting Shape
+
+Use:
+- console summary for immediate developer feedback
+- TRX artifacts for CI storage and machine-readable results
+- optional HTML summary later for richer CI presentation
+
+### CI-Oriented Summary Expectations
+
+When CI is added, the workflow should surface:
+- build result
+- unit test result
+- integration test result
+- failed test identifiers
+- direct links to logs or artifacts
+
+This should feel obvious and actionable, similar to strong enterprise CI pipelines.
+
+For CI/deployment workflow design, see:
+- [CI-PLAN.md](/workspaces/finance-tracker-graphql/docs/CI-PLAN.md)
+
 ## Proposed Test Project Layout
-Create a top-level `Tests/` directory (separate projects is fine, but keep it simple):
+Create a top-level `Tests/` directory with two projects only for now:
 
 ```
 Tests/
-  FinanceTracker.UnitTests/
-  FinanceTracker.IntegrationTests/
-  FinanceTracker.ApiTests/
+  UnitTests/
+  IntegrationTests/
 ```
 
-Within each project, mirror the app feature areas:
+Within each project, mirror the app feature areas in a clean, independent way.
 
 ```
-Income/
-Expense/
-Savings/
-Loan/
-Auth/
-Dashboard/
+Tests/
+  UnitTests/
+    Auth/
+    Dashboard/
+    Expense/
+    Income/
+    Loan/
+    Savings/
+    Common/
+    Builders/
+  IntegrationTests/
+    Caching/
+    Dashboard/
+    Database/
+    Expense/
+    Fixtures/
+    Income/
+    Loan/
+    Savings/
 ```
+
+### Folder Intent
+- `Auth/`: auth service and auth-contract-related test suites
+- `Dashboard/`: dashboard service, repository, and cache behavior suites
+- `Income/`, `Expense/`, `Savings/`, `Loan/`: feature-specific suites
+- `Common/`: shared assertion helpers, constants, and test utilities
+- `Builders/`: deterministic test-data builders for unit tests
+- `Fixtures/`: database fixtures, seeded contexts, and shared integration setup
+- `Database/`: lower-level DB or schema behavior checks
+- `Caching/`: Redis/distributed cache integration coverage
+
+Shared naming, traits, and output rules live in:
+- [TESTING-CONVENTIONS.md](/workspaces/finance-tracker-graphql/docs/TESTING-CONVENTIONS.md)
 
 ## Test Data Strategy
 - Prefer builders/factories for inputs and entities (avoid copy/paste).
 - Use fixed timestamps in tests (no `DateTime.UtcNow` comparisons without control).
 - Use deterministic GUIDs where helpful for readability.
 - Seed minimal data for each test; clean up after each test.
+- Keep every test independent; do not rely on test execution order.
 
 Recommended helpers (to add as tests grow):
 - `TestUser` builder (two users A/B for isolation tests).
 - `IncomeBuilder`, `ExpenseBuilder`, `LoanBuilder`, `SavingsGoalBuilder`.
-- `GraphQlRequest` helper (sends `{ query, variables }`).
+- `DashboardSummaryBuilder` only if needed for service-level cache tests.
+- `FixedDate` or `TestClock` helper for time-sensitive assertions
 
 ## Unit Test Plan (Application Layer)
 Target: `Application/Services/*Service.cs`
@@ -209,8 +396,64 @@ Unit tests should *not* call real Supabase.
   - Valid -> returns API access token via `IApiTokenService`
   - Valid -> preserves refresh token from `ISupabaseAuthClient`
 
+### DashboardService
+- Cache hit:
+  - returns cached dashboard
+  - does not call repository methods
+- Cache miss:
+  - reads totals, savings goals, loan summary, and recent activity from the repository
+  - stores the rebuilt dashboard in cache
+- Activity limit normalization:
+  - `null` -> default
+  - `<= 0` -> default
+  - `> max` -> capped
+- Summary composition:
+  - `netBalance` = income - expenses
+  - `expenseToIncomeRatio` rules are correct
+  - `hasNegativeNetBalance` rules are correct
+  - `hasOverdueLoans` reflects the loan summary
+  - `focusGoal` selection is stable for mixed savings-goal data
+
+### Cache Invalidation Unit Coverage
+These service tests should verify `InvalidateUserAsync` is called after successful writes:
+
+- `IncomeService`
+  - add
+  - update
+  - delete success
+- `ExpenseService`
+  - add
+  - update
+  - delete success
+- `SavingsGoalService`
+  - create
+  - update
+  - add contribution
+  - update progress
+  - delete success
+- `LoanService`
+  - add
+  - update
+  - record repayment
+  - settle
+  - delete success
+
+And should verify invalidation is *not* called on failed operations where no write succeeds.
+
 ## Integration Test Plan (Infrastructure + DB)
 Target: repositories and EF mappings.
+
+## Integration Test Scope
+Integration tests in this codebase should focus on three areas:
+
+- repository correctness against a real Postgres database
+- dashboard repository aggregation correctness
+- cache implementation behavior with distributed cache abstractions
+
+Database reset strategy decision:
+- use **database reset / truncate between tests or test groups**
+- do not rely on test execution order
+- avoid hidden shared state
 
 ## High-Value Test Cases (Checklist)
 Use this as a punch-list when implementing tests.
@@ -266,12 +509,41 @@ For each repository:
   - returns `true` when deleted
   - verifies row is removed
 
+### Dashboard Repository Integration Tests
+- `GetTotalIncomeAsync` respects user scoping and date filters
+- `GetTotalExpensesAsync` respects user scoping and date filters
+- `GetSavingsGoalsAsync` returns goals ordered by `CreatedAt` descending
+- `GetLoanSummaryAsync` calculates:
+  - `TotalOwed`
+  - `TotalGiven`
+  - `ActiveLoanCount`
+  - `OverdueLoanCount`
+  - `SettledLoanCount`
+- `GetRecentActivityAsync`:
+  - merges income, expense, savings, loan, and repayment activity
+  - returns results in descending `HappenedAt` order
+  - respects `activityLimit`
+  - respects `fromDate` / `toDate`
+  - scopes joined loan-repayment activity to the current user
+
+### Dashboard Cache Integration Tests
+- `DashboardCacheService.GetAsync` returns `null` on miss
+- `DashboardCacheService.SetAsync` stores a dashboard and `GetAsync` returns it
+- cache keys vary by:
+  - `userId`
+  - `fromDate`
+  - `toDate`
+  - `activityLimit`
+- `InvalidateUserAsync` causes subsequent reads to miss old dashboard entries
+- disabled cache mode bypasses cache reads and writes cleanly
+- invalid payload handling removes unreadable cached entries safely
+
 ### EF Mapping Tests (High Value)
 - `created_at` and `user_id` are not rewritten on update (regression guard).
 - `numeric(18,2)` precision is preserved for amounts.
 
-## API / GraphQL Integration Test Plan
-Target: GraphQL pipeline correctness, auth enforcement, and payload contract.
+## Deferred API / E2E Coverage
+The scenarios below are still valuable, but they are intentionally deferred until after the unit and integration layers are in place.
 
 ## Coverage Matrix (What We Test Where)
 This matrix helps prevent gaps and prevents duplicating work in the wrong layer.
@@ -283,20 +555,20 @@ This matrix helps prevent gaps and prevents duplicating work in the wrong layer.
 | Savings | ✅ create/update/progress rules | ✅ CRUD + progress persistence | ✅ auth + payload + isolation |
 | Loans | ✅ due date + repayment + settlement rules | ✅ CRUD + repayment history + enum mapping | ✅ auth + payload + isolation + status filters |
 | Auth | ✅ input validation + token issuance | ⚠️ minimal (mock supabase) | ✅ reject missing/expired token |
-| Dashboard | ✅ optional (pure aggregation helpers) | ✅ optional seed verification | ✅ expected totals from seeded data + cache behavior |
+| Dashboard | ✅ service composition + cache behavior | ✅ repository + cache verification | ⏳ later |
 | Error handling | ✅ service error messages | ✅ DB errors mapped correctly | ✅ timeout/auth mapped consistently |
 
 Legend:
 - ✅ required for “done”
 - ⚠️ keep thin to avoid flaky external calls
 
-### Auth Enforcement
+### Later API Auth Enforcement
 For every protected query/mutation:
 - No JWT -> 401 (or GraphQL auth error mapped to 401)
 - Expired JWT -> 401
 - Valid JWT -> 200 and operation succeeds
 
-### Payload Contract (Mutations)
+### Later API Payload Contract (Mutations)
 For add/update/delete mutations:
 - On success:
   - payload entity is not null (except deletes)
@@ -316,39 +588,75 @@ For add/update/delete mutations:
 - `refreshToken` must not be blank when the upstream auth provider returns one.
 - Until a refresh endpoint exists, tests should verify the field is present but should not assume `/api/auth/refresh` behavior.
 
-### Isolation (Critical)
+### Later API Isolation (Critical)
 For each entity type:
 - User A creates data
 - User B cannot read it (`GetAll` doesn’t include it; `GetById` returns null)
 - User B cannot update/delete it (returns “not found” or equivalent)
 
-### Error/Timeout Scenarios (Regression Guards)
+### Later API Error/Timeout Scenarios (Regression Guards)
 - When DB operation times out or is canceled:
   - API surfaces `REQUEST_TIMEOUT` (or payload `errors` for update paths if handled there)
   - error contains guidance to refresh/check state before retry
 
-## Dashboard Tests (API Level)
-Given seeded incomes/expenses/savings/loans:
-- `TotalIncome` = sum(incomes.amount)
-- `TotalExpenses` = sum(expenses.amount)
-- `NetBalance` = income - expenses
-- `SavingsProgress` calculations stable
-- `LoanSummary` totals correct (owed vs given)
-- `FocusGoal` selection is stable for mixed goal data
-- `RecentActivity` includes mixed activity types in descending order
-- `activityLimit` truncates recent activity correctly
-- filtered dashboard (`fromDate`, `toDate`) respects the requested period
+## Suggested File Blueprint
+Use small, focused test files instead of huge feature dumps.
 
-## Dashboard Cache Tests
-- First dashboard request for a user/filter combination is a cache miss and builds from DB.
-- Second dashboard request for the same user/filter combination is served from cache.
-- Cache key varies by:
-  - `userId`
-  - `fromDate`
-  - `toDate`
-  - `activityLimit`
-- Successful writes to income, expense, savings, loan, and loan repayment flows invalidate the user dashboard cache.
-- If distributed cache is unavailable, dashboard still falls back to the DB path.
+Example unit-test file layout:
+
+```text
+Tests/UnitTests/
+  Auth/
+    AuthServiceSignInTests.cs
+    AuthServiceSignUpTests.cs
+  Dashboard/
+    DashboardServiceCacheTests.cs
+    DashboardServiceSummaryTests.cs
+  Expense/
+    ExpenseServiceAddTests.cs
+    ExpenseServiceUpdateTests.cs
+    ExpenseServiceDeleteTests.cs
+  Income/
+    IncomeServiceAddTests.cs
+    IncomeServiceUpdateTests.cs
+    IncomeServiceDeleteTests.cs
+  Loan/
+    LoanServiceAddTests.cs
+    LoanServiceUpdateTests.cs
+    LoanServiceRepaymentTests.cs
+    LoanServiceSettlementTests.cs
+    LoanServiceDeleteTests.cs
+  Savings/
+    SavingsGoalServiceCreateTests.cs
+    SavingsGoalServiceUpdateTests.cs
+    SavingsGoalServiceContributionTests.cs
+    SavingsGoalServiceProgressTests.cs
+    SavingsGoalServiceDeleteTests.cs
+```
+
+Example integration-test file layout:
+
+```text
+Tests/IntegrationTests/
+  Caching/
+    DashboardCacheServiceTests.cs
+  Dashboard/
+    DashboardRepositoryTotalsTests.cs
+    DashboardRepositoryActivityTests.cs
+    DashboardRepositoryLoanSummaryTests.cs
+  Expense/
+    ExpenseRepositoryTests.cs
+  Income/
+    IncomeRepositoryTests.cs
+  Loan/
+    LoanRepositoryTests.cs
+    LoanRepaymentRepositoryTests.cs
+  Savings/
+    SavingsGoalRepositoryTests.cs
+  Fixtures/
+    PostgresFixture.cs
+    TestDatabaseReset.cs
+```
 
 ## Manual Smoke Tests (Docs/Postman)
 For quick human verification and demos, keep the Postman examples current:
@@ -360,11 +668,9 @@ These are not a substitute for automated tests, but they are useful for:
 - reproducing issues quickly
 
 ## Test Execution (Local)
-Proposed commands (once projects exist):
-- `dotnet test Tests/FinanceTracker.UnitTests/FinanceTracker.UnitTests.csproj`
-- `dotnet test Tests/FinanceTracker.IntegrationTests/FinanceTracker.IntegrationTests.csproj`
-- `dotnet test Tests/FinanceTracker.ApiTests/FinanceTracker.ApiTests.csproj`
-- `dotnet test Tests/FinanceTracker.E2ETests/FinanceTracker.E2ETests.csproj`
+Proposed commands (once the projects exist):
+- `dotnet test Tests/UnitTests/UnitTests.csproj`
+- `dotnet test Tests/IntegrationTests/IntegrationTests.csproj`
 
 ### Test Configuration (Recommended)
 Prefer injecting config in tests rather than relying on developer machine settings:
@@ -373,19 +679,50 @@ Prefer injecting config in tests rather than relying on developer machine settin
 - `Supabase:*`: can be dummy values for most tests (auth client is mocked in unit tests).
 
 ## CI Recommendations
+You do **not** need a `ci.yml` file to begin the unit and integration test setup.
+
+Start with:
+- the test project structure
+- package references
+- fixtures/builders
+- local `dotnet test` execution
+
+Add a CI workflow only after the local test suites are stable enough to automate confidently.
+
+### When `ci.yml` becomes necessary
+Add a GitHub Actions workflow such as `.github/workflows/ci.yml` when you want:
+- automatic test runs on pull requests
+- a consistent team-level verification path
+- protection against regressions before merge
+- structured summaries and downloadable test artifacts
+
+### What is not required right now
+- `ci.yml`
+- E2E workflow files
+- deployment/test orchestration scripts beyond local test commands
+
+### What is required right now
+- `Tests/UnitTests/`
+- `Tests/IntegrationTests/`
+- clean project references and package setup
+- deterministic local test execution
+- readable detailed console output
+- stable result files such as TRX for later CI reporting
+- a CI workflow once deployment gating begins
+
 - Run unit tests on every PR.
-- Run integration + API tests on PRs that touch `Infrastructure/`, `Api/`, or migrations/scripts.
-- Run E2E tests on PRs for backend changes (or nightly if runtime is too slow).
+- Run integration tests on PRs that touch `Infrastructure/`, `Api/`, or migrations/scripts.
+- Add API/E2E jobs later as a separate workstream.
 - Cache NuGet packages.
 - Use a Postgres service container for integration tests (preferred).
 
 ### CI Outline (Example)
-High-level workflow (details depend on how we set up the `Tests/*` projects):
+High-level workflow:
 - Restore/build
 - Unit tests
 - Start Postgres service
 - Apply schema/migrations/seed
-- Integration tests + API tests
+- Integration tests
 
 Example GitHub Actions shape (illustrative):
 
@@ -403,10 +740,13 @@ services:
 - Integration tests must not rely on shared external environments unless explicitly marked and excluded from PR runs.
 - Prefer polling with a short timeout for “eventual consistency” over fixed sleeps.
 - Keep timeouts explicit and generous enough for CI, but short enough to fail fast on deadlocks.
-- Keep E2E suite lean: 1-2 journeys per feature + isolation + dashboard is usually enough.
+- Keep test classes small and feature-focused.
+- Prefer one responsibility per test file.
+- Shared fixtures should live under `Fixtures/`, not inside feature folders.
 
 ## Exit Criteria
 - All tests pass locally and in CI.
 - No cross-user data leakage in any feature.
-- Mutations return consistent `errors`/`message` behavior.
-- A contributor can run tests with a single command and get deterministic results.
+- Dashboard cache behavior is covered at unit and integration levels.
+- Auth sign-in contract is covered for `accessToken`, `refreshToken`, and `tokenType`.
+- A contributor can run the unit or integration suites independently with deterministic results.
