@@ -261,7 +261,7 @@ query {
     source
     date
   }
-  loans(type: Owed) {
+  loans(type: OWED) {
     id
     counterpartyName
     remainingBalance
@@ -325,7 +325,7 @@ flowchart LR
 
 - Use a plain query like `dashboard` when the client only needs to read data and nothing should change in the database.
 - Use query arguments like `fromDate`, `toDate`, `source`, and `type` when the client wants a narrower slice of data without creating new endpoints.
-- Use an enum argument like `LoanType` when the client should choose from a fixed set of valid values such as `Owed` or `Given`.
+- Use an enum argument like `LoanType` when the client should choose from a fixed set of valid values such as `OWED` or `GIVEN`.
 - Use a mutation payload with `errors` and `message` when the operation can fail for business reasons and the client needs a predictable response shape.
 - Use the public `health` query when you want a simple connectivity check from Postman, Banana Cake Pop, or a deployment smoke test.
 

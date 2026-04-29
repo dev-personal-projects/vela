@@ -26,12 +26,17 @@ CONN_URI=""
 MIGRATIONS_DIR=""
 VERBOSE=false
 AUTO_YES=false
+TEMP_SCRIPT=""
 
 # ── Logging ────────────────────────────────────────────────────────────────────
 log_info()  { echo "[INFO]  $*"; }
 log_warn()  { echo "[WARN]  $*" >&2; }
 log_error() { echo "[ERROR] $*" >&2; }
 fatal()     { log_error "$*"; exit 1; }
+
+cleanup_temp_script() {
+    [[ -n "${TEMP_SCRIPT:-}" ]] && rm -f "$TEMP_SCRIPT"
+}
 
 mask_uri() {
     echo "$1" | sed -E 's|://([^:]+):[^@]+@|://\1:****@|'
@@ -136,14 +141,14 @@ build_combined_script() {
         echo "-- Applying: $filename"
         echo "-- ────────────────────────────────────────────────────"
         echo ""
-        printf "\\echo '>>> Applying: %s'\n" "$filename"
+        printf "\\\\echo '>>> Applying: %s'\n" "$filename"
         echo ""
         printf "\\i %s\n" "$migration"
         echo ""
     done
 
     echo "-- ────────────────────────────────────────────────────"
-    printf "\\echo '>>> All migrations validated — rolling back (dry-run)'\n"
+    printf "\\\\echo '>>> All migrations validated — rolling back (dry-run)'\n"
     echo "ROLLBACK;"
 }
 
@@ -165,21 +170,20 @@ validate_migrations() {
         echo ""
     fi
 
-    local temp_script
-    temp_script=$(mktemp /tmp/migration-validate-XXXXXX.sql)
-    trap 'rm -f "$temp_script"' EXIT
+    TEMP_SCRIPT=$(mktemp /tmp/migration-validate-XXXXXX.sql)
+    trap cleanup_temp_script EXIT
 
-    build_combined_script "${migrations[@]}" > "$temp_script"
+    build_combined_script "${migrations[@]}" > "$TEMP_SCRIPT"
 
     if [[ "$VERBOSE" == true ]]; then
         log_info "Combined validation script:"
         echo "---"
-        cat "$temp_script"
+        cat "$TEMP_SCRIPT"
         echo "---"
         echo ""
     fi
 
-    local psql_opts=("-v" "ON_ERROR_STOP=1" "-f" "$temp_script")
+    local psql_opts=("-v" "ON_ERROR_STOP=1" "-f" "$TEMP_SCRIPT")
     [[ "$VERBOSE" != true ]] && psql_opts+=("--quiet")
 
     if psql "$CONN_URI" "${psql_opts[@]}"; then

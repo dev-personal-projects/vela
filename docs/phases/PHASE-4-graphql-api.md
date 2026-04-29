@@ -220,17 +220,21 @@ flowchart LR
 ```mermaid
 flowchart LR
     subgraph Query
-        QL[loans\noptional type\nreturns list of Loan]
+        QL[loans\noptional type / status\nreturns list of Loan]
+        QR[loanRepaymentHistory\nreturns list of LoanRepayment]
     end
 
     subgraph Mutations
         ML[addLoan\nAddLoanInput\nreturns LoanPayload]
         MR[recordRepayment\nRecordRepaymentInput\nreturns LoanPayload]
+        MSL[settleLoan\nSettleLoanInput\nreturns LoanPayload]
     end
 
     QL --> LS[LoanService.GetAllAsync]
+    QR --> LS4[LoanService.GetRepaymentHistoryAsync]
     ML --> LS2[LoanService.AddAsync]
     MR --> LS3[LoanService.RecordRepaymentAsync]
+    MSL --> LS5[LoanService.SettleAsync]
 ```
 
 ---
@@ -300,8 +304,9 @@ sequenceDiagram
 | `expense(id)` | required | Expense or null |
 | `savingsGoals` | required | list of SavingsGoal |
 | `savingsGoal(id)` | required | SavingsGoal or null |
-| `loans(type?)` | required | list of Loan |
+| `loans(type?, status?)` | required | list of Loan |
 | `loan(id)` | required | Loan or null |
+| `loanRepaymentHistory(loanId)` | required | list of LoanRepayment |
 | `dashboard` | required | DashboardSummary |
 
 ---
@@ -326,6 +331,7 @@ sequenceDiagram
 | `addLoan` | required | `AddLoanInput` | `LoanPayload` |
 | `updateLoan` | required | `UpdateLoanInput` | `LoanPayload` |
 | `recordRepayment` | required | `RecordRepaymentInput` | `LoanPayload` |
+| `settleLoan` | required | `SettleLoanInput` | `LoanPayload` |
 | `deleteLoan` | required | `id` | `DeletePayload` |
 
 ---

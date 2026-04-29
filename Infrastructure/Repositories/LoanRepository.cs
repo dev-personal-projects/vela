@@ -1,5 +1,6 @@
 using FinanceTracker.Application.Interfaces;
 using FinanceTracker.Domain.Entities;
+using FinanceTracker.Domain.Enums;
 using FinanceTracker.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,8 +9,12 @@ namespace FinanceTracker.Infrastructure.Repositories;
 public sealed class LoanRepository(AppDbContext db) : ILoanRepository
 {
     public Task<List<Loan>> GetAllAsync(Guid userId, CancellationToken ct = default) =>
+        GetAllAsync(userId, null, ct);
+
+    public Task<List<Loan>> GetAllAsync(Guid userId, LoanType? type, CancellationToken ct = default) =>
         db.Loans
           .Where(x => x.UserId == userId)
+          .Where(x => !type.HasValue || x.Type == type.Value)
           .OrderByDescending(x => x.Date)
           .ToListAsync(ct);
 

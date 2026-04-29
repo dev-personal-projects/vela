@@ -11,9 +11,12 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
     public DbSet<Expense> Expenses => Set<Expense>();
     public DbSet<SavingsGoal> SavingsGoals => Set<SavingsGoal>();
     public DbSet<Loan> Loans => Set<Loan>();
+    public DbSet<LoanRepayment> LoanRepayments => Set<LoanRepayment>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.HasPostgresEnum<LoanType>("loan_type");
+
         modelBuilder.Entity<Income>(e =>
         {
             e.ToTable("incomes");
@@ -75,17 +78,40 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
             e.Property(x => x.Id).HasColumnName("id");
             e.Property(x => x.UserId).HasColumnName("user_id").IsRequired();
             e.Property(x => x.CounterpartyName).HasColumnName("counterparty_name").IsRequired();
+            e.Property(x => x.CounterpartyPhoneNumber).HasColumnName("counterparty_phone_number");
             e.Property(x => x.Amount).HasColumnName("amount").HasColumnType("numeric(18,2)").IsRequired();
             e.Property(x => x.AmountRepaid).HasColumnName("amount_repaid").HasColumnType("numeric(18,2)").IsRequired();
-            e.Property(x => x.Type).HasColumnName("type").HasConversion<string>().IsRequired();
+            e.Property(x => x.Type).HasColumnName("type").IsRequired();
             e.Property(x => x.Description).HasColumnName("description").IsRequired();
             e.Property(x => x.Date).HasColumnName("date").IsRequired();
             e.Property(x => x.DueDate).HasColumnName("due_date");
             e.Property(x => x.CreatedAt).HasColumnName("created_at").IsRequired();
             e.Ignore(x => x.RemainingBalance);
             e.Ignore(x => x.IsSettled);
+            e.Ignore(x => x.IsOverdue);
+            e.Ignore(x => x.Status);
 
             e.Property(x => x.UserId).Metadata.SetAfterSaveBehavior(PropertySaveBehavior.Ignore);
+            e.Property(x => x.CreatedAt).ValueGeneratedOnAdd();
+            e.Property(x => x.CreatedAt).Metadata.SetAfterSaveBehavior(PropertySaveBehavior.Ignore);
+        });
+
+        modelBuilder.Entity<LoanRepayment>(e =>
+        {
+            e.ToTable("loan_repayments");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).HasColumnName("id");
+            e.Property(x => x.LoanId).HasColumnName("loan_id").IsRequired();
+            e.Property(x => x.Amount).HasColumnName("amount").HasColumnType("numeric(18,2)").IsRequired();
+            e.Property(x => x.Date).HasColumnName("date").IsRequired();
+            e.Property(x => x.Note).HasColumnName("note").IsRequired();
+            e.Property(x => x.CreatedAt).HasColumnName("created_at").IsRequired();
+
+            e.HasOne<Loan>()
+                .WithMany()
+                .HasForeignKey(x => x.LoanId)
+                .OnDelete(DeleteBehavior.Cascade);
+
             e.Property(x => x.CreatedAt).ValueGeneratedOnAdd();
             e.Property(x => x.CreatedAt).Metadata.SetAfterSaveBehavior(PropertySaveBehavior.Ignore);
         });

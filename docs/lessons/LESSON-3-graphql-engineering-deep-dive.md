@@ -270,12 +270,12 @@ You can alias fields to rename them in the response or call the same field twice
 
 ```graphql
 query {
-  owedLoans: loans(type: Owed) {
+  owedLoans: loans(type: OWED) {
     id
     counterpartyName
     remainingBalance
   }
-  givenLoans: loans(type: Given) {
+  givenLoans: loans(type: GIVEN) {
     id
     counterpartyName
     remainingBalance

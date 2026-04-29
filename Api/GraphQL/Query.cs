@@ -106,16 +106,14 @@ public sealed class Query
     [Authorize]
     public async Task<List<Loan>> Loans(
         LoanType? type,
+        LoanStatus? status,
         [Service] ILoanService service,
         ClaimsPrincipal claimsPrincipal,
         CancellationToken cancellationToken)
     {
         var userId = claimsPrincipal.GetUserId();
-        var result = await service.GetAllAsync(userId, cancellationToken);
-
-        return result.Value!
-            .Where(x => !type.HasValue || x.Type == type.Value)
-            .ToList();
+        var result = await service.GetAllAsync(userId, type, status, cancellationToken);
+        return result.Value!;
     }
 
     [Authorize]
@@ -128,6 +126,18 @@ public sealed class Query
         var userId = claimsPrincipal.GetUserId();
         var result = await service.GetByIdAsync(id, userId, cancellationToken);
         return result.IsSuccess ? result.Value : null;
+    }
+
+    [Authorize]
+    public async Task<List<LoanRepayment>> LoanRepaymentHistory(
+        Guid loanId,
+        [Service] ILoanService service,
+        ClaimsPrincipal claimsPrincipal,
+        CancellationToken cancellationToken)
+    {
+        var userId = claimsPrincipal.GetUserId();
+        var result = await service.GetRepaymentHistoryAsync(loanId, userId, cancellationToken);
+        return result.IsSuccess ? result.Value! : [];
     }
 
     // ── Dashboard ─────────────────────────────────────────────────────────────

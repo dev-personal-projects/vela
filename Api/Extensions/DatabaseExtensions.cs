@@ -1,4 +1,5 @@
 using FinanceTracker.Infrastructure.Data;
+using FinanceTracker.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 
@@ -15,7 +16,11 @@ public static class DatabaseExtensions
         services.AddDbContext<AppDbContext>(options =>
             options.UseNpgsql(
                 NormalizePostgresConnectionString(connectionString),
-                npgsql => npgsql.CommandTimeout(commandTimeoutSeconds)));
+                npgsql =>
+                {
+                    npgsql.CommandTimeout(commandTimeoutSeconds);
+                    npgsql.MapEnum<LoanType>("loan_type");
+                }));
 
         return services;
     }
