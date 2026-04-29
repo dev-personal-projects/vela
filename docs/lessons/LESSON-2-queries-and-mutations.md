@@ -257,42 +257,55 @@ Every resolver calls `claimsPrincipal.GetUserId()` — one line, no duplication.
 
 ## The Dashboard Query — Aggregation
 
-The dashboard query calls **multiple services** and aggregates the results:
+The dashboard field stays small at the API layer and delegates the aggregation work to a dedicated dashboard service:
 
 ```csharp
 [Authorize]
 public async Task<DashboardSummary> Dashboard(
-    [Service] IIncomeService incomeService,
-    [Service] IExpenseService expenseService,
-    [Service] ISavingsGoalService savingsService,
-    [Service] ILoanService loanService,
+    DateTime? fromDate,
+    DateTime? toDate,
+    int? activityLimit,
+    [Service] IDashboardService service,
     ClaimsPrincipal claimsPrincipal,
     CancellationToken cancellationToken)
 {
     var userId = claimsPrincipal.GetUserId();
-
-    var incomes = (await incomeService.GetAllAsync(userId, cancellationToken)).Value!;
-    var expenses = (await expenseService.GetAllAsync(userId, cancellationToken)).Value!;
-    var totalIncome = incomes.Sum(x => x.Amount);
-    var totalExpenses = expenses.Sum(x => x.Amount);
-    // ...
-
-    return new DashboardSummary(
-        TotalIncome:   totalIncome,
-        TotalExpenses: totalExpenses,
-        NetBalance:    totalIncome - totalExpenses,
-        ...);
+    var result = await service.GetSummaryAsync(userId, fromDate, toDate, activityLimit, cancellationToken);
+    return result.IsSuccess
+        ? result.Value!
+        : throw new InvalidOperationException(result.Error);
 }
 ```
+
+That service can still compose multiple sources, but the GraphQL resolver remains thin and easier to maintain.
 
 The client gets everything in one request:
 
 ```graphql
 query {
-  dashboard {
+  dashboard(activityLimit: 5) {
     totalIncome
     totalExpenses
     netBalance
+    period {
+      fromDate
+      toDate
+      isFiltered
+    }
+    insights {
+      expenseToIncomeRatio
+      hasNegativeNetBalance
+      hasOverdueLoans
+    }
+    savingsOverview {
+      totalGoals
+      completedGoals
+      focusGoal {
+        name
+        remainingAmount
+        progress
+      }
+    }
     savingsProgress {
       name
       remainingAmount
@@ -301,6 +314,16 @@ query {
     loanSummary {
       totalOwed
       totalGiven
+      activeLoanCount
+      overdueLoanCount
+      settledLoanCount
+    }
+    recentActivity {
+      type
+      title
+      subtitle
+      amount
+      happenedAt
     }
   }
 }
@@ -350,11 +373,13 @@ mutation {
 ### Get Dashboard
 ```graphql
 query {
-  dashboard {
+  dashboard(fromDate: "2025-01-01T00:00:00Z", toDate: "2025-01-31T23:59:59Z", activityLimit: 5) {
     totalIncome
     totalExpenses
     netBalance
-    loanSummary { totalOwed totalGiven }
+    period { isFiltered }
+    loanSummary { totalOwed totalGiven activeLoanCount overdueLoanCount settledLoanCount }
+    recentActivity { type title amount happenedAt }
   }
 }
 ```
@@ -417,7 +442,7 @@ mutation {
 - Use `[Service]` injection when the resolver needs application logic such as validation, persistence, or aggregation.
 - Use `ClaimsPrincipal` when the result must be scoped to the authenticated user instead of trusting a client-supplied `userId`.
 - Use payload types when the client should always receive a stable shape with either data or friendly validation errors.
-- Use a composed query like `dashboard` when the UI needs totals, savings progress, remaining amounts, and loan summaries in one round trip.
+- Use a composed query like `dashboard` when the UI needs totals, insights, savings progress, recent activity, and loan summaries in one round trip.
 
 ---
 

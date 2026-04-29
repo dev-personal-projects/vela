@@ -1,6 +1,6 @@
 using System.Security.Claims;
 using FinanceTracker.Api.GraphQL.Helpers;
-using FinanceTracker.Api.GraphQL.Payloads;
+using FinanceTracker.Application.DTOs.Dashboard;
 using FinanceTracker.Application.Interfaces;
 using FinanceTracker.Domain.Entities;
 using FinanceTracker.Domain.Enums;
@@ -144,37 +144,18 @@ public sealed class Query
 
     [Authorize]
     public async Task<DashboardSummary> Dashboard(
-        [Service] IIncomeService incomeService,
-        [Service] IExpenseService expenseService,
-        [Service] ISavingsGoalService savingsService,
-        [Service] ILoanService loanService,
+        DateTime? fromDate,
+        DateTime? toDate,
+        int? activityLimit,
+        [Service] IDashboardService service,
         ClaimsPrincipal claimsPrincipal,
         CancellationToken cancellationToken)
     {
         var userId = claimsPrincipal.GetUserId();
-
-        var incomes      = (await incomeService.GetAllAsync(userId, cancellationToken)).Value!;
-        var expenses     = (await expenseService.GetAllAsync(userId, cancellationToken)).Value!;
-        var savingsGoals = (await savingsService.GetAllAsync(userId, cancellationToken)).Value!;
-        var loans        = (await loanService.GetAllAsync(userId, cancellationToken)).Value!;
-
-        var totalIncome   = incomes.Sum(x => x.Amount);
-        var totalExpenses = expenses.Sum(x => x.Amount);
-
-        var savingsProgress = savingsGoals
-            .Select(g => new SavingsGoalProgress(g.Id, g.Name, g.TargetAmount, g.CurrentAmount, g.RemainingAmount, g.Progress))
-            .ToList();
-
-        var loanSummary = new LoanSummary(
-            TotalOwed:  loans.Where(l => l.Type == Domain.Enums.LoanType.Owed).Sum(l => l.RemainingBalance),
-            TotalGiven: loans.Where(l => l.Type == Domain.Enums.LoanType.Given).Sum(l => l.RemainingBalance));
-
-        return new DashboardSummary(
-            TotalIncome:     totalIncome,
-            TotalExpenses:   totalExpenses,
-            NetBalance:      totalIncome - totalExpenses,
-            SavingsProgress: savingsProgress,
-            LoanSummary:     loanSummary);
+        var result = await service.GetSummaryAsync(userId, fromDate, toDate, activityLimit, cancellationToken);
+        return result.IsSuccess
+            ? result.Value!
+            : throw new InvalidOperationException(result.Error);
     }
 
     private static bool IsWithinDateRange(DateTime value, DateTime? fromDate, DateTime? toDate) =>

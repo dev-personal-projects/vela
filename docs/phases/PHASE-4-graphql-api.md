@@ -245,11 +245,15 @@ flowchart LR
 flowchart TD
     DQ[dashboard query\nextract UserId]
 
-    DQ --> TI[totalIncome\nSUM of all income amounts]
-    DQ --> TE[totalExpenses\nSUM of all expense amounts]
+    DQ --> PR[period\noptional fromDate / toDate / activityLimit]
+    DQ --> TI[totalIncome\nSUM of filtered income amounts]
+    DQ --> TE[totalExpenses\nSUM of filtered expense amounts]
     DQ --> NB[netBalance\ntotalIncome minus totalExpenses]
+    DQ --> DI[insights\nratio + negative balance + overdue loans]
+    DQ --> SO[savingsOverview\ntotal / completed / focus goal]
     DQ --> SP[savingsProgress\nlist of goals with current / remaining / percentage]
-    DQ --> LS[loanSummary\ntotalOwed and totalGiven]
+    DQ --> LS[loanSummary\ntotals and loan status counts]
+    DQ --> RA[recentActivity\nlatest income / expense / savings / loan / repayment items]
 ```
 
 ---
@@ -307,7 +311,7 @@ sequenceDiagram
 | `loans(type?, status?)` | required | list of Loan |
 | `loan(id)` | required | Loan or null |
 | `loanRepaymentHistory(loanId)` | required | list of LoanRepayment |
-| `dashboard` | required | DashboardSummary |
+| `dashboard(fromDate?, toDate?, activityLimit?)` | required | DashboardSummary |
 
 ---
 

@@ -9,6 +9,7 @@ public sealed class IncomeRepository(AppDbContext db) : IIncomeRepository
 {
     public Task<List<Income>> GetAllAsync(Guid userId, CancellationToken ct = default) =>
         db.Incomes
+          .AsNoTracking()
           .Where(x => x.UserId == userId)
           .OrderByDescending(x => x.Date)
           .ToListAsync(ct);

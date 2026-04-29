@@ -9,6 +9,7 @@ public sealed class LoanRepaymentRepository(AppDbContext db) : ILoanRepaymentRep
 {
     public Task<List<LoanRepayment>> GetByLoanIdAsync(Guid loanId, CancellationToken ct = default) =>
         db.LoanRepayments
+            .AsNoTracking()
             .Where(x => x.LoanId == loanId)
             .OrderByDescending(x => x.Date)
             .ThenByDescending(x => x.CreatedAt)
