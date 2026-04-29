@@ -6,7 +6,10 @@ using FinanceTracker.Domain.Enums;
 
 namespace FinanceTracker.Application.Services;
 
-public sealed class LoanService(ILoanRepository repository, ILoanRepaymentRepository repaymentRepository) : ILoanService
+public sealed class LoanService(
+    ILoanRepository repository,
+    ILoanRepaymentRepository repaymentRepository,
+    IDashboardCacheService dashboardCacheService) : ILoanService
 {
     public async Task<AppResult<List<Loan>>> GetAllAsync(Guid userId, CancellationToken ct = default)
     {
@@ -68,6 +71,7 @@ public sealed class LoanService(ILoanRepository repository, ILoanRepaymentReposi
         var loan = new Loan(userId, input.CounterpartyName, input.CounterpartyPhoneNumber, input.Amount, input.Type, input.Description, input.Date, input.DueDate);
 
         await repository.AddAsync(loan, ct);
+        await dashboardCacheService.InvalidateUserAsync(userId, ct);
 
         return AppResult<Loan>.Ok(loan);
     }
@@ -104,6 +108,7 @@ public sealed class LoanService(ILoanRepository repository, ILoanRepaymentReposi
         loan.Update(input.CounterpartyName, input.CounterpartyPhoneNumber, input.Amount, input.Description, input.DueDate);
 
         await repository.UpdateAsync(loan, ct);
+        await dashboardCacheService.InvalidateUserAsync(userId, ct);
 
         return AppResult<Loan>.Ok(loan);
     }
@@ -138,6 +143,7 @@ public sealed class LoanService(ILoanRepository repository, ILoanRepaymentReposi
         var repayment = new LoanRepayment(loan.Id, input.Amount, repaymentDate, input.Note);
 
         await repaymentRepository.AddAsync(repayment, ct);
+        await dashboardCacheService.InvalidateUserAsync(userId, ct);
 
         return AppResult<Loan>.Ok(loan);
     }
@@ -168,6 +174,7 @@ public sealed class LoanService(ILoanRepository repository, ILoanRepaymentReposi
         var repayment = new LoanRepayment(loan.Id, settlementAmount, settlementDate, input.Note);
 
         await repaymentRepository.AddAsync(repayment, ct);
+        await dashboardCacheService.InvalidateUserAsync(userId, ct);
 
         return AppResult<Loan>.Ok(loan);
     }
@@ -175,6 +182,12 @@ public sealed class LoanService(ILoanRepository repository, ILoanRepaymentReposi
     public async Task<AppResult> DeleteAsync(Guid id, Guid userId, CancellationToken ct = default)
     {
         var deleted = await repository.DeleteAsync(id, userId, ct);
+
+        if (deleted)
+        {
+            await dashboardCacheService.InvalidateUserAsync(userId, ct);
+        }
+
         return deleted ? AppResult.Ok() : AppResult.Fail("Loan not found.");
     }
 }

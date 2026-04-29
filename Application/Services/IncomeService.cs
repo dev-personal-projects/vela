@@ -5,7 +5,9 @@ using FinanceTracker.Domain.Entities;
 
 namespace FinanceTracker.Application.Services;
 
-public sealed class IncomeService(IIncomeRepository repository) : IIncomeService
+public sealed class IncomeService(
+    IIncomeRepository repository,
+    IDashboardCacheService dashboardCacheService) : IIncomeService
 {
     public async Task<AppResult<List<Income>>> GetAllAsync(Guid userId, CancellationToken ct = default)
     {
@@ -42,6 +44,7 @@ public sealed class IncomeService(IIncomeRepository repository) : IIncomeService
         var income = new Income(userId, input.Amount, input.Source, input.Description, input.Date);
 
         await repository.AddAsync(income, ct);
+        await dashboardCacheService.InvalidateUserAsync(userId, ct);
 
         return AppResult<Income>.Ok(income);
     }
@@ -73,6 +76,7 @@ public sealed class IncomeService(IIncomeRepository repository) : IIncomeService
         income.Update(input.Amount, input.Source, input.Description, input.Date);
 
         await repository.UpdateAsync(income, ct);
+        await dashboardCacheService.InvalidateUserAsync(userId, ct);
 
         return AppResult<Income>.Ok(income);
     }
@@ -80,6 +84,12 @@ public sealed class IncomeService(IIncomeRepository repository) : IIncomeService
     public async Task<AppResult> DeleteAsync(Guid id, Guid userId, CancellationToken ct = default)
     {
         var deleted = await repository.DeleteAsync(id, userId, ct);
+
+        if (deleted)
+        {
+            await dashboardCacheService.InvalidateUserAsync(userId, ct);
+        }
+
         return deleted ? AppResult.Ok() : AppResult.Fail("Income record not found.");
     }
 }

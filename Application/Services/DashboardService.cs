@@ -7,7 +7,8 @@ using FinanceTracker.Domain.Enums;
 namespace FinanceTracker.Application.Services;
 
 public sealed class DashboardService(
-    IDashboardRepository dashboardRepository) : IDashboardService
+    IDashboardRepository dashboardRepository,
+    IDashboardCacheService dashboardCacheService) : IDashboardService
 {
     public async Task<AppResult<DashboardSummary>> GetSummaryAsync(
         Guid userId,
@@ -17,6 +18,18 @@ public sealed class DashboardService(
         CancellationToken ct = default)
     {
         var normalizedActivityLimit = NormalizeActivityLimit(activityLimit);
+        var cachedDashboard = await dashboardCacheService.GetAsync(
+            userId,
+            fromDate,
+            toDate,
+            normalizedActivityLimit,
+            ct);
+
+        if (cachedDashboard is not null)
+        {
+            return AppResult<DashboardSummary>.Ok(cachedDashboard);
+        }
+
         var totalIncome = await dashboardRepository.GetTotalIncomeAsync(userId, fromDate, toDate, ct);
         var totalExpenses = await dashboardRepository.GetTotalExpensesAsync(userId, fromDate, toDate, ct);
         var savingsGoals = await dashboardRepository.GetSavingsGoalsAsync(userId, ct);
@@ -60,6 +73,14 @@ public sealed class DashboardService(
                 OverdueLoanCount: loanSummary.OverdueLoanCount,
                 SettledLoanCount: loanSummary.SettledLoanCount),
             RecentActivity: recentActivity);
+
+        await dashboardCacheService.SetAsync(
+            userId,
+            fromDate,
+            toDate,
+            normalizedActivityLimit,
+            dashboard,
+            ct);
 
         return AppResult<DashboardSummary>.Ok(dashboard);
     }
