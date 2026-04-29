@@ -39,7 +39,7 @@ public sealed class LoanService(ILoanRepository repository) : ILoanService
             return AppResult<Loan>.Fail("Due date must be after the loan date.");
         }
 
-        var loan = new Loan(userId, input.CounterpartyName, input.Amount, input.Type, input.Description, input.Date, input.DueDate);
+        var loan = new Loan(userId, input.CounterpartyName, input.CounterpartyPhoneNumber, input.Amount, input.Type, input.Description, input.Date, input.DueDate);
 
         await repository.AddAsync(loan, ct);
 
@@ -60,12 +60,22 @@ public sealed class LoanService(ILoanRepository repository) : ILoanService
             return AppResult<Loan>.Fail("Counterparty name is required.");
         }
 
+        if (input.Amount <= 0)
+        {
+            return AppResult<Loan>.Fail("Amount must be greater than 0.");
+        }
+
+        if (input.Amount < loan.AmountRepaid)
+        {
+            return AppResult<Loan>.Fail($"Amount cannot be less than the amount already repaid ({loan.AmountRepaid:C}).");
+        }
+
         if (input.DueDate.HasValue && input.DueDate.Value <= loan.Date)
         {
             return AppResult<Loan>.Fail("Due date must be after the loan date.");
         }
 
-        loan.Update(input.CounterpartyName, input.Description, input.DueDate);
+        loan.Update(input.CounterpartyName, input.CounterpartyPhoneNumber, input.Amount, input.Description, input.DueDate);
 
         await repository.UpdateAsync(loan, ct);
 

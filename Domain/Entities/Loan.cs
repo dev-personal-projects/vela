@@ -7,7 +7,8 @@ public sealed class Loan
     public Guid Id { get; }
     public Guid UserId { get; }
     public string CounterpartyName { get; private set; } = string.Empty;
-    public decimal Amount { get; }
+    public string? CounterpartyPhoneNumber { get; private set; }
+    public decimal Amount { get; private set; }
     public decimal AmountRepaid { get; private set; }
     public LoanType Type { get; }
     public string Description { get; private set; } = string.Empty;
@@ -23,6 +24,7 @@ public sealed class Loan
     public Loan(
         Guid userId,
         string counterpartyName,
+        string? counterpartyPhoneNumber,
         decimal amount,
         LoanType type,
         string description,
@@ -52,6 +54,7 @@ public sealed class Loan
         Id = Guid.NewGuid();
         UserId = userId;
         CounterpartyName = counterpartyName.Trim();
+        CounterpartyPhoneNumber = NormalizePhoneNumber(counterpartyPhoneNumber);
         Amount = amount;
         AmountRepaid = 0;
         Type = type;
@@ -76,11 +79,21 @@ public sealed class Loan
         AmountRepaid += repaymentAmount;
     }
 
-    public void Update(string counterpartyName, string description, DateTime? dueDate)
+    public void Update(string counterpartyName, string? counterpartyPhoneNumber, decimal amount, string description, DateTime? dueDate)
     {
         if (string.IsNullOrWhiteSpace(counterpartyName))
         {
             throw new ArgumentException("CounterpartyName is required.", nameof(counterpartyName));
+        }
+
+        if (amount <= 0)
+        {
+            throw new ArgumentException("Amount must be greater than 0.", nameof(amount));
+        }
+
+        if (amount < AmountRepaid)
+        {
+            throw new ArgumentException($"Amount cannot be less than the amount already repaid ({AmountRepaid:C}).", nameof(amount));
         }
 
         if (dueDate.HasValue && dueDate.Value <= Date)
@@ -89,7 +102,12 @@ public sealed class Loan
         }
 
         CounterpartyName = counterpartyName.Trim();
+        CounterpartyPhoneNumber = NormalizePhoneNumber(counterpartyPhoneNumber);
+        Amount = amount;
         Description = description?.Trim() ?? string.Empty;
         DueDate = dueDate;
     }
+
+    private static string? NormalizePhoneNumber(string? phoneNumber) =>
+        string.IsNullOrWhiteSpace(phoneNumber) ? null : phoneNumber.Trim();
 }

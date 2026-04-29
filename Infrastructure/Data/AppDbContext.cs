@@ -75,6 +75,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
             e.Property(x => x.Id).HasColumnName("id");
             e.Property(x => x.UserId).HasColumnName("user_id").IsRequired();
             e.Property(x => x.CounterpartyName).HasColumnName("counterparty_name").IsRequired();
+            e.Property(x => x.CounterpartyPhoneNumber).HasColumnName("counterparty_phone_number");
             e.Property(x => x.Amount).HasColumnName("amount").HasColumnType("numeric(18,2)").IsRequired();
             e.Property(x => x.AmountRepaid).HasColumnName("amount_repaid").HasColumnType("numeric(18,2)").IsRequired();
             e.Property(x => x.Type).HasColumnName("type").HasConversion<string>().IsRequired();

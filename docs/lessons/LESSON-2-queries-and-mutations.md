@@ -387,6 +387,28 @@ query {
 }
 ```
 
+### Correct A Loan Amount After A Typo
+```graphql
+mutation {
+  updateLoan(input: {
+    id: "LOAN_ID"
+    counterpartyName: "John Smith"
+    amount: 2500.00
+    description: "Corrected principal amount"
+    dueDate: "2025-09-01T00:00:00Z"
+  }) {
+    loan {
+      id
+      amount
+      amountRepaid
+      remainingBalance
+    }
+    message
+    errors
+  }
+}
+```
+
 ---
 
 ## When To Use Each Pattern

@@ -143,6 +143,7 @@ classDiagram
         +Guid Id
         +Guid UserId
         +string CounterpartyName
+        +string CounterpartyPhoneNumber
         +decimal Amount
         +decimal AmountRepaid
         +LoanType Type

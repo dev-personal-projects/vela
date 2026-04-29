@@ -4,6 +4,7 @@ namespace FinanceTracker.Application.DTOs.Loan;
 
 public sealed record AddLoanInput(
     string CounterpartyName,
+    string? CounterpartyPhoneNumber,
     decimal Amount,
     LoanType Type,
     string Description,
@@ -13,6 +14,8 @@ public sealed record AddLoanInput(
 public sealed record UpdateLoanInput(
     Guid Id,
     string CounterpartyName,
+    string? CounterpartyPhoneNumber,
+    decimal Amount,
     string Description,
     DateTime? DueDate);
 

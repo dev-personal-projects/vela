@@ -292,7 +292,7 @@
     {
       "id": 22,
       "name": "Create Savings Goal",
-      "description": "Copy the id for GetById, Update, UpdateProgress, Delete.",
+      "description": "Copy the id for GetById, Update, AddSavingsContribution, UpdateSavingsProgress, and Delete.",
       "method": "POST",
       "url": "http://localhost:8080/graphql",
       "headers": { "Content-Type": "application/json", "Authorization": "Bearer <JWT_TOKEN>" },
@@ -395,16 +395,16 @@
     {
       "id": 28,
       "name": "Add Loan — Owed",
-      "description": "Copy the id for GetById, Update, Repayment, Delete.",
+      "description": "Copy the id for GetById, Update, Repayment, Delete. counterpartyPhoneNumber is optional and useful when the mobile app chooses a person from contacts.",
       "method": "POST",
       "url": "http://localhost:8080/graphql",
       "headers": { "Content-Type": "application/json", "Authorization": "Bearer <JWT_TOKEN>" },
       "body": {
-        "query": "mutation { addLoan(input: { counterpartyName: \"John Smith\", amount: 2000.00, type: Owed, description: \"Personal loan\", date: \"2025-01-01T00:00:00Z\", dueDate: \"2025-06-01T00:00:00Z\" }) { loan { id counterpartyName amount amountRepaid remainingBalance type isSettled } message errors } }"
+        "query": "mutation { addLoan(input: { counterpartyName: \"John Smith\", counterpartyPhoneNumber: \"+256700000000\", amount: 2000.00, type: Owed, description: \"Personal loan\", date: \"2025-01-01T00:00:00Z\", dueDate: \"2025-06-01T00:00:00Z\" }) { loan { id counterpartyName counterpartyPhoneNumber amount amountRepaid remainingBalance type isSettled dueDate } message errors } }"
       },
       "expected_response": {
         "status": 200,
-        "body": { "data": { "addLoan": { "loan": { "id": "<uuid>", "counterpartyName": "John Smith", "amount": 2000.00, "amountRepaid": 0.00, "remainingBalance": 2000.00, "type": "Owed", "isSettled": false }, "message": "Loan added successfully.", "errors": null } } }
+        "body": { "data": { "addLoan": { "loan": { "id": "<uuid>", "counterpartyName": "John Smith", "counterpartyPhoneNumber": "+256700000000", "amount": 2000.00, "amountRepaid": 0.00, "remainingBalance": 2000.00, "type": "Owed", "isSettled": false, "dueDate": "2025-06-01T00:00:00Z" }, "message": "Loan added successfully.", "errors": null } } }
       }
     },
 
@@ -414,10 +414,10 @@
       "method": "POST",
       "url": "http://localhost:8080/graphql",
       "headers": { "Content-Type": "application/json", "Authorization": "Bearer <JWT_TOKEN>" },
-      "body": { "query": "{ loans { id counterpartyName amount amountRepaid remainingBalance type isSettled date dueDate } }" },
+      "body": { "query": "{ loans { id counterpartyName counterpartyPhoneNumber amount amountRepaid remainingBalance type isSettled date dueDate } }" },
       "expected_response": {
         "status": 200,
-        "body": { "data": { "loans": [{ "id": "<uuid>", "counterpartyName": "John Smith", "amount": 2000.00, "remainingBalance": 2000.00, "type": "Owed", "isSettled": false }] } }
+        "body": { "data": { "loans": [{ "id": "<uuid>", "counterpartyName": "John Smith", "counterpartyPhoneNumber": "+256700000000", "amount": 2000.00, "remainingBalance": 2000.00, "type": "Owed", "isSettled": false }] } }
       }
     },
 
@@ -427,26 +427,26 @@
       "method": "POST",
       "url": "http://localhost:8080/graphql",
       "headers": { "Content-Type": "application/json", "Authorization": "Bearer <JWT_TOKEN>" },
-      "body": { "query": "{ loan(id: \"<PASTE_ID>\") { id counterpartyName amount amountRepaid remainingBalance type isSettled date dueDate } }" },
+      "body": { "query": "{ loan(id: \"<PASTE_ID>\") { id counterpartyName counterpartyPhoneNumber amount amountRepaid remainingBalance type isSettled date dueDate } }" },
       "expected_response": {
         "status": 200,
-        "body": { "data": { "loan": { "id": "<uuid>", "counterpartyName": "John Smith", "amount": 2000.00, "remainingBalance": 2000.00, "type": "Owed", "isSettled": false } } }
+        "body": { "data": { "loan": { "id": "<uuid>", "counterpartyName": "John Smith", "counterpartyPhoneNumber": "+256700000000", "amount": 2000.00, "remainingBalance": 2000.00, "type": "Owed", "isSettled": false } } }
       }
     },
 
     {
       "id": 31,
       "name": "Update Loan",
-      "description": "Updates counterpartyName, description and dueDate only. Amount and type are immutable.",
+      "description": "Updates counterpartyName, optional counterpartyPhoneNumber, amount, description and dueDate. Type remains unchanged. The new amount cannot be less than amountRepaid, so if amountRepaid is 300.00 the smallest valid amount is 300.00.",
       "method": "POST",
       "url": "http://localhost:8080/graphql",
       "headers": { "Content-Type": "application/json", "Authorization": "Bearer <JWT_TOKEN>" },
       "body": {
-        "query": "mutation { updateLoan(input: { id: \"<PASTE_ID>\", counterpartyName: \"John Smith\", description: \"Updated description\", dueDate: \"2025-09-01T00:00:00Z\" }) { loan { id counterpartyName description dueDate } message errors } }"
+        "query": "mutation { updateLoan(input: { id: \"<PASTE_ID>\", counterpartyName: \"John Smith\", counterpartyPhoneNumber: \"+256711111111\", amount: 2500.00, description: \"Updated description\", dueDate: \"2025-09-01T00:00:00Z\" }) { loan { id counterpartyName counterpartyPhoneNumber amount amountRepaid remainingBalance description dueDate } message errors } }"
       },
       "expected_response": {
         "status": 200,
-        "body": { "data": { "updateLoan": { "loan": { "id": "<uuid>", "counterpartyName": "John Smith", "description": "Updated description", "dueDate": "2025-09-01T00:00:00Z" }, "message": "Loan updated successfully.", "errors": null } } }
+        "body": { "data": { "updateLoan": { "loan": { "id": "<uuid>", "counterpartyName": "John Smith", "counterpartyPhoneNumber": "+256711111111", "amount": 2500.00, "amountRepaid": 0.00, "remainingBalance": 2500.00, "description": "Updated description", "dueDate": "2025-09-01T00:00:00Z" }, "message": "Loan updated successfully.", "errors": null } } }
       }
     },
 
@@ -561,11 +561,59 @@
       "url": "http://localhost:8080/graphql",
       "headers": { "Content-Type": "application/json", "Authorization": "Bearer <JWT_TOKEN>" },
       "body": {
-        "query": "{ loans(type: Owed) { id counterpartyName amount amountRepaid remainingBalance type isSettled date dueDate } }"
+        "query": "{ loans(type: Owed) { id counterpartyName counterpartyPhoneNumber amount amountRepaid remainingBalance type isSettled date dueDate } }"
       },
       "expected_response": {
         "status": 200,
-        "body": { "data": { "loans": [{ "id": "<uuid>", "counterpartyName": "John Smith", "amount": 2000.00, "amountRepaid": 0.00, "remainingBalance": 2000.00, "type": "Owed", "isSettled": false, "date": "2025-01-01T00:00:00Z", "dueDate": "2025-06-01T00:00:00Z" }] } }
+        "body": { "data": { "loans": [{ "id": "<uuid>", "counterpartyName": "John Smith", "counterpartyPhoneNumber": "+256700000000", "amount": 2000.00, "amountRepaid": 0.00, "remainingBalance": 2000.00, "type": "Owed", "isSettled": false, "date": "2025-01-01T00:00:00Z", "dueDate": "2025-06-01T00:00:00Z" }] } }
+      }
+    },
+
+    {
+      "id": 41,
+      "name": "GraphQL Sign Up",
+      "description": "Reference example for the public GraphQL signUp mutation. REST sign-up remains the main onboarding flow in this file.",
+      "method": "POST",
+      "url": "http://localhost:8080/graphql",
+      "headers": { "Content-Type": "application/json" },
+      "body": {
+        "query": "mutation { signUp(input: { email: \"graphql.user@example.com\", password: \"Password123!\" }) { message errors } }"
+      },
+      "expected_response": {
+        "status": 200,
+        "body": { "data": { "signUp": { "message": "Account created successfully. Please sign in.", "errors": null } } }
+      }
+    },
+
+    {
+      "id": 42,
+      "name": "GraphQL Sign In",
+      "description": "Reference example for the public GraphQL signIn mutation.",
+      "method": "POST",
+      "url": "http://localhost:8080/graphql",
+      "headers": { "Content-Type": "application/json" },
+      "body": {
+        "query": "mutation { signIn(input: { email: \"graphql.user@example.com\", password: \"Password123!\" }) { signIn { accessToken refreshToken tokenType } errors } }"
+      },
+      "expected_response": {
+        "status": 200,
+        "body": { "data": { "signIn": { "signIn": { "accessToken": "eyJhbGci...", "refreshToken": "", "tokenType": "bearer" }, "errors": null } } }
+      }
+    },
+
+    {
+      "id": 43,
+      "name": "Update Loan — Amount Below Repaid",
+      "description": "Run this after Record Repayment. If amountRepaid is 500.00, updating the loan amount to 400.00 should fail.",
+      "method": "POST",
+      "url": "http://localhost:8080/graphql",
+      "headers": { "Content-Type": "application/json", "Authorization": "Bearer <JWT_TOKEN>" },
+      "body": {
+        "query": "mutation { updateLoan(input: { id: \"<PASTE_ID>\", counterpartyName: \"John Smith\", counterpartyPhoneNumber: \"+256711111111\", amount: 400.00, description: \"Too low after repayment\", dueDate: \"2025-09-01T00:00:00Z\" }) { loan { id amount amountRepaid remainingBalance } message errors } }"
+      },
+      "expected_response": {
+        "status": 200,
+        "body": { "data": { "updateLoan": { "loan": null, "message": null, "errors": ["Amount cannot be less than the amount already repaid ($500.00)."] } } }
       }
     }
 
@@ -576,6 +624,8 @@
     "36 — GraphQL Health Query        POST /graphql",
     "2  — Sign Up                     POST /api/auth/signup",
     "6  — Sign In                     POST /api/auth/signin     → copy accessToken",
+    "41 — GraphQL Sign Up             POST /graphql",
+    "42 — GraphQL Sign In             POST /graphql",
     "--- Income (full CRUD) ---",
     "9  — Add Income                  POST /graphql             → copy id",
     "10 — Get All Incomes             POST /graphql",
@@ -606,6 +656,7 @@
     "30 — Get Loan By Id              POST /graphql             → paste id",
     "31 — Update Loan                 POST /graphql             → paste id",
     "32 — Record Repayment            POST /graphql             → paste id",
+    "43 — Update Loan below repaid    POST /graphql             → paste same id",
     "34 — Delete Loan                 POST /graphql             → paste id",
     "--- Dashboard ---",
     "35 — Get Dashboard               POST /graphql",

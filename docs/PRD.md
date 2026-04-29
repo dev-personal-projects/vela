@@ -123,6 +123,7 @@ erDiagram
         uuid id PK
         uuid user_id FK
         string counterparty_name
+        string counterparty_phone_number
         decimal amount
         decimal amount_repaid
         string type
