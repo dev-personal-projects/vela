@@ -14,7 +14,8 @@ Connect to Supabase PostgreSQL via EF Core, apply the SQL migrations, and implem
 - [x] `IExpenseRepository` interface defined in Application layer
 - [x] `ISavingsGoalRepository` interface defined in Application layer
 - [x] `ILoanRepository` interface defined in Application layer
-- [x] All four repository implementations complete
+- [x] `ILoanRepaymentRepository` interface defined in Application layer
+- [x] All repository implementations complete
 - [x] All repositories registered in DI in `Program.cs`
 
 ---
@@ -27,7 +28,8 @@ Application/
     ├── IIncomeRepository.cs
     ├── IExpenseRepository.cs
     ├── ISavingsGoalRepository.cs
-    └── ILoanRepository.cs
+    ├── ILoanRepository.cs
+    └── ILoanRepaymentRepository.cs
 
 Infrastructure/
 ├── Data/
@@ -36,7 +38,8 @@ Infrastructure/
     ├── IncomeRepository.cs
     ├── ExpenseRepository.cs
     ├── SavingsGoalRepository.cs
-    └── LoanRepository.cs
+    ├── LoanRepository.cs
+    └── LoanRepaymentRepository.cs
 
 scripts/
 └── db/
@@ -45,9 +48,12 @@ scripts/
     ├── 002_create_expenses.sql         done
     ├── 003_create_savings_goals.sql    done
     ├── 004_create_loans.sql            done
+    ├── 005_add_loan_counterparty_phone_number.sql done
+    ├── 006_create_loan_repayments.sql  done
     └── rollback/
         ├── rollback_profiles.sql       done
         ├── rollback_loans.sql          done
+        ├── rollback_loan_repayments.sql done
         ├── rollback_savings_goals.sql  done
         ├── rollback_expenses.sql       done
         └── rollback_incomes.sql        done
@@ -64,6 +70,7 @@ flowchart TB
         ER[IExpenseRepository]
         SR[ISavingsGoalRepository]
         LR[ILoanRepository]
+        LRR[ILoanRepaymentRepository]
     end
 
     subgraph Infrastructure
@@ -71,6 +78,7 @@ flowchart TB
         IMP2[ExpenseRepository]
         IMP3[SavingsGoalRepository]
         IMP4[LoanRepository]
+        IMP5[LoanRepaymentRepository]
         CTX[AppDbContext]
     end
 
@@ -82,11 +90,13 @@ flowchart TB
     ER -.implemented by.-> IMP2
     SR -.implemented by.-> IMP3
     LR -.implemented by.-> IMP4
+    LRR -.implemented by.-> IMP5
 
     IMP1 --> CTX
     IMP2 --> CTX
     IMP3 --> CTX
     IMP4 --> CTX
+    IMP5 --> CTX
     CTX --> DB
 ```
 
@@ -130,6 +140,7 @@ erDiagram
         uuid id PK
         uuid user_id FK
         text counterparty_name
+        text counterparty_phone_number
         numeric amount
         numeric amount_repaid
         loan_type type
@@ -138,6 +149,17 @@ erDiagram
         timestamptz due_date
         timestamptz created_at
     }
+
+    loan_repayments {
+        uuid id PK
+        uuid loan_id FK
+        numeric amount
+        timestamptz date
+        text note
+        timestamptz created_at
+    }
+
+    loans ||--o{ loan_repayments : has_many
 ```
 
 ---
@@ -186,10 +208,22 @@ flowchart LR
 ```mermaid
 flowchart LR
     LR[ILoanRepository]
-    LR --> GA["GetAllAsync(userId)\nreturns list of Loan"]
+    LR --> GA["GetAllAsync(userId, type?)\nreturns list of Loan"]
     LR --> GI["GetByIdAsync(id, userId)\nreturns Loan or null"]
     LR --> AD["AddAsync(loan)\nvoid"]
     LR --> UP["UpdateAsync(loan)\nvoid"]
+    LR --> DL["DeleteAsync(id, userId)\nreturns bool"]
+```
+
+---
+
+## Feature — Loan Repayment Repository
+
+```mermaid
+flowchart LR
+    LRR[ILoanRepaymentRepository]
+    LRR --> GA["GetByLoanIdAsync(loanId)\nreturns list of LoanRepayment"]
+    LRR --> AD["AddAsync(repayment)\nvoid"]
 ```
 
 ---
@@ -218,7 +252,7 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-    SQL[scripts/db/\n001 to 004 .sql files]
+    SQL[scripts/db/\n000 to 006 .sql files]
     VAL[validate-migrations.sh\ndry-run against Supabase]
     APP[apply-migrations.sh\napply to Supabase]
     DB[(Supabase\nPostgreSQL)]
@@ -246,6 +280,6 @@ flowchart LR
 
 - SQL migrations apply cleanly via `apply-migrations.sh`
 - `validate-migrations.sh` passes with no errors
-- All four tables exist in Supabase with correct columns and constraints
+- Core tables plus `loan_repayments` exist in Supabase with correct columns and constraints
 - Repositories return only records belonging to the requesting user
 - DI resolves all repository interfaces to their implementations

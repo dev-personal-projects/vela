@@ -14,8 +14,11 @@ Backend API for personal finance tracking (incomes, expenses, savings goals, loa
 ## Overview
 Core capabilities:
 - Income, expense, savings goal, and loan CRUD (user-scoped)
+- Savings contributions via `addSavingsContribution`, plus direct progress correction via `updateSavingsProgress`
+- Loan repayment history, settlement, and status-aware filtering
+- Optional `counterpartyPhoneNumber` on loans for contact-friendly clients
 - Dashboard summary aggregates
-- JWT-protected GraphQL operations
+- Public GraphQL `health` query and JWT-protected finance operations
 
 ## Architecture
 Layering:
@@ -69,6 +72,12 @@ Default (see console output / launch settings for the bound URL/port):
 
 Postman:
 - `docs/postman/test-examples.json`
+
+GraphQL highlights:
+- Public query: `health`
+- Filtered queries: `incomes(fromDate?, toDate?, source?)`, `expenses(fromDate?, toDate?, category?)`, `loans(type?, status?)`
+- Savings: `addSavingsContribution`, `updateSavingsProgress`
+- Loans: `recordRepayment`, `loanRepaymentHistory`, `settleLoan`
 
 ## Documentation and lessons
 Product/technical docs:

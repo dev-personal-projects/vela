@@ -29,6 +29,7 @@ Application/
 │   ├── IExpenseRepository.cs       Phase 2
 │   ├── ISavingsGoalRepository.cs   Phase 2
 │   ├── ILoanRepository.cs          Phase 2
+│   ├── ILoanRepaymentRepository.cs Phase 2
 │   ├── IIncomeService.cs
 │   ├── IExpenseService.cs
 │   ├── ISavingsGoalService.cs
@@ -52,7 +53,8 @@ Application/
     │   └── CreateSavingsGoalInput.cs
     └── Loan/
         ├── AddLoanInput.cs
-        └── RecordRepaymentInput.cs
+        ├── RecordRepaymentInput.cs
+        └── SettleLoanInput.cs
 ```
 
 ---
@@ -134,10 +136,13 @@ flowchart LR
     SS --> GA["GetAllAsync(userId)\nResult of list of SavingsGoal"]
     SS --> CR["CreateAsync(input, userId)\nResult of SavingsGoal"]
     SS --> UP["UpdateProgressAsync(id, amount, userId)\nResult of SavingsGoal"]
+    SS --> AC["AddContributionAsync(input, userId)\nResult of SavingsGoal"]
 
     CR --> V1[TargetAmount must be greater than 0]
     CR --> V2[Name must not be empty]
     UP --> V3[New amount must not exceed TargetAmount]
+    AC --> V4[Contribution amount must be greater than 0]
+    AC --> V5[Contribution must not push total above TargetAmount]
 ```
 
 ---
@@ -147,14 +152,18 @@ flowchart LR
 ```mermaid
 flowchart LR
     LS[ILoanService]
-    LS --> GA["GetAllAsync(userId)\nResult of list of Loan"]
+    LS --> GA["GetAllAsync(userId, type?, status?)\nResult of list of Loan"]
     LS --> AD["AddAsync(input, userId)\nResult of Loan"]
     LS --> RP["RecordRepaymentAsync(input, userId)\nResult of Loan"]
+    LS --> RH["GetRepaymentHistoryAsync(loanId, userId)\nResult of list of LoanRepayment"]
+    LS --> ST["SettleAsync(input, userId)\nResult of Loan"]
 
     AD --> V1[Amount must be greater than 0]
     AD --> V2[CounterpartyName must not be empty]
     AD --> V3[DueDate must be after Date]
     RP --> V4[Repayment must not exceed RemainingBalance]
+    RP --> V5[Repayment date must not be before loan date]
+    ST --> V6[Settled loan cannot be settled again]
 ```
 
 ---
@@ -164,10 +173,11 @@ flowchart LR
 ```mermaid
 sequenceDiagram
     participant Service
-    participant Repository
+    participant LoanRepo
+    participant RepaymentRepo
 
-    Service->>Repository: GetByIdAsync(loanId, userId)
-    Repository-->>Service: Loan or null
+    Service->>LoanRepo: GetByIdAsync(loanId, userId)
+    LoanRepo-->>Service: Loan or null
 
     alt Loan not found
         Service-->>Resolver: Result.Fail - Loan not found
@@ -175,9 +185,37 @@ sequenceDiagram
         Service-->>Resolver: Result.Fail - Exceeds remaining balance
     else Valid repayment
         Service->>Service: loan.AmountRepaid += amount
-        Service->>Repository: UpdateAsync(loan)
-        Repository-->>Service: updated loan
+        Service->>RepaymentRepo: AddAsync(LoanRepayment)
+        Service->>LoanRepo: UpdateAsync(loan)
+        LoanRepo-->>Service: updated loan
         Service-->>Resolver: Result.Ok - updated loan
+    end
+```
+
+---
+
+## Feature — Loan Settlement Flow
+
+```mermaid
+sequenceDiagram
+    participant Service
+    participant LoanRepo
+    participant RepaymentRepo
+
+    Service->>LoanRepo: GetByIdAsync(loanId, userId)
+    LoanRepo-->>Service: Loan or null
+
+    alt Loan not found
+        Service-->>Resolver: Result.Fail - Loan not found
+    else Already settled
+        Service-->>Resolver: Result.Fail - Loan is already settled
+    else Valid settlement
+        Service->>Service: remaining = loan.RemainingBalance
+        Service->>Service: loan.RecordRepayment(remaining)
+        Service->>RepaymentRepo: AddAsync(LoanRepayment with remaining amount)
+        Service->>LoanRepo: UpdateAsync(loan)
+        LoanRepo-->>Service: updated loan
+        Service-->>Resolver: Result.Ok - settled loan
     end
 ```
 
@@ -196,6 +234,7 @@ sequenceDiagram
 | `CurrentAmount` | Must be between 0 and TargetAmount |
 | `DueDate` | Must be after `Date` |
 | `RepaymentAmount` | Must not exceed `RemainingBalance` |
+| `RepaymentDate` | Must not be before the original loan `Date` |
 | `CounterpartyName` | Must not be empty |
 
 ---
@@ -219,4 +258,5 @@ sequenceDiagram
 - Valid inputs produce `Result.Ok` with the entity
 - Invalid inputs produce `Result.Fail` with a clear message
 - Repayment exceeding balance returns `Result.Fail`
+- Valid repayment history events are persisted alongside aggregate loan state
 - No EF Core, GraphQL, or HTTP references anywhere in this layer

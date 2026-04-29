@@ -73,6 +73,7 @@ CRUD Journeys (Happy Path):
 - Expense: add -> list -> update -> delete -> verify missing.
 - Savings: create -> update progress -> update fields -> delete -> verify missing.
 - Loan: add -> record repayment -> update -> delete -> verify missing.
+- Loan advanced flow: add -> record repayment with note/date -> query repayment history -> settle -> filter by status.
 
 Dashboard:
 - Seed known records and assert totals match expected sums.
@@ -170,13 +171,22 @@ Target: `Application/Services/*Service.cs`
   - Counterparty empty -> fail
   - Amount <= 0 -> fail
   - DueDate <= Date -> fail
+  - Optional phone number persists when provided
 - Update:
   - Counterparty empty -> fail
   - DueDate <= Date -> fail
+  - Amount < amount already repaid -> fail
 - RecordRepayment:
   - Amount <= 0 -> fail
   - Amount > remaining -> fail
+  - Repayment date < loan date -> fail
   - Valid repayment -> ok
+- GetRepaymentHistory:
+  - Missing loan / wrong user -> fail
+  - Existing loan -> ordered repayment list returned
+- Settle:
+  - Already settled loan -> fail
+  - Active loan -> ok, records final repayment event
 - Delete:
   - Repo bool respected
 
@@ -221,6 +231,10 @@ Use this as a punch-list when implementing tests.
 - Due date must be after loan date (create/update).
 - Repayment cannot exceed remaining balance.
 - Repayment updates `amount_repaid` and derived values behave correctly.
+- `counterparty_phone_number` persists and round-trips correctly.
+- `loan_repayments` history persists with correct ordering and cascade delete behavior.
+- Loan status filtering behaves correctly for `ACTIVE`, `SETTLED`, and `OVERDUE`.
+- PostgreSQL enum mapping for `LoanType` round-trips correctly (`OWED` / `GIVEN` at GraphQL level).
 
 ### Timeout/Resilience
 - Simulated DB delay surfaces `REQUEST_TIMEOUT` (or payload `errors`) with guidance to refresh before retrying.
@@ -260,7 +274,7 @@ This matrix helps prevent gaps and prevents duplicating work in the wrong layer.
 | Income | ✅ validations, not-found, delete result | ✅ CRUD + scoping + delete bool | ✅ auth + payload + isolation |
 | Expense | ✅ validations, not-found, delete result | ✅ CRUD + scoping + delete bool | ✅ auth + payload + isolation |
 | Savings | ✅ create/update/progress rules | ✅ CRUD + progress persistence | ✅ auth + payload + isolation |
-| Loans | ✅ due date + repayment rules | ✅ CRUD + repayment persistence | ✅ auth + payload + isolation |
+| Loans | ✅ due date + repayment + settlement rules | ✅ CRUD + repayment history + enum mapping | ✅ auth + payload + isolation + status filters |
 | Auth | ✅ input validation + token issuance | ⚠️ minimal (mock supabase) | ✅ reject missing/expired token |
 | Dashboard | ✅ optional (pure aggregation helpers) | ✅ optional seed verification | ✅ expected totals from seeded data |
 | Error handling | ✅ service error messages | ✅ DB errors mapped correctly | ✅ timeout/auth mapped consistently |

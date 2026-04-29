@@ -47,7 +47,7 @@ Optional:
 Pick one approach and stick to it:
 
 1. SQL-first (fast to bootstrap)
-- Apply the scripts in `scripts/db/*.sql` in order (000..004).
+- Apply the scripts in `scripts/db/*.sql` in order (000..006).
 
 2. EF migrations (if/when added to the repo)
 - Run `dotnet ef database update` against the test DB.
@@ -94,6 +94,13 @@ Keep the initial E2E suite lean and high signal:
 - One CRUD “journey” per feature (income/expense/savings/loan)
 - Dashboard totals from seeded data
 
+For the loan journey, prefer the current richer flow:
+- add loan with `type` and optional `counterpartyPhoneNumber`
+- record repayment with `date` and `note`
+- query `loanRepaymentHistory`
+- settle the remaining balance
+- verify `loans(status: SETTLED)` includes the loan
+
 ## CI Notes
 In CI, use a Postgres service container and set the same env vars:
 - `ConnectionStrings__Default` points to the CI service
@@ -102,4 +109,3 @@ In CI, use a Postgres service container and set the same env vars:
 If E2E runtime becomes too slow:
 - Run unit + integration on every PR
 - Run E2E on backend PRs only (or nightly)
-
