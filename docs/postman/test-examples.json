@@ -78,7 +78,7 @@
       "body": { "email": "user@example.com", "password": "Password123!" },
       "expected_response": {
         "status": 200,
-        "body": { "accessToken": "eyJhbGci...", "refreshToken": "", "tokenType": "bearer" }
+        "body": { "accessToken": "eyJhbGci...", "refreshToken": "<supabase-refresh-token>", "tokenType": "bearer" }
       }
     },
 

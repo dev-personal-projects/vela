@@ -8,7 +8,7 @@ We use a hybrid approach — REST for auth, GraphQL for everything else.
 flowchart TB
     subgraph Step 1 - Get a token via REST
         SIGNUP["POST /api/auth/signup\n{ email, password }\n→ { message }"]
-        SIGNIN["POST /api/auth/signin\n{ email, password }\n→ { accessToken, tokenType }"]
+        SIGNIN["POST /api/auth/signin\n{ email, password }\n→ { accessToken, refreshToken, tokenType }"]
     end
 
     subgraph Step 2 - Use token with GraphQL
@@ -95,11 +95,12 @@ flowchart TB
     S1 --> S2 --> S3 --> S4
 ```
 
-Today this backend is built around a single API access token:
+Today this backend is built around a single API access token for authorization:
 
 - The API issues its own JWT after successful sign-in.
 - The token lifetime is controlled by `Auth:AccessTokenMinutes` and defaults to 60 minutes.
 - The client sends that token in the `Authorization: Bearer <token>` header for GraphQL requests.
+- The sign-in response also includes the upstream refresh token returned by Supabase.
 - There is no `/api/auth/refresh` endpoint implemented in this codebase right now.
 
 ### What should a client do when the token expires?
@@ -128,7 +129,7 @@ class AuthInterceptor : HttpInterceptor {
 }
 ```
 
-If you add refresh-token support later, that should be documented as a new auth flow, not assumed by default.
+If you add refresh-token support later, that should be documented as a new auth flow, not assumed by default. Returning the refresh token in the sign-in response does not by itself mean the API already supports token refresh.
 
 ---
 

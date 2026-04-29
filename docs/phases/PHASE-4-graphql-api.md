@@ -16,6 +16,8 @@ Expose all features through a clean, authenticated GraphQL API. Resolvers are th
 - [x] `health` query remains public
 - [x] All mutations return typed payloads with data or error
 - [x] Dashboard query returns aggregated summary
+- [x] Dashboard query supports optional `fromDate`, `toDate`, and `activityLimit`
+- [x] Dashboard resolver stays thin and delegates orchestration to `IDashboardService`
 
 ---
 
@@ -23,20 +25,34 @@ Expose all features through a clean, authenticated GraphQL API. Resolvers are th
 
 ```
 Api/
+├── Controllers/
+│   ├── AuthController.cs
+│   └── HealthController.cs
+├── Extensions/
+│   ├── AuthExtensions.cs
+│   ├── CachingExtensions.cs
+│   ├── DatabaseExtensions.cs
+│   ├── GraphQlExtensions.cs
+│   ├── RepositoryExtensions.cs
+│   ├── ServiceExtensions.cs
+│   └── SupabaseExtensions.cs
 └── GraphQL/
     ├── Query.cs
     └── Mutation.cs
 
 Application/
 ├── Interfaces/
-│   └── IAuthService.cs
+│   ├── IAuthService.cs
+│   ├── IDashboardService.cs
+│   └── other service interfaces...
 ├── Services/
-│   └── AuthService.cs
+│   ├── AuthService.cs
+│   ├── DashboardService.cs
+│   └── other feature services...
 └── DTOs/
-    └── Auth/
-        ├── SignUpInput.cs
-        ├── SignInInput.cs
-        └── AuthDtos.cs
+    ├── Auth/
+    ├── Dashboard/
+    └── feature DTO folders...
 ```
 
 ---
@@ -75,6 +91,7 @@ flowchart TB
         ML[addLoan\nauthenticated]
         MLU[updateLoan\nauthenticated]
         MR[recordRepayment\nauthenticated]
+        MSL[settleLoan\nauthenticated]
         MLD[deleteLoan\nauthenticated]
     end
 ```
@@ -154,7 +171,7 @@ sequenceDiagram
     SupabaseAuth->>SupabaseAuth: verify password
     SupabaseAuth-->>AuthService: JWT access_token
     AuthService-->>Mutation: Result.Ok(signInPayload)
-    Mutation-->>Client: SignInPayloadResult with accessToken
+    Mutation-->>Client: SignInPayloadResult with accessToken, refreshToken, tokenType
 ```
 
 ---
@@ -255,6 +272,13 @@ flowchart TD
     DQ --> LS[loanSummary\ntotals and loan status counts]
     DQ --> RA[recentActivity\nlatest income / expense / savings / loan / repayment items]
 ```
+
+### Current implementation notes
+
+- `dashboard` delegates to `IDashboardService`
+- the service uses a dedicated `IDashboardRepository` read path
+- the final dashboard payload can be served from cache before rebuilding from the database
+- dashboard writes are not handled here; cache invalidation happens after successful mutations in the application layer
 
 ---
 

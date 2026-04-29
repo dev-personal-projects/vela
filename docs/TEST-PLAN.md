@@ -58,6 +58,10 @@ Auth and Access Control:
 - Unauthenticated request to protected query/mutation returns 401.
 - Expired token returns 401.
 - Valid token returns 200.
+- Sign-in response includes:
+  - non-empty API `accessToken`
+  - non-empty `refreshToken`
+  - `tokenType == "bearer"`
 
 Cross-User Isolation:
 - User A creates income/expense/savings/loan.
@@ -77,6 +81,8 @@ CRUD Journeys (Happy Path):
 
 Dashboard:
 - Seed known records and assert totals match expected sums.
+- Repeated dashboard request hits cache after the first read.
+- Dashboard cache is invalidated after successful dashboard-affecting writes.
 
 Resilience/Timeout (Regression Guard):
 - Simulate a slow DB call and verify the API returns a timeout error with guidance to refresh before retrying.
@@ -200,7 +206,8 @@ Unit tests should *not* call real Supabase.
   - Invalid email -> fail
   - Missing password -> fail
   - Auth client failure -> fail
-  - Valid -> returns API token via `IApiTokenService`
+  - Valid -> returns API access token via `IApiTokenService`
+  - Valid -> preserves refresh token from `ISupabaseAuthClient`
 
 ## Integration Test Plan (Infrastructure + DB)
 Target: repositories and EF mappings.
@@ -276,7 +283,7 @@ This matrix helps prevent gaps and prevents duplicating work in the wrong layer.
 | Savings | ✅ create/update/progress rules | ✅ CRUD + progress persistence | ✅ auth + payload + isolation |
 | Loans | ✅ due date + repayment + settlement rules | ✅ CRUD + repayment history + enum mapping | ✅ auth + payload + isolation + status filters |
 | Auth | ✅ input validation + token issuance | ⚠️ minimal (mock supabase) | ✅ reject missing/expired token |
-| Dashboard | ✅ optional (pure aggregation helpers) | ✅ optional seed verification | ✅ expected totals from seeded data |
+| Dashboard | ✅ optional (pure aggregation helpers) | ✅ optional seed verification | ✅ expected totals from seeded data + cache behavior |
 | Error handling | ✅ service error messages | ✅ DB errors mapped correctly | ✅ timeout/auth mapped consistently |
 
 Legend:
@@ -300,6 +307,15 @@ For add/update/delete mutations:
   - `errors` contains the message
   - `message` is null
 
+### Auth Response Contract
+- `POST /api/auth/signin` success payload contains:
+  - `accessToken`
+  - `refreshToken`
+  - `tokenType`
+- `accessToken` must be the API-issued JWT used for GraphQL authorization.
+- `refreshToken` must not be blank when the upstream auth provider returns one.
+- Until a refresh endpoint exists, tests should verify the field is present but should not assume `/api/auth/refresh` behavior.
+
 ### Isolation (Critical)
 For each entity type:
 - User A creates data
@@ -318,6 +334,21 @@ Given seeded incomes/expenses/savings/loans:
 - `NetBalance` = income - expenses
 - `SavingsProgress` calculations stable
 - `LoanSummary` totals correct (owed vs given)
+- `FocusGoal` selection is stable for mixed goal data
+- `RecentActivity` includes mixed activity types in descending order
+- `activityLimit` truncates recent activity correctly
+- filtered dashboard (`fromDate`, `toDate`) respects the requested period
+
+## Dashboard Cache Tests
+- First dashboard request for a user/filter combination is a cache miss and builds from DB.
+- Second dashboard request for the same user/filter combination is served from cache.
+- Cache key varies by:
+  - `userId`
+  - `fromDate`
+  - `toDate`
+  - `activityLimit`
+- Successful writes to income, expense, savings, loan, and loan repayment flows invalidate the user dashboard cache.
+- If distributed cache is unavailable, dashboard still falls back to the DB path.
 
 ## Manual Smoke Tests (Docs/Postman)
 For quick human verification and demos, keep the Postman examples current:

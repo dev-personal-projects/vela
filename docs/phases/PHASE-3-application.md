@@ -13,8 +13,12 @@ Implement all business logic through services. Services orchestrate domain entit
 - [x] `IExpenseService` interface and `ExpenseService` implementation
 - [x] `ISavingsGoalService` interface and `SavingsGoalService` implementation
 - [x] `ILoanService` interface and `LoanService` implemented
+- [x] `IDashboardService` interface and `DashboardService` implementation
+- [x] `IDashboardCacheService` interface added for dashboard caching
 - [x] All services return `AppResult<T>` or `AppResult`
 - [x] All validation rules enforced in services
+- [x] Dashboard aggregation centralized in the application layer
+- [x] Dashboard cache invalidation triggered after successful writes
 - [x] All services registered in DI
 
 ---
@@ -25,6 +29,9 @@ Implement all business logic through services. Services orchestrate domain entit
 Application/
 ├── Interfaces/
 │   ├── IAuthService.cs
+│   ├── IDashboardCacheService.cs
+│   ├── IDashboardRepository.cs     Phase 2
+│   ├── IDashboardService.cs
 │   ├── IIncomeRepository.cs        Phase 2
 │   ├── IExpenseRepository.cs       Phase 2
 │   ├── ISavingsGoalRepository.cs   Phase 2
@@ -36,6 +43,7 @@ Application/
 │   └── ILoanService.cs
 ├── Services/
 │   ├── AuthService.cs
+│   ├── DashboardService.cs
 │   ├── IncomeService.cs
 │   ├── ExpenseService.cs
 │   ├── SavingsGoalService.cs
@@ -48,9 +56,14 @@ Application/
     ├── Income/
     │   └── AddIncomeInput.cs
     ├── Expense/
-    │   └── AddExpenseInput.cs
+    │   ├── AddExpenseInput.cs
+    │   └── UpdateExpenseInput.cs
+    ├── Dashboard/
+    │   └── DashboardDtos.cs
     ├── Savings/
-    │   └── CreateSavingsGoalInput.cs
+    │   ├── CreateSavingsGoalInput.cs
+    │   ├── AddSavingsContributionInput.cs
+    │   └── UpdateSavingsGoalInput.cs
     └── Loan/
         ├── AddLoanInput.cs
         ├── RecordRepaymentInput.cs
@@ -91,10 +104,44 @@ flowchart TD
     VAL -- valid --> BUILD[Build domain entity]
     BUILD --> REPO[Repository call]
     REPO --> OK[Result.Ok\nentity]
+    OK --> INV[Optional side effects\ncache invalidation]
 
     FAIL --> ERR[GraphQL error payload]
-    OK --> DATA[GraphQL data payload]
+    INV --> DATA[GraphQL data payload]
 ```
+
+---
+
+## Feature — Dashboard Service
+
+```mermaid
+flowchart LR
+    DS[IDashboardService]
+    DS --> SUM["GetSummaryAsync(userId, fromDate?, toDate?, activityLimit?)\nResult of DashboardSummary"]
+    SUM --> CACHE[Check dashboard cache]
+    CACHE --> MISS[On miss: build dashboard from repository reads]
+    MISS --> STORE[Store cached dashboard response]
+```
+
+Dashboard responsibilities:
+- normalize `activityLimit`
+- orchestrate dashboard totals, savings, loan summary, and recent activity
+- read from the cache first
+- rebuild and cache the dashboard on miss
+
+---
+
+## Cache Invalidation Responsibility
+
+The application layer now owns dashboard freshness for in-app writes.
+
+After successful writes, the following services invalidate the user’s dashboard cache:
+- `IncomeService`
+- `ExpenseService`
+- `SavingsGoalService`
+- `LoanService`
+
+This keeps mutation flows and cache freshness aligned in one layer.
 
 ---
 
@@ -249,6 +296,7 @@ sequenceDiagram
 | Interface Segregation | One interface per service — no fat interfaces |
 | Dependency Inversion | Services depend on repository interfaces, not implementations |
 | DRY | Shared validation helpers extracted if used across services |
+| Separation of Concerns | Dashboard caching is abstracted behind `IDashboardCacheService` |
 
 ---
 
@@ -258,5 +306,7 @@ sequenceDiagram
 - Valid inputs produce `Result.Ok` with the entity
 - Invalid inputs produce `Result.Fail` with a clear message
 - Repayment exceeding balance returns `Result.Fail`
+- Dashboard requests resolve through `DashboardService`
+- Dashboard-affecting writes invalidate the user dashboard cache
 - Valid repayment history events are persisted alongside aggregate loan state
 - No EF Core, GraphQL, or HTTP references anywhere in this layer

@@ -12,6 +12,7 @@
 | Database | Supabase (PostgreSQL) |
 | Auth | Supabase Auth (credential verification) + own JWT tokens |
 | ORM | Entity Framework Core |
+| Cache | Redis via `IDistributedCache` with in-memory fallback |
 | Mobile | Kotlin + Apollo GraphQL (Phase 2) |
 | Runtime | .NET 10 |
 
@@ -42,6 +43,7 @@ flowchart TB
 
     subgraph Infrastructure Layer
         REP[Repositories]
+        CACHE[Dashboard Cache Service]
         EF[EF Core DbContext]
     end
 
@@ -55,8 +57,10 @@ flowchart TB
     GQL --> SVC
     SVC --> ENT
     SVC --> REP
+    SVC --> CACHE
     REP --> EF
     EF --> SUPA_DB
+    CACHE --> SUPA_DB
     AUTH -.signs in via auth service.-> SUPA_AUTH
     SVC --> RES
 ```
@@ -66,8 +70,8 @@ flowchart TB
 | Layer | Responsibility |
 |---|---|
 | Domain | Core entities, enums, value objects, Result pattern |
-| Application | Business logic, use cases, service interfaces |
-| Infrastructure | EF Core DbContext, Supabase connection, repository implementations |
+| Application | Business logic, use cases, service interfaces, cache invalidation decisions |
+| Infrastructure | EF Core DbContext, Supabase connection, repository implementations, Redis-backed cache implementation |
 | API | GraphQL types, queries, mutations, JWT auth middleware — no business logic |
 
 ---
@@ -88,17 +92,18 @@ flowchart LR
     DOM --> DOM_COM[Common/\nResult.cs]
     DOM --> DOM_ENM[Enums/\nLoanType.cs]
 
-    APP --> APP_INT[Interfaces/\nIIncomeService\nIExpenseService\nISavingsService\nILoanService]
-    APP --> APP_SVC[Services/\nIncomeService\nExpenseService\nSavingsService\nLoanService]
-    APP --> APP_DTO[DTOs/\nInput & Output models]
+    APP --> APP_INT[Interfaces/\nfeature services\nrepositories\ndashboard cache]
+    APP --> APP_SVC[Services/\nAuthService\nDashboardService\nfeature services]
+    APP --> APP_DTO[DTOs/\nAuth\nDashboard\nfeature models]
 
     INF --> INF_DB[Data/\nAppDbContext.cs]
-    INF --> INF_REP[Repositories/]
-    INF --> INF_SUP[Supabase/\nSupabaseAuthProvider.cs]
+    INF --> INF_REP[Repositories/\nfeature + dashboard]
+    INF --> INF_SUP[Auth/\nApiTokenService\nSupabaseAuthClient]
+    INF --> INF_CACHE[Caching/\nDashboardCacheService]
 
     API --> API_GQL[GraphQL/\nQuery.cs\nMutation.cs]
-    API --> API_TYP[Types/\nGraphQL type configs]
-    API --> API_AUTH[Auth/\nJWT Middleware]
+    API --> API_EXT[Extensions/\nAuth Database GraphQL\nRepositories Services Caching]
+    API --> API_CTRL[Controllers/\nAuth Health]
 ```
 
 ---
@@ -198,7 +203,7 @@ flowchart LR
     Q --> QE[expenses: Expense list\noptional fromDate / toDate / category]
     Q --> QS[savingsGoals: SavingsGoal list]
     Q --> QL[loans: Loan list\noptional type / status]
-    Q --> QD[dashboard: DashboardSummary]
+    Q --> QD[dashboard: DashboardSummary\noptional fromDate / toDate / activityLimit]
     Q --> QR[loanRepaymentHistory: LoanRepayment list]
 ```
 
@@ -209,13 +214,34 @@ flowchart LR
     M[Mutation Root\n🔒 Authenticated]
 
     M --> MI[addIncome\nAddIncomeInput\n→ IncomePayload]
+    M --> MI2[updateIncome\nUpdateIncomeInput\n→ IncomePayload]
+    M --> MI3[deleteIncome\nGuid\n→ DeletePayload]
     M --> ME[addExpense\nAddExpenseInput\n→ ExpensePayload]
+    M --> ME2[updateExpense\nUpdateExpenseInput\n→ ExpensePayload]
+    M --> ME3[deleteExpense\nGuid\n→ DeletePayload]
     M --> MS[createSavingsGoal\nCreateSavingsGoalInput\n→ SavingsGoalPayload]
+    M --> MSU[updateSavingsGoal\nUpdateSavingsGoalInput\n→ SavingsGoalPayload]
     M --> MS2[addSavingsContribution\nAddSavingsContributionInput\n→ SavingsGoalPayload]
+    M --> MS3[updateSavingsProgress\nGuid + decimal\n→ SavingsGoalPayload]
+    M --> MS4[deleteSavingsGoal\nGuid\n→ DeletePayload]
     M --> ML1[addLoan\nAddLoanInput\n→ LoanPayload]
+    M --> ML4[updateLoan\nUpdateLoanInput\n→ LoanPayload]
     M --> ML2[recordRepayment\nRecordRepaymentInput\n→ LoanPayload]
     M --> ML3[settleLoan\nSettleLoanInput\n→ LoanPayload]
+    M --> ML5[deleteLoan\nGuid\n→ DeletePayload]
 ```
+
+### Dashboard Read Strategy
+
+The dashboard is implemented as a purpose-built read path rather than a naive composition of generic list queries.
+
+Current characteristics:
+- dedicated dashboard repository
+- SQL-side totals and loan summary aggregation
+- read-only EF queries with `AsNoTracking()`
+- recent activity assembled from focused per-source reads
+- Redis-backed cache for the final dashboard response
+- cache invalidation triggered after successful dashboard-affecting writes
 
 ---
 
