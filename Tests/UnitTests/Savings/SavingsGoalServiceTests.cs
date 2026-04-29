@@ -87,5 +87,53 @@ public sealed class SavingsGoalServiceTests
         _cache.Verify(x => x.InvalidateUserAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
+    [Fact(DisplayName = "UT-SAVINGS-PROGRESS-001 updates progress and invalidates dashboard cache")]
+    public async Task UpdateProgressAsync_ShouldUpdateProgressAndInvalidateCache_WhenAmountIsValid()
+    {
+        var service = CreateService();
+        var ct = TestContext.Current.CancellationToken;
+        var userId = TestUsers.PrimaryUserId;
+        var goal = new SavingsGoalBuilder()
+            .WithTargetAmount(1000m)
+            .Build(userId);
+
+        _repository
+            .Setup(x => x.GetByIdAsync(goal.Id, userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(goal);
+
+        _repository
+            .Setup(x => x.UpdateAsync(goal, It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        _cache
+            .Setup(x => x.InvalidateUserAsync(userId, It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        var result = await service.UpdateProgressAsync(goal.Id, 400m, userId, ct);
+
+        result.IsSuccess.Should().BeTrue();
+        goal.CurrentAmount.Should().Be(400m);
+        goal.Progress.Should().Be(40m);
+        _cache.Verify(x => x.InvalidateUserAsync(userId, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact(DisplayName = "UT-SAVINGS-DELETE-001 does not invalidate cache when delete misses")]
+    public async Task DeleteAsync_ShouldNotInvalidateCache_WhenGoalIsMissing()
+    {
+        var service = CreateService();
+        var ct = TestContext.Current.CancellationToken;
+        var goalId = Guid.NewGuid();
+
+        _repository
+            .Setup(x => x.DeleteAsync(goalId, TestUsers.PrimaryUserId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
+        var result = await service.DeleteAsync(goalId, TestUsers.PrimaryUserId, ct);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Should().Be("Savings goal not found.");
+        _cache.Verify(x => x.InvalidateUserAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
     private SavingsGoalService CreateService() => new(_repository.Object, _cache.Object);
 }

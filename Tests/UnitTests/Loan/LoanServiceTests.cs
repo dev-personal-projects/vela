@@ -2,6 +2,7 @@ using FinanceTracker.Application.DTOs.Loan;
 using FinanceTracker.Application.Interfaces;
 using FinanceTracker.Application.Services;
 using FinanceTracker.Domain.Entities;
+using FinanceTracker.Domain.Enums;
 using UnitTests.Builders;
 using UnitTests.Common;
 
@@ -98,6 +99,64 @@ public sealed class LoanServiceTests
 
         _repaymentRepository.Verify(x => x.AddAsync(It.IsAny<LoanRepayment>(), It.IsAny<CancellationToken>()), Times.Never);
         _cache.Verify(x => x.InvalidateUserAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact(DisplayName = "UT-LOAN-ADD-001 rejects due dates that are not after the loan date")]
+    public async Task AddAsync_ShouldFail_WhenDueDateIsNotAfterLoanDate()
+    {
+        var service = CreateService();
+        var ct = TestContext.Current.CancellationToken;
+
+        var result = await service.AddAsync(
+            new AddLoanInput("John Smith", null, 500m, LoanType.Owed, "Bad due date", TestDates.OneDayAgo, TestDates.OneDayAgo),
+            TestUsers.PrimaryUserId,
+            ct);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Should().Be("Due date must be after the loan date.");
+        _repository.Verify(x => x.AddAsync(It.IsAny<FinanceTracker.Domain.Entities.Loan>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact(DisplayName = "UT-LOAN-UPDATE-001 rejects reducing the amount below the amount already repaid")]
+    public async Task UpdateAsync_ShouldFail_WhenAmountWouldDropBelowRepaidAmount()
+    {
+        var service = CreateService();
+        var ct = TestContext.Current.CancellationToken;
+        var loan = new LoanBuilder()
+            .WithAmount(1000m)
+            .WithAmountRepaid(400m)
+            .Build(TestUsers.PrimaryUserId);
+
+        _repository
+            .Setup(x => x.GetByIdAsync(loan.Id, TestUsers.PrimaryUserId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(loan);
+
+        var result = await service.UpdateAsync(
+            new UpdateLoanInput(loan.Id, "John Smith", null, 300m, "Updated", TestDates.NextMonth),
+            TestUsers.PrimaryUserId,
+            ct);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Should().Be($"Amount cannot be less than the amount already repaid ({loan.AmountRepaid:C}).");
+        _repository.Verify(x => x.UpdateAsync(It.IsAny<FinanceTracker.Domain.Entities.Loan>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact(DisplayName = "UT-LOAN-HISTORY-001 returns not found when requesting repayment history for another user's loan")]
+    public async Task GetRepaymentHistoryAsync_ShouldFail_WhenLoanIsMissing()
+    {
+        var service = CreateService();
+        var ct = TestContext.Current.CancellationToken;
+        var loanId = Guid.NewGuid();
+
+        _repository
+            .Setup(x => x.GetByIdAsync(loanId, TestUsers.PrimaryUserId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((FinanceTracker.Domain.Entities.Loan?)null);
+
+        var result = await service.GetRepaymentHistoryAsync(loanId, TestUsers.PrimaryUserId, ct);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Should().Be("Loan not found.");
+        _repaymentRepository.Verify(x => x.GetByLoanIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     private LoanService CreateService() => new(_repository.Object, _repaymentRepository.Object, _cache.Object);

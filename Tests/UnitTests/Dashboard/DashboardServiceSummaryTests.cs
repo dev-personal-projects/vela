@@ -79,6 +79,74 @@ public sealed class DashboardServiceSummaryTests
         result.Value.SavingsOverview.FocusGoal!.Name.Should().Be("Emergency Fund");
     }
 
+    [Fact(DisplayName = "UT-DASHBOARD-SUMMARY-003 normalizes non-positive activity limits to the default of ten")]
+    [Trait("Suite", "Unit")]
+    [Trait("Feature", "Dashboard")]
+    [Trait("CaseId", "UT-DASHBOARD-SUMMARY-003")]
+    public async Task UT_DASHBOARD_SUMMARY_003_NormalizesNonPositiveActivityLimitsToTen()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var repository = new Mock<IDashboardRepository>(MockBehavior.Strict);
+        var cache = new Mock<IDashboardCacheService>(MockBehavior.Strict);
+
+        cache.Setup(x => x.GetAsync(TestUsers.PrimaryUserId, null, null, 10, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((DashboardSummary?)null);
+        repository.Setup(x => x.GetTotalIncomeAsync(TestUsers.PrimaryUserId, null, null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(100m);
+        repository.Setup(x => x.GetTotalExpensesAsync(TestUsers.PrimaryUserId, null, null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(50m);
+        repository.Setup(x => x.GetSavingsGoalsAsync(TestUsers.PrimaryUserId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
+        repository.Setup(x => x.GetLoanSummaryAsync(TestUsers.PrimaryUserId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new DashboardLoanSummarySnapshot(0m, 0m, 0, 0, 0));
+        repository.Setup(x => x.GetRecentActivityAsync(TestUsers.PrimaryUserId, null, null, 10, It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
+        cache.Setup(x => x.SetAsync(TestUsers.PrimaryUserId, null, null, 10, It.IsAny<DashboardSummary>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        var service = new DashboardService(repository.Object, cache.Object);
+
+        var result = await service.GetSummaryAsync(TestUsers.PrimaryUserId, null, null, 0, ct);
+
+        result.IsSuccess.Should().BeTrue();
+        repository.Verify(x => x.GetRecentActivityAsync(TestUsers.PrimaryUserId, null, null, 10, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact(DisplayName = "UT-DASHBOARD-SUMMARY-004 returns null expense-to-income ratio when total income is zero")]
+    [Trait("Suite", "Unit")]
+    [Trait("Feature", "Dashboard")]
+    [Trait("CaseId", "UT-DASHBOARD-SUMMARY-004")]
+    public async Task UT_DASHBOARD_SUMMARY_004_ReturnsNullExpenseToIncomeRatio_WhenIncomeIsZero()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var repository = new Mock<IDashboardRepository>(MockBehavior.Strict);
+        var cache = new Mock<IDashboardCacheService>(MockBehavior.Strict);
+
+        cache.Setup(x => x.GetAsync(TestUsers.PrimaryUserId, null, null, 10, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((DashboardSummary?)null);
+        repository.Setup(x => x.GetTotalIncomeAsync(TestUsers.PrimaryUserId, null, null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(0m);
+        repository.Setup(x => x.GetTotalExpensesAsync(TestUsers.PrimaryUserId, null, null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(50m);
+        repository.Setup(x => x.GetSavingsGoalsAsync(TestUsers.PrimaryUserId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
+        repository.Setup(x => x.GetLoanSummaryAsync(TestUsers.PrimaryUserId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new DashboardLoanSummarySnapshot(0m, 0m, 0, 0, 0));
+        repository.Setup(x => x.GetRecentActivityAsync(TestUsers.PrimaryUserId, null, null, 10, It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
+        cache.Setup(x => x.SetAsync(TestUsers.PrimaryUserId, null, null, 10, It.IsAny<DashboardSummary>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        var service = new DashboardService(repository.Object, cache.Object);
+
+        var result = await service.GetSummaryAsync(TestUsers.PrimaryUserId, null, null, null, ct);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value!.Insights.ExpenseToIncomeRatio.Should().BeNull();
+        result.Value.NetBalance.Should().Be(-50m);
+        result.Value.Insights.HasNegativeNetBalance.Should().BeTrue();
+    }
+
     private static Mock<IDashboardRepository> CreateSummaryRepository()
     {
         var repository = new Mock<IDashboardRepository>(MockBehavior.Strict);

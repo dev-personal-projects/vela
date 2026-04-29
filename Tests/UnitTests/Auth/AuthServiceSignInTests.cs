@@ -72,5 +72,23 @@ public sealed class AuthServiceSignInTests
         _apiTokenService.Verify(x => x.CreateAccessToken(It.IsAny<Guid>()), Times.Never);
     }
 
+    [Fact(DisplayName = "UT-AUTH-SIGNIN-004 returns upstream authentication errors without minting an API token")]
+    public async Task SignInAsync_ShouldReturnUpstreamError_WhenProviderAuthenticationFails()
+    {
+        var service = CreateService();
+        var ct = TestContext.Current.CancellationToken;
+
+        _authClient
+            .Setup(x => x.SignInAsync("user@example.com", "wrong-password", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(AppResult<SignInPayload>.Fail("Invalid login credentials."));
+
+        var result = await service.SignInAsync(new SignInInput("user@example.com", "wrong-password"), ct);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Should().Be("Invalid login credentials.");
+
+        _apiTokenService.Verify(x => x.CreateAccessToken(It.IsAny<Guid>()), Times.Never);
+    }
+
     private AuthService CreateService() => new(_authClient.Object, _apiTokenService.Object);
 }

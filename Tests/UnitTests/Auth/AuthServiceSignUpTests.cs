@@ -43,5 +43,19 @@ public sealed class AuthServiceSignUpTests
         _authClient.Verify(x => x.SignUpAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
+    [Fact(DisplayName = "UT-AUTH-SIGNUP-003 rejects invalid email before calling the auth provider")]
+    public async Task SignUpAsync_ShouldFail_WhenEmailIsInvalid()
+    {
+        var service = CreateService();
+        var ct = TestContext.Current.CancellationToken;
+
+        var result = await service.SignUpAsync(new SignUpInput("not-an-email", "secret123"), ct);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Should().Be("A valid email address is required.");
+
+        _authClient.Verify(x => x.SignUpAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
     private AuthService CreateService() => new(_authClient.Object, _apiTokenService.Object);
 }

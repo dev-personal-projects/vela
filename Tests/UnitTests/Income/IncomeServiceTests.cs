@@ -75,5 +75,55 @@ public sealed class IncomeServiceTests
         _cache.Verify(x => x.InvalidateUserAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
+    [Fact(DisplayName = "UT-INCOME-GETBYID-001 returns not found when the income does not belong to the user")]
+    public async Task GetByIdAsync_ShouldFail_WhenIncomeIsMissing()
+    {
+        var service = CreateService();
+        var ct = TestContext.Current.CancellationToken;
+        var incomeId = Guid.NewGuid();
+
+        _repository
+            .Setup(x => x.GetByIdAsync(incomeId, TestUsers.PrimaryUserId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((FinanceTracker.Domain.Entities.Income?)null);
+
+        var result = await service.GetByIdAsync(incomeId, TestUsers.PrimaryUserId, ct);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Should().Be("Income record not found.");
+    }
+
+    [Fact(DisplayName = "UT-INCOME-UPDATE-001 updates an existing income and invalidates dashboard cache")]
+    public async Task UpdateAsync_ShouldUpdateIncomeAndInvalidateCache_WhenInputIsValid()
+    {
+        var service = CreateService();
+        var ct = TestContext.Current.CancellationToken;
+        var userId = TestUsers.PrimaryUserId;
+        var income = new FinanceTracker.Domain.Entities.Income(userId, 1000m, "Salary", "Old description", TestDates.OneWeekAgo);
+
+        _repository
+            .Setup(x => x.GetByIdAsync(income.Id, userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(income);
+
+        _repository
+            .Setup(x => x.UpdateAsync(income, It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        _cache
+            .Setup(x => x.InvalidateUserAsync(userId, It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        var result = await service.UpdateAsync(
+            new UpdateIncomeInput(income.Id, 1500m, " Consulting ", "Updated description", TestDates.OneDayAgo),
+            userId,
+            ct);
+
+        result.IsSuccess.Should().BeTrue();
+        income.Amount.Should().Be(1500m);
+        income.Source.Should().Be("Consulting");
+        income.Description.Should().Be("Updated description");
+        income.Date.Should().Be(TestDates.OneDayAgo);
+        _cache.Verify(x => x.InvalidateUserAsync(userId, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
     private IncomeService CreateService() => new(_repository.Object, _cache.Object);
 }
