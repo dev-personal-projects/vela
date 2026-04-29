@@ -400,11 +400,11 @@
       "url": "http://localhost:8080/graphql",
       "headers": { "Content-Type": "application/json", "Authorization": "Bearer <JWT_TOKEN>" },
       "body": {
-        "query": "mutation { addLoan(input: { counterpartyName: \"John Smith\", counterpartyPhoneNumber: \"+256700000000\", amount: 2000.00, type: Owed, description: \"Personal loan\", date: \"2025-01-01T00:00:00Z\", dueDate: \"2025-06-01T00:00:00Z\" }) { loan { id counterpartyName counterpartyPhoneNumber amount amountRepaid remainingBalance type isSettled dueDate } message errors } }"
+        "query": "mutation { addLoan(input: { counterpartyName: \"John Smith\", counterpartyPhoneNumber: \"+256700000000\", amount: 2000.00, type: OWED, description: \"Personal loan\", date: \"2025-01-01T00:00:00Z\", dueDate: \"2025-06-01T00:00:00Z\" }) { loan { id counterpartyName counterpartyPhoneNumber amount amountRepaid remainingBalance type isSettled dueDate } message errors } }"
       },
       "expected_response": {
         "status": 200,
-        "body": { "data": { "addLoan": { "loan": { "id": "<uuid>", "counterpartyName": "John Smith", "counterpartyPhoneNumber": "+256700000000", "amount": 2000.00, "amountRepaid": 0.00, "remainingBalance": 2000.00, "type": "Owed", "isSettled": false, "dueDate": "2025-06-01T00:00:00Z" }, "message": "Loan added successfully.", "errors": null } } }
+        "body": { "data": { "addLoan": { "loan": { "id": "<uuid>", "counterpartyName": "John Smith", "counterpartyPhoneNumber": "+256700000000", "amount": 2000.00, "amountRepaid": 0.00, "remainingBalance": 2000.00, "type": "OWED", "isSettled": false, "dueDate": "2025-06-01T00:00:00Z" }, "message": "Loan added successfully.", "errors": null } } }
       }
     },
 
@@ -417,7 +417,7 @@
       "body": { "query": "{ loans { id counterpartyName counterpartyPhoneNumber amount amountRepaid remainingBalance type isSettled date dueDate } }" },
       "expected_response": {
         "status": 200,
-        "body": { "data": { "loans": [{ "id": "<uuid>", "counterpartyName": "John Smith", "counterpartyPhoneNumber": "+256700000000", "amount": 2000.00, "remainingBalance": 2000.00, "type": "Owed", "isSettled": false }] } }
+        "body": { "data": { "loans": [{ "id": "<uuid>", "counterpartyName": "John Smith", "counterpartyPhoneNumber": "+256700000000", "amount": 2000.00, "remainingBalance": 2000.00, "type": "OWED", "isSettled": false }] } }
       }
     },
 
@@ -430,7 +430,7 @@
       "body": { "query": "{ loan(id: \"<PASTE_ID>\") { id counterpartyName counterpartyPhoneNumber amount amountRepaid remainingBalance type isSettled date dueDate } }" },
       "expected_response": {
         "status": 200,
-        "body": { "data": { "loan": { "id": "<uuid>", "counterpartyName": "John Smith", "counterpartyPhoneNumber": "+256700000000", "amount": 2000.00, "remainingBalance": 2000.00, "type": "Owed", "isSettled": false } } }
+        "body": { "data": { "loan": { "id": "<uuid>", "counterpartyName": "John Smith", "counterpartyPhoneNumber": "+256700000000", "amount": 2000.00, "remainingBalance": 2000.00, "type": "OWED", "isSettled": false } } }
       }
     },
 
@@ -561,11 +561,11 @@
       "url": "http://localhost:8080/graphql",
       "headers": { "Content-Type": "application/json", "Authorization": "Bearer <JWT_TOKEN>" },
       "body": {
-        "query": "{ loans(type: Owed) { id counterpartyName counterpartyPhoneNumber amount amountRepaid remainingBalance type isSettled date dueDate } }"
+        "query": "{ loans(type: OWED) { id counterpartyName counterpartyPhoneNumber amount amountRepaid remainingBalance type isSettled date dueDate } }"
       },
       "expected_response": {
         "status": 200,
-        "body": { "data": { "loans": [{ "id": "<uuid>", "counterpartyName": "John Smith", "counterpartyPhoneNumber": "+256700000000", "amount": 2000.00, "amountRepaid": 0.00, "remainingBalance": 2000.00, "type": "Owed", "isSettled": false, "date": "2025-01-01T00:00:00Z", "dueDate": "2025-06-01T00:00:00Z" }] } }
+        "body": { "data": { "loans": [{ "id": "<uuid>", "counterpartyName": "John Smith", "counterpartyPhoneNumber": "+256700000000", "amount": 2000.00, "amountRepaid": 0.00, "remainingBalance": 2000.00, "type": "OWED", "isSettled": false, "date": "2025-01-01T00:00:00Z", "dueDate": "2025-06-01T00:00:00Z" }] } }
       }
     },
 

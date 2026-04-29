@@ -374,12 +374,12 @@ query {
 ### Fetch Two Loan Views In One Request
 ```graphql
 query {
-  owed: loans(type: Owed) {
+  owed: loans(type: OWED) {
     id
     counterpartyName
     remainingBalance
   }
-  given: loans(type: Given) {
+  given: loans(type: GIVEN) {
     id
     counterpartyName
     remainingBalance

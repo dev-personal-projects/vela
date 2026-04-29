@@ -14,6 +14,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.HasPostgresEnum<LoanType>("loan_type");
+
         modelBuilder.Entity<Income>(e =>
         {
             e.ToTable("incomes");
@@ -78,7 +80,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
             e.Property(x => x.CounterpartyPhoneNumber).HasColumnName("counterparty_phone_number");
             e.Property(x => x.Amount).HasColumnName("amount").HasColumnType("numeric(18,2)").IsRequired();
             e.Property(x => x.AmountRepaid).HasColumnName("amount_repaid").HasColumnType("numeric(18,2)").IsRequired();
-            e.Property(x => x.Type).HasColumnName("type").HasConversion<string>().IsRequired();
+            e.Property(x => x.Type).HasColumnName("type").IsRequired();
             e.Property(x => x.Description).HasColumnName("description").IsRequired();
             e.Property(x => x.Date).HasColumnName("date").IsRequired();
             e.Property(x => x.DueDate).HasColumnName("due_date");
