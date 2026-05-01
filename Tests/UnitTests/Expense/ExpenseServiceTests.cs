@@ -51,6 +51,36 @@ public sealed class ExpenseServiceTests
         _cache.Verify(x => x.InvalidateUserAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
+    [Fact(DisplayName = "UT-EXPENSE-ADD-003 rejects non-positive expense amounts")]
+    public async Task AddAsync_ShouldFail_WhenAmountIsNotPositive()
+    {
+        var service = CreateService();
+        var ct = TestContext.Current.CancellationToken;
+
+        var result = await service.AddAsync(new AddExpenseInput(0m, "Groceries", "Weekly shop", TestDates.OneDayAgo), TestUsers.PrimaryUserId, ct);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Should().Be("Amount must be greater than 0.");
+
+        _repository.Verify(x => x.AddAsync(It.IsAny<FinanceTracker.Domain.Entities.Expense>(), It.IsAny<CancellationToken>()), Times.Never);
+        _cache.Verify(x => x.InvalidateUserAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact(DisplayName = "UT-EXPENSE-ADD-004 rejects future-dated expenses")]
+    public async Task AddAsync_ShouldFail_WhenDateIsInTheFuture()
+    {
+        var service = CreateService();
+        var ct = TestContext.Current.CancellationToken;
+
+        var result = await service.AddAsync(new AddExpenseInput(50m, "Groceries", "Weekly shop", DateTime.UtcNow.AddMinutes(1)), TestUsers.PrimaryUserId, ct);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Should().Be("Date cannot be in the future.");
+
+        _repository.Verify(x => x.AddAsync(It.IsAny<FinanceTracker.Domain.Entities.Expense>(), It.IsAny<CancellationToken>()), Times.Never);
+        _cache.Verify(x => x.InvalidateUserAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
     [Fact(DisplayName = "UT-EXPENSE-GETBYID-001 returns not found when the expense does not exist")]
     public async Task GetByIdAsync_ShouldFail_WhenExpenseIsMissing()
     {
@@ -119,6 +149,24 @@ public sealed class ExpenseServiceTests
 
         result.IsSuccess.Should().BeTrue();
         _cache.Verify(x => x.InvalidateUserAsync(TestUsers.PrimaryUserId, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact(DisplayName = "UT-EXPENSE-DELETE-002 does not invalidate cache when delete misses")]
+    public async Task DeleteAsync_ShouldNotInvalidateCache_WhenExpenseIsMissing()
+    {
+        var service = CreateService();
+        var ct = TestContext.Current.CancellationToken;
+        var expenseId = Guid.NewGuid();
+
+        _repository
+            .Setup(x => x.DeleteAsync(expenseId, TestUsers.PrimaryUserId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
+        var result = await service.DeleteAsync(expenseId, TestUsers.PrimaryUserId, ct);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Should().Be("Expense record not found.");
+        _cache.Verify(x => x.InvalidateUserAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     private ExpenseService CreateService() => new(_repository.Object, _cache.Object);

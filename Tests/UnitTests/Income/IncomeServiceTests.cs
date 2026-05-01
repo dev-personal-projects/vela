@@ -57,6 +57,42 @@ public sealed class IncomeServiceTests
         _cache.Verify(x => x.InvalidateUserAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
+    [Fact(DisplayName = "UT-INCOME-ADD-003 rejects non-positive income amounts")]
+    public async Task AddAsync_ShouldFail_WhenAmountIsNotPositive()
+    {
+        var service = CreateService();
+        var ct = TestContext.Current.CancellationToken;
+
+        var result = await service.AddAsync(
+            new AddIncomeInput(0m, "Salary", "Monthly salary", TestDates.OneDayAgo),
+            TestUsers.PrimaryUserId,
+            ct);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Should().Be("Amount must be greater than 0.");
+
+        _repository.Verify(x => x.AddAsync(It.IsAny<FinanceTracker.Domain.Entities.Income>(), It.IsAny<CancellationToken>()), Times.Never);
+        _cache.Verify(x => x.InvalidateUserAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact(DisplayName = "UT-INCOME-ADD-004 rejects empty income sources")]
+    public async Task AddAsync_ShouldFail_WhenSourceIsMissing()
+    {
+        var service = CreateService();
+        var ct = TestContext.Current.CancellationToken;
+
+        var result = await service.AddAsync(
+            new AddIncomeInput(100m, "   ", "Monthly salary", TestDates.OneDayAgo),
+            TestUsers.PrimaryUserId,
+            ct);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Should().Be("Source is required.");
+
+        _repository.Verify(x => x.AddAsync(It.IsAny<FinanceTracker.Domain.Entities.Income>(), It.IsAny<CancellationToken>()), Times.Never);
+        _cache.Verify(x => x.InvalidateUserAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
     [Fact(DisplayName = "UT-INCOME-DELETE-001 does not invalidate cache when delete misses")]
     public async Task DeleteAsync_ShouldNotInvalidateCache_WhenIncomeIsMissing()
     {
@@ -73,6 +109,27 @@ public sealed class IncomeServiceTests
         result.Error.Should().Be("Income record not found.");
 
         _cache.Verify(x => x.InvalidateUserAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact(DisplayName = "UT-INCOME-DELETE-002 invalidates dashboard cache after a successful delete")]
+    public async Task DeleteAsync_ShouldInvalidateCache_WhenDeleteSucceeds()
+    {
+        var service = CreateService();
+        var ct = TestContext.Current.CancellationToken;
+        var incomeId = Guid.NewGuid();
+
+        _repository
+            .Setup(x => x.DeleteAsync(incomeId, TestUsers.PrimaryUserId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        _cache
+            .Setup(x => x.InvalidateUserAsync(TestUsers.PrimaryUserId, It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        var result = await service.DeleteAsync(incomeId, TestUsers.PrimaryUserId, ct);
+
+        result.IsSuccess.Should().BeTrue();
+        _cache.Verify(x => x.InvalidateUserAsync(TestUsers.PrimaryUserId, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact(DisplayName = "UT-INCOME-GETBYID-001 returns not found when the income does not belong to the user")]

@@ -54,6 +54,21 @@ public sealed class AuthServiceSignInTests
         _apiTokenService.Verify(x => x.CreateAccessToken(It.IsAny<Guid>()), Times.Never);
     }
 
+    [Fact(DisplayName = "UT-AUTH-SIGNIN-005 rejects missing passwords before hitting dependencies")]
+    public async Task SignInAsync_ShouldFail_WhenPasswordIsMissing()
+    {
+        var service = CreateService();
+        var ct = TestContext.Current.CancellationToken;
+
+        var result = await service.SignInAsync(new SignInInput("user@example.com", "   "), ct);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Should().Be("Password is required.");
+
+        _authClient.Verify(x => x.SignInAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+        _apiTokenService.Verify(x => x.CreateAccessToken(It.IsAny<Guid>()), Times.Never);
+    }
+
     [Fact(DisplayName = "UT-AUTH-SIGNIN-003 fails when upstream token payload does not contain a valid subject")]
     public async Task SignInAsync_ShouldFail_WhenUpstreamTokenPayloadIsInvalid()
     {
