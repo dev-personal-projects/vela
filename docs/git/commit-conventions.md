@@ -12,7 +12,7 @@ The goal is to keep commits:
 
 The source of truth for this workflow is:
 - this document
-- `.github/commit-message-template.md`
+- `docs/git/commit-message-template.md`
 - `scripts/git/prepare-commit-context.sh`
 - `scripts/git/finalize-commit.sh`
 
@@ -226,7 +226,7 @@ bash scripts/git/finalize-commit.sh
 
 The standard reusable template lives in:
 
-- [.github/commit-message-template.md](/workspaces/finance-tracker-graphql/.github/commit-message-template.md)
+- [docs/git/commit-message-template.md](/workspaces/finance-tracker-graphql/docs/git/commit-message-template.md)
 - [scripts/git/prepare-commit-context.sh](/workspaces/finance-tracker-graphql/scripts/git/prepare-commit-context.sh)
 - [scripts/git/finalize-commit.sh](/workspaces/finance-tracker-graphql/scripts/git/finalize-commit.sh)
 - [commit-message-proposal.md](/workspaces/finance-tracker-graphql/commit-message-proposal.md)
