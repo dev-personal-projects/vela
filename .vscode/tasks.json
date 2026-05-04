@@ -36,6 +36,24 @@
                 "${workspaceFolder}/finance-tracker-graphql.sln"
             ],
             "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "prepare commit context",
+            "type": "process",
+            "command": "bash",
+            "args": [
+                "${workspaceFolder}/scripts/git/prepare-commit-context.sh"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "finalize commit",
+            "type": "process",
+            "command": "bash",
+            "args": [
+                "${workspaceFolder}/scripts/git/finalize-commit.sh"
+            ],
+            "problemMatcher": []
         }
     ]
 }

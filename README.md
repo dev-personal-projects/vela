@@ -84,6 +84,10 @@ Product/technical docs:
 - PRD: `docs/prd.md`
 - TRD: `docs/trd.md`
 - Devcontainer plan: `docs/devcontainer-plan.md`
+- Commit conventions: `.github/commit-conventions.md`
+- Commit context tool: `scripts/git/prepare-commit-context.sh`
+- Commit finalize tool: `scripts/git/finalize-commit.sh`
+- Commit proposal file: `commit-message-proposal.md` (contains only the final commit message paragraph)
 
 Lessons (guided learning path built around this codebase):
 - Lesson index: `docs/lessons/README.md`
