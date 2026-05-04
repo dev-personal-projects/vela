@@ -23,11 +23,12 @@ Every commit in this repository should follow these rules:
 1. The commit message must describe the actual scope of the staged changes being committed.
 2. The commit message must be generated only after reviewing branch context against the default branch.
 3. The proposed commit message must be written to a file in the repository root before the commit is created.
-4. The commit message may use an emoji when it adds clarity, but emoji use is optional and should stay restrained.
-5. The message must stay short, readable, and outcome-focused.
-6. Unrelated work must not be mixed into the same commit.
-7. The agent must never stage files on the user's behalf.
-8. If no changes are staged, the agent must ask the user to stage the intended files before proceeding.
+4. The commit message should begin with a clear change tag such as `docs:`, `feat:`, `fix:`, `test:`, `refactor:`, `chore:`, `ci:`, or `build:`.
+5. The commit message may use a matching emoji when it adds clarity, but emoji use should stay restrained and aligned with the tag.
+6. The message must stay short, readable, and outcome-focused.
+7. Unrelated work must not be mixed into the same commit.
+8. The agent must never stage files on the user's behalf.
+9. If no changes are staged, the agent must ask the user to stage the intended files before proceeding.
 
 ## Required Pre-Commit Review
 
@@ -64,40 +65,61 @@ The final commit message should be a short paragraph that:
 - describes the staged scope clearly
 - includes the important parts of the change
 - avoids shallow labels that hide the real work
-- may include one emoji at the beginning when it improves readability
+- begins with a clear change tag
+- may include one matching emoji at the beginning when it improves readability
 
 The goal is not to produce a rigid subject template. The goal is to produce a readable commit message that captures the real staged work.
 
 Prefer messages like:
 
 ```text
-📝 This normalizes the repository documentation structure by standardizing filenames, updating references, and aligning the documentation tree with the new naming convention.
+📝 docs: This normalizes the repository documentation structure by standardizing filenames, updating references, and aligning the documentation tree with the new naming convention.
 
-🧪 This strengthens the repository testing workflow by clarifying the staged-only commit process, generating a reviewable proposal file, and adding scripts to prepare and finalize approved commits.
+🧪 test: This strengthens the repository testing workflow by clarifying the staged-only commit process, generating a reviewable proposal file, and adding scripts to prepare and finalize approved commits.
+
+🐛 fix: This corrects the loan repayment validation path by tightening the service checks and keeping the failing edge case covered by tests.
 ```
 
 Avoid messages like:
 
 ```text
 chore: updates
-🚀 chore: define branch-aware commit workflow
+📝 docs: update docs
 fix: stuff
 ```
+
+## Commit Tags
+
+Use one tag that best describes the staged change:
+- `docs:` for documentation-only changes
+- `feat:` for user-facing features or new behavior
+- `fix:` for bugs or behavioral corrections
+- `test:` for test coverage or test-only infrastructure
+- `refactor:` for internal restructures without behavior change
+- `chore:` for repo maintenance or workflow housekeeping
+- `ci:` for pipeline or automation changes
+- `build:` for dependency or build-system changes
+
+Pick the narrowest honest tag for the staged scope.
 
 ## Emoji Guidance
 
 Emoji usage is allowed when it improves scanability.
 
 Recommended examples:
-- `📝` for documentation
-- `🧪` for tests
-- `🚀` for developer workflow or tooling improvements
-- `🐛` for bug fixes
-- `♻️` for refactors
+- `📝` with `docs:`
+- `✨` with `feat:`
+- `🐛` with `fix:`
+- `🧪` with `test:`
+- `♻️` with `refactor:`
+- `🔧` or `🚀` with `chore:`
+- `🤖` with `ci:`
+- `🏗️` with `build:`
 
 Rules for emoji usage:
 - use at most one emoji
-- place it at the start of the subject
+- place it at the start of the message
+- keep it consistent with the change tag
 - do not use emoji if it makes the subject noisy or unclear
 - prefer clarity over decoration
 
@@ -107,6 +129,7 @@ The final paragraph should:
 - describe the outcome, not just the activity
 - remain concise while still covering the important staged scope
 - match the full scope of the current commit
+- open with a healthy tag-and-summary prefix such as `📝 docs:` or `🐛 fix:`
 - read naturally if someone scans history later
 
 ## Staged-Only Commit Rule

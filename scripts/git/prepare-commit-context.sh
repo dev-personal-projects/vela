@@ -25,26 +25,26 @@ STAGED_FILES="$(git diff --cached --name-only || true)"
 
 generate_commit_message() {
     if printf '%s\n' "${STAGED_FILES}" | rg -q '(^|/)(commit-conventions\.md|commit-message-template\.md|prepare-commit-context\.sh)$'; then
-        printf '%s\n' '🚀 This updates the repository commit workflow by adding branch-aware commit conventions, a reusable commit message proposal file, VS Code tasks, and helper scripts to prepare and finalize reviewed commits from staged changes only.'
+        printf '%s\n' '🔧 chore: This updates the repository commit workflow by adding branch-aware commit conventions, a reusable commit message proposal file, VS Code tasks, and helper scripts to prepare and finalize reviewed commits from staged changes only.'
         return
     fi
 
     if printf '%s\n' "${STAGED_FILES}" | rg -q '(^|/)docs/|(^|/)README\.md$'; then
-        printf '%s\n' '📝 This updates the repository documentation to keep naming, guidance, and developer workflow references consistent across the docs set and the main README.'
+        printf '%s\n' '📝 docs: This updates the repository documentation to keep naming, guidance, and developer workflow references consistent across the docs set and the main README.'
         return
     fi
 
     if printf '%s\n' "${STAGED_FILES}" | rg -q '(^|/)Tests/'; then
-        printf '%s\n' '🧪 This expands automated test coverage and strengthens the shared testing foundation so staged changes are validated more consistently across the current feature scope.'
+        printf '%s\n' '🧪 test: This expands automated test coverage and strengthens the shared testing foundation so staged changes are validated more consistently across the current feature scope.'
         return
     fi
 
     if printf '%s\n' "${STAGED_FILES}" | rg -q '(^|/)\.github/|(^|/)\.vscode/|(^|/)scripts/'; then
-        printf '%s\n' '🚀 This updates repository workflow tooling by improving the shared automation, editor tasks, and supporting scripts used to prepare and complete branch work safely.'
+        printf '%s\n' '🔧 chore: This updates repository workflow tooling by improving the shared automation, editor tasks, and supporting scripts used to prepare and complete branch work safely.'
         return
     fi
 
-    printf '%s\n' 'This updates the staged branch work with the reviewed changes currently prepared for commit and keeps the scope aligned with the confirmed feature context.'
+    printf '%s\n' '🔧 chore: This updates the staged branch work with the reviewed changes currently prepared for commit and keeps the scope aligned with the confirmed feature context.'
 }
 
 DRAFT_COMMIT_MESSAGE="$(generate_commit_message)"

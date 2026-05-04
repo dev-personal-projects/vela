@@ -69,5 +69,5 @@ appsettings.*.json
 .vscode/
 
 # Generated commit message review file
-commit-message-proposal.md
-COMMIT_MESSAGE_PROPOSAL.md
+# commit-message-proposal.md
+# COMMIT_MESSAGE_PROPOSAL.md
