@@ -8,12 +8,12 @@
 
 | Phase | Name | Focus | Status |
 |---|---|---|---|
-| [Phase 0](./PHASE-0-foundation.md) | Foundation | Project setup, Supabase, JWT, EF Core | ✅ Complete |
-| [Phase 1](./PHASE-1-domain.md) | Domain | Entities, enums, business rules | ✅ Complete |
-| [Phase 2](./PHASE-2-infrastructure.md) | Infrastructure | DbContext, SQL migrations, repositories, dashboard read model, caching infra | ✅ Complete |
-| [Phase 3](./PHASE-3-application.md) | Application | Services, DTOs, validation, dashboard orchestration, cache invalidation | ✅ Complete |
-| [Phase 4](./PHASE-4-graphql-api.md) | GraphQL API | Queries, mutations, dashboard, auth-protected resolver layer | ✅ Complete |
-| [Phase 5](./PHASE-5-testing.md) | Testing | Unit, integration, auth isolation | 🚧 Planned / Partial |
+| [Phase 0](./phase-00-foundation.md) | Foundation | Project setup, Supabase, JWT, EF Core | ✅ Complete |
+| [Phase 1](./phase-01-domain.md) | Domain | Entities, enums, business rules | ✅ Complete |
+| [Phase 2](./phase-02-infrastructure.md) | Infrastructure | DbContext, SQL migrations, repositories, dashboard read model, caching infra | ✅ Complete |
+| [Phase 3](./phase-03-application.md) | Application | Services, DTOs, validation, dashboard orchestration, cache invalidation | ✅ Complete |
+| [Phase 4](./phase-04-graphql-api.md) | GraphQL API | Queries, mutations, dashboard, auth-protected resolver layer | ✅ Complete |
+| [Phase 5](./phase-05-testing.md) | Testing | Unit, integration, auth isolation | 🚧 Planned / Partial |
 
 ---
 

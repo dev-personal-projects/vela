@@ -8,14 +8,14 @@ A complete learning path from GraphQL fundamentals to real-world production patt
 
 | # | Title | What you learn |
 |---|---|---|
-| [1](./LESSON-1-graphql-fundamentals.md) | GraphQL Fundamentals | What GraphQL is, queries, mutations, schema, types, resolvers |
-| [2](./LESSON-2-queries-and-mutations.md) | Queries and Mutations in Hot Chocolate | How C# maps to GraphQL, `[Service]`, `[Authorize]`, payloads |
-| [3](./LESSON-3-graphql-engineering-deep-dive.md) | Engineering Deep Dive | Single endpoint, execution engine, variables, fragments, N+1, introspection |
-| [4](./LESSON-4-schema-in-depth.md) | The Schema In Depth | SDL, type mapping, non-null, input vs output types, enums, deprecation |
-| [5](./LESSON-5-error-handling.md) | Error Handling | Three levels of errors, payload pattern, AppResult, partial success |
-| [6](./LESSON-6-authentication-and-security.md) | Authentication and Security | JWT, access tokens, UserId scoping, our own JWT |
-| [7](./LESSON-7-clean-architecture-and-graphql.md) | Clean Architecture and GraphQL | Four layers, dependency rule, thin resolvers, interfaces, DI |
-| [8](./LESSON-8-real-world-patterns.md) | Real World Patterns | 10 patterns used in this project with code examples |
+| [1](./lesson-01-graphql-fundamentals.md) | GraphQL Fundamentals | What GraphQL is, queries, mutations, schema, types, resolvers |
+| [2](./lesson-02-queries-and-mutations.md) | Queries and Mutations in Hot Chocolate | How C# maps to GraphQL, `[Service]`, `[Authorize]`, payloads |
+| [3](./lesson-03-graphql-engineering-deep-dive.md) | Engineering Deep Dive | Single endpoint, execution engine, variables, fragments, N+1, introspection |
+| [4](./lesson-04-schema-in-depth.md) | The Schema In Depth | SDL, type mapping, non-null, input vs output types, enums, deprecation |
+| [5](./lesson-05-error-handling.md) | Error Handling | Three levels of errors, payload pattern, AppResult, partial success |
+| [6](./lesson-06-authentication-and-security.md) | Authentication and Security | JWT, access tokens, UserId scoping, our own JWT |
+| [7](./lesson-07-clean-architecture-and-graphql.md) | Clean Architecture and GraphQL | Four layers, dependency rule, thin resolvers, interfaces, DI |
+| [8](./lesson-08-real-world-patterns.md) | Real World Patterns | 10 patterns used in this project with code examples |
 
 ---
 

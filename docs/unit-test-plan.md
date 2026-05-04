@@ -100,7 +100,7 @@ All examples, naming conventions, and reporting expectations in this document as
 - keep shared helpers under `Builders/` or `Common/`, not hidden inside individual test files
 
 Shared conventions:
-- [TESTING-CONVENTIONS.md](/workspaces/finance-tracker-graphql/docs/TESTING-CONVENTIONS.md)
+- [testing-conventions.md](/workspaces/finance-tracker-graphql/docs/testing-conventions.md)
 
 ## Unit Test Naming and Identity Standard
 

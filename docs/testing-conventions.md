@@ -12,9 +12,9 @@ It exists to keep:
 consistent in naming, structure, diagnostics, and reporting.
 
 Related plans:
-- [TEST-PLAN.md](/workspaces/finance-tracker-graphql/docs/TEST-PLAN.md)
-- [UNIT-TEST-PLAN.md](/workspaces/finance-tracker-graphql/docs/UNIT-TEST-PLAN.md)
-- [INTEGRATION-TEST-PLAN.md](/workspaces/finance-tracker-graphql/docs/INTEGRATION-TEST-PLAN.md)
+- [test-plan.md](/workspaces/finance-tracker-graphql/docs/test-plan.md)
+- [unit-test-plan.md](/workspaces/finance-tracker-graphql/docs/unit-test-plan.md)
+- [integration-test-plan.md](/workspaces/finance-tracker-graphql/docs/integration-test-plan.md)
 
 ---
 

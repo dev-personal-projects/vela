@@ -11,6 +11,9 @@ Integration tests in this codebase should validate that infrastructure component
 - dashboard aggregation queries
 - distributed cache implementation behavior
 
+Environment and database safety requirements are defined in:
+- [test-requirements.md](/workspaces/finance-tracker-graphql/docs/test-requirements.md)
+
 ---
 
 ## Scope
@@ -22,9 +25,11 @@ Integration tests cover:
 - dashboard cache service behavior with distributed cache abstractions
 
 Integration tests do **not** cover:
-- full GraphQL request pipeline
+- full GraphQL request pipeline in the repository-focused suite
 - REST controller status-code behavior
 - full browser/client journeys
+
+GraphQL and REST pipeline coverage should be added as API integration tests. Those tests may live in a separate `Tests/ApiTests` project or under `Tests/IntegrationTests/Api`, but they should still use an isolated test database.
 
 ---
 
@@ -97,10 +102,27 @@ All examples, naming conventions, and reporting guidance in this plan assume xUn
 
 ## Environment Strategy
 
-Preferred setup:
-- real PostgreSQL test database
-- isolated schema or clean database per test run
+Required setup:
+- Testcontainers PostgreSQL
+- real PostgreSQL test database, created only for the test run
+- disposable database lifecycle
 - deterministic seed data
+- Respawn reset before each repository test
+
+The only supported database path for automated integration tests is Testcontainers PostgreSQL. Development happens inside devcontainers, so the devcontainer must expose Docker/Testcontainers support. If Docker/Testcontainers is unavailable in the devcontainer or CI, that is an environment setup failure, not a reason to use another database path.
+
+Repository SQL alignment rules:
+- project SQL files stay under [scripts](/workspaces/finance-tracker-graphql/scripts)
+- automated tests may read SQL assets from `scripts/` if needed
+- `.devcontainer/` is for environment setup, not duplicate schema ownership
+- automated integration tests do not rely on a long-lived Postgres container managed separately from the test run
+
+Never run integration reset logic against:
+- production
+- staging
+- shared development databases
+- dedicated developer databases
+- any Supabase project that contains real user data
 
 Cache coverage:
 - use in-memory distributed cache for core behavior verification when appropriate
@@ -123,7 +145,7 @@ Database reset strategy decision:
 - keep database reset logic in shared fixtures, not duplicated in feature tests
 
 Shared conventions:
-- [TESTING-CONVENTIONS.md](/workspaces/finance-tracker-graphql/docs/TESTING-CONVENTIONS.md)
+- [testing-conventions.md](/workspaces/finance-tracker-graphql/docs/testing-conventions.md)
 
 ## Integration Test Naming and Identity Standard
 

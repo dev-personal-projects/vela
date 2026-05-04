@@ -81,18 +81,22 @@ GraphQL highlights:
 
 ## Documentation and lessons
 Product/technical docs:
-- PRD: `docs/PRD.md`
-- TRD: `docs/TRD.md`
+- PRD: `docs/prd.md`
+- TRD: `docs/trd.md`
+- Devcontainer plan: `docs/devcontainer-plan.md`
 
 Lessons (guided learning path built around this codebase):
 - Lesson index: `docs/lessons/README.md`
-- Fundamentals: `docs/lessons/LESSON-1-graphql-fundamentals.md`
-- Queries/mutations (Hot Chocolate): `docs/lessons/LESSON-2-queries-and-mutations.md`
-- Error handling: `docs/lessons/LESSON-5-error-handling.md`
-- Auth and security: `docs/lessons/LESSON-6-authentication-and-security.md`
-- Architecture: `docs/lessons/LESSON-7-clean-architecture-and-graphql.md`
+- Fundamentals: `docs/lessons/lesson-01-graphql-fundamentals.md`
+- Queries/mutations (Hot Chocolate): `docs/lessons/lesson-02-queries-and-mutations.md`
+- Error handling: `docs/lessons/lesson-05-error-handling.md`
+- Auth and security: `docs/lessons/lesson-06-authentication-and-security.md`
+- Architecture: `docs/lessons/lesson-07-clean-architecture-and-graphql.md`
 
 ## Testing
 Test plan and coverage:
-- `docs/TEST-PLAN.md`
-- E2E quickstart: `docs/E2E-QUICKSTART.md`
+- `docs/test-requirements.md`
+- `docs/test-plan.md`
+- `docs/unit-test-plan.md`
+- `docs/integration-test-plan.md`
+- E2E quickstart: `docs/e2e-quickstart.md`

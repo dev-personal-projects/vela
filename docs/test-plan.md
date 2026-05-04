@@ -10,10 +10,11 @@ This document defines a practical, end-to-end testing strategy for the Finance T
 This plan is written so that a new contributor can implement tests incrementally without guessing what to cover.
 
 Related focused plans:
-- [UNIT-TEST-PLAN.md](/workspaces/finance-tracker-graphql/docs/UNIT-TEST-PLAN.md)
-- [INTEGRATION-TEST-PLAN.md](/workspaces/finance-tracker-graphql/docs/INTEGRATION-TEST-PLAN.md)
-- [TESTING-CONVENTIONS.md](/workspaces/finance-tracker-graphql/docs/TESTING-CONVENTIONS.md)
-- [CI-PLAN.md](/workspaces/finance-tracker-graphql/docs/CI-PLAN.md)
+- [test-requirements.md](/workspaces/finance-tracker-graphql/docs/test-requirements.md)
+- [unit-test-plan.md](/workspaces/finance-tracker-graphql/docs/unit-test-plan.md)
+- [integration-test-plan.md](/workspaces/finance-tracker-graphql/docs/integration-test-plan.md)
+- [testing-conventions.md](/workspaces/finance-tracker-graphql/docs/testing-conventions.md)
+- [ci-plan.md](/workspaces/finance-tracker-graphql/docs/ci-plan.md)
 
 ## Testing Standard
 
@@ -47,13 +48,15 @@ For the next testing phase, the focus is:
 
 - unit tests
 - integration tests
+- API-level GraphQL integration tests
 
-E2E coverage is intentionally deferred to a later iteration.
+E2E coverage is intentionally deferred to a later iteration. API-level GraphQL tests are not full E2E tests; they are backend pipeline tests and should be added before browser/client E2E work.
 
 ## Testing Pyramid (Current Split)
 - Unit tests (majority): `Application/Services/*` and small pure helpers.
 - Integration tests (some): `Infrastructure/*`, database behavior, and cache integration behavior.
-- E2E/API tests: planned later, not part of the immediate implementation scope.
+- API integration tests (targeted): GraphQL/HTTP auth, resolver behavior, payload shapes, and error formatting.
+- Full E2E/client tests: planned later, not part of the immediate implementation scope.
 
 ## E2E Status
 E2E coverage is planned later.
@@ -68,8 +71,7 @@ Notes for later:
 - Mocking: `Moq` (or `NSubstitute` if preferred, but pick one)
 - Assertions: built-in xUnit assertions by default
 - DB integration:
-  - Preferred: local Postgres container for tests (Testcontainers or docker-compose)
-  - Acceptable: dedicated Supabase “test” project (never production)
+  - Required: Testcontainers PostgreSQL for automated database-backed tests
 
 ### Recommended Package Baseline
 For the initial test projects, use:
@@ -258,7 +260,7 @@ When CI is added, the workflow should surface:
 This should feel obvious and actionable, similar to strong enterprise CI pipelines.
 
 For CI/deployment workflow design, see:
-- [CI-PLAN.md](/workspaces/finance-tracker-graphql/docs/CI-PLAN.md)
+- [ci-plan.md](/workspaces/finance-tracker-graphql/docs/ci-plan.md)
 
 ## Proposed Test Project Layout
 Create a top-level `Tests/` directory with two projects only for now:
@@ -304,7 +306,7 @@ Tests/
 - `Caching/`: Redis/distributed cache integration coverage
 
 Shared naming, traits, and output rules live in:
-- [TESTING-CONVENTIONS.md](/workspaces/finance-tracker-graphql/docs/TESTING-CONVENTIONS.md)
+- [testing-conventions.md](/workspaces/finance-tracker-graphql/docs/testing-conventions.md)
 
 ## Test Data Strategy
 - Prefer builders/factories for inputs and entities (avoid copy/paste).
@@ -489,14 +491,17 @@ Use this as a punch-list when implementing tests.
 ### Timeout/Resilience
 - Simulated DB delay surfaces `REQUEST_TIMEOUT` (or payload `errors`) with guidance to refresh before retrying.
 
-### DB Environment (Pick One)
-Option A (Recommended for CI): Postgres container per test run
-- Pros: hermetic, repeatable, cheap
-- Cons: adds Docker dependency
+### DB Environment
+Required: Testcontainers PostgreSQL per test run.
 
-Option B: dedicated Supabase test project
-- Pros: matches production environment
-- Cons: external dependency, flakier; must ensure cleanup
+Why:
+- hermetic and repeatable
+- no real database credentials required
+- disposable lifecycle
+- safe for destructive reset
+- same standard locally and in CI
+
+External databases are not supported for automated integration tests.
 
 ### Repository Tests (All Entities)
 For each repository:
