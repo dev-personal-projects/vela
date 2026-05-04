@@ -10,6 +10,12 @@ The goal is to keep commits:
 - descriptive of the full change scope
 - consistent across human and agent-driven work
 
+The source of truth for this workflow is:
+- this document
+- `.github/commit-message-template.md`
+- `scripts/git/prepare-commit-context.sh`
+- `scripts/git/finalize-commit.sh`
+
 ## Core Rules
 
 Every commit in this repository should follow these rules:
@@ -33,7 +39,9 @@ Before creating a commit, always review:
 - the commits on the feature branch that differ from the default branch
 - the diff summary against the default branch
 
-Recommended review commands:
+The agent is responsible for gathering that context before generating the proposed commit message.
+
+Recommended review command:
 
 ```bash
 bash scripts/git/prepare-commit-context.sh
@@ -46,6 +54,7 @@ commit-message-proposal.md
 ```
 
 The file should contain only the final commit message paragraph.
+The proposal file is a generated artifact, not a long-form review document.
 After the developer confirms the proposal and instructs the agent to proceed, the agent should use that exact paragraph as the commit message.
 After the commit is created and the current branch is pushed successfully, the generated proposal file should be removed.
 
@@ -130,24 +139,43 @@ When an agent is preparing a commit, it must:
 
 1. Run `bash scripts/git/prepare-commit-context.sh`.
 2. Stop if the script reports that nothing is staged.
-3. Inspect the current branch name.
-4. Inspect recent `HEAD` commits.
-5. Inspect commits relative to the default branch.
-6. Inspect the diff summary relative to the default branch.
-7. Generate a proposed commit message from that context.
-8. Write or update `commit-message-proposal.md` in the repository root.
-9. Ask the developer to review and confirm the proposal file.
-10. When the developer instructs the agent to proceed, read the confirmed final commit message directly from `commit-message-proposal.md`.
-11. Create the commit from staged changes only.
-12. Push the current branch.
-13. Remove the generated proposal file after a successful push.
+3. Use branch context, recent history, and the staged diff to generate a proposed commit message.
+4. Write or update `commit-message-proposal.md` in the repository root.
+5. Ask the developer to review and confirm the proposal file.
+6. When the developer instructs the agent to proceed, read the confirmed final commit message directly from `commit-message-proposal.md`.
+7. Create the commit from staged changes only.
+8. Push the current branch.
+9. Remove the generated proposal file after a successful push.
 
 The agent should not invent a commit message from one file or one headline without looking at the branch context first.
 The agent should not stage files automatically.
 
+## Developer Workflow
+
+The expected developer flow is:
+
+1. Stage the intended files manually.
+2. Run `bash scripts/git/prepare-commit-context.sh`, or ask the agent to do it.
+3. Review `commit-message-proposal.md`.
+4. If the proposal is correct, tell the agent to proceed.
+5. The agent runs `bash scripts/git/finalize-commit.sh`.
+6. The agent commits the staged changes, pushes the current branch, and removes the generated proposal file.
+
+The developer does not need to stage through the agent.
+The developer does not need to rewrite the proposal file manually when the generated message is already correct.
+
 ## Proposal File
 
 Before committing, write `commit-message-proposal.md` as plain text containing only the final commit message paragraph.
+
+It should not include:
+- branch metadata
+- staged diff summaries
+- markdown sections
+- review checklists
+- placeholder templates
+
+It exists only to hold the final approved commit message that `scripts/git/finalize-commit.sh` will use.
 
 ## Recommended `gh`-Assisted Flow
 

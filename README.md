@@ -89,6 +89,13 @@ Product/technical docs:
 - Commit finalize tool: `scripts/git/finalize-commit.sh`
 - Commit proposal file: `commit-message-proposal.md` (contains only the final commit message paragraph)
 
+Commit workflow:
+1. Stage the intended files manually.
+2. Run `bash scripts/git/prepare-commit-context.sh`.
+3. Review `commit-message-proposal.md`.
+4. Tell the agent to proceed.
+5. The agent runs `bash scripts/git/finalize-commit.sh`, commits staged changes only, pushes the current branch, and removes the generated proposal file.
+
 Lessons (guided learning path built around this codebase):
 - Lesson index: `docs/lessons/README.md`
 - Fundamentals: `docs/lessons/lesson-01-graphql-fundamentals.md`
