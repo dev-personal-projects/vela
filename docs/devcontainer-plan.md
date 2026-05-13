@@ -28,28 +28,57 @@ A developer should be able to:
 
 without manual machine-specific setup beyond Docker and the devcontainer host prerequisites.
 
+For this repository, one first-time manual prerequisite remains intentional:
+- the developer must have `appsettings.Development.json` ready with valid development credentials before opening the repository in the devcontainer
+
 ## Current State
 
 The repository already has:
 - [devcontainer.json](/workspaces/finance-tracker-graphql/.devcontainer/devcontainer.json)
 - [Dockerfile.Dev](/workspaces/finance-tracker-graphql/.devcontainer/Dockerfile.Dev)
 - VS Code settings, tasks, and launch config under [.vscode](/workspaces/finance-tracker-graphql/.vscode)
+- bootstrap and validation scripts under [scripts/devcontainer](/workspaces/finance-tracker-graphql/scripts/devcontainer)
+- development database bootstrap script:
+  - [ensure-dev-db.sh](/workspaces/finance-tracker-graphql/scripts/devcontainer/ensure-dev-db.sh)
+- devcontainer lifecycle hooks:
+  - [postCreate.sh](/workspaces/finance-tracker-graphql/.devcontainer/postCreate.sh)
+  - [postStart.sh](/workspaces/finance-tracker-graphql/.devcontainer/postStart.sh)
 
 Current strengths:
 - .NET 10 SDK base image
-- useful CLI tooling such as `gh`, `jq`, `rg`, `psql`
+- useful CLI tooling such as `gh`, `jq`, `rg`, `psql`, `docker`, `redis-cli`, `tree`, and `make`
 - basic VS Code extensions for C#
-- restore command on container startup
+- bootstrap and environment validation on container startup
+- automatic development database schema validation and migration through the existing SQL scripts under `scripts/db`
+- Docker socket passthrough for Testcontainers-backed integration tests
+- shared VS Code tasks for restore, run, unit tests, integration tests, formatting, and commit workflow steps
 
 Current gaps:
-- no explicit Docker/Testcontainers contract for integration tests
-- no environment validation step
-- no standard secrets strategy for devcontainer users
-- no formal onboarding script
-- no documented port strategy for API, GraphQL, and future local services
-- no shared development services composition for optional dependencies
-- no standard task set for build, run, unit test, integration test, and formatting
+- no documented optional local service composition for specialized workflows yet
 - no clear policy for which `.vscode` files are committed and team-supported
+
+## Implemented Foundation
+
+The first hardening pass is now in place.
+
+Implemented files:
+- [devcontainer.json](/workspaces/finance-tracker-graphql/.devcontainer/devcontainer.json)
+- [Dockerfile.Dev](/workspaces/finance-tracker-graphql/.devcontainer/Dockerfile.Dev)
+- [postCreate.sh](/workspaces/finance-tracker-graphql/.devcontainer/postCreate.sh)
+- [postStart.sh](/workspaces/finance-tracker-graphql/.devcontainer/postStart.sh)
+- [bootstrap.sh](/workspaces/finance-tracker-graphql/scripts/devcontainer/bootstrap.sh)
+- [validate-env.sh](/workspaces/finance-tracker-graphql/scripts/devcontainer/validate-env.sh)
+- [check-testcontainers.sh](/workspaces/finance-tracker-graphql/scripts/devcontainer/check-testcontainers.sh)
+- [ensure-dev-db.sh](/workspaces/finance-tracker-graphql/scripts/devcontainer/ensure-dev-db.sh)
+
+Implemented behavior:
+- the devcontainer mounts `/var/run/docker.sock` so Testcontainers can talk to Docker from inside the workspace
+- startup runs a bootstrap pass on create and a validation pass on start
+- environment validation checks required CLI tools and Docker/Testcontainers access
+- the bootstrap also validates and applies the SQL scripts under `scripts/db` to the development database configured in `appsettings.Development.json`
+- the repository now has team-owned VS Code tasks for restore, API run, unit tests, integration tests, and formatting
+- the debug profile binds the API to `http://0.0.0.0:8080`
+- integration fixture errors now distinguish missing Docker/Testcontainers support from actual repository test failures
 
 ## Target State
 
@@ -95,15 +124,21 @@ Optional compose-managed development services:
 ### 3. Smooth Onboarding
 
 A new contributor should need one path only:
-1. open repository in devcontainer
-2. wait for bootstrap
-3. run the API or tests from documented tasks
+1. prepare `appsettings.Development.json` with valid development credentials
+2. open repository in devcontainer
+3. wait for bootstrap
+4. run the API or tests from documented tasks
 
 The container should bootstrap:
 - `dotnet restore`
 - trusted local tool restore if added later
 - validation of Docker/Testcontainers access
 - validation of required secrets or env vars for auth flows
+
+The repository documentation must make this explicit:
+- `appsettings.Development.json` is required before first devcontainer startup
+- the file must contain real development credentials
+- once that file is present, the devcontainer should handle the remaining bootstrap steps automatically
 
 ### 4. Shared Editor Workflow
 
@@ -125,8 +160,8 @@ The devcontainer plan should standardize:
 - which files must never be committed
 
 The repo should prefer:
-- checked-in templates such as `appsettings.Development.template.json` or `.env.example`
-- secrets supplied through local env, devcontainer env injection, or platform secrets
+- the real `appsettings.Development.json` for the supported development workflow
+- secrets supplied through the local development settings file or environment overrides when needed
 
 ### 6. Collaboration-First Defaults
 
@@ -243,7 +278,7 @@ These are the most likely additions for the implementation phase:
 - `scripts/devcontainer/bootstrap.sh`
 - `scripts/devcontainer/validate-env.sh`
 - `scripts/devcontainer/check-testcontainers.sh`
-- `appsettings.Development.template.json`
+- `scripts/devcontainer/ensure-dev-db.sh`
 - `docs/devcontainer-plan.md`
 
 Possible additions depending on chosen direction:

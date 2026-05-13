@@ -4,28 +4,50 @@
     "dockerfile": "Dockerfile.Dev",
     "context": ".."
   },
+  "mounts": [
+    "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
+  ],
   "workspaceFolder": "/workspaces/finance-tracker-graphql",
   "containerEnv": {
     "DOTNET_CLI_TELEMETRY_OPTOUT": "1",
     "DOTNET_SKIP_FIRST_TIME_EXPERIENCE": "1",
-    "DOTNET_USE_POLLING_FILE_WATCHER": "1"
+    "DOTNET_USE_POLLING_FILE_WATCHER": "1",
+    "DEVCONTAINER": "true"
   },
   "customizations": {
     "vscode": {
+      "settings": {
+        "files.exclude": {
+          "**/.git": true,
+          "**/.DS_Store": true
+        }
+      },
       "extensions": [
         "ms-dotnettools.csharp",
         "ms-dotnettools.csdevkit",
         "ms-dotnettools.vscode-dotnet-runtime",
+        "ms-azuretools.vscode-docker",
         "EditorConfig.EditorConfig",
         "csharpier.csharpier-vscode",
+        "DavidAnson.vscode-markdownlint",
         "PKief.material-icon-theme"
       ]
     }
   },
   "forwardPorts": [
+    8080,
+    8081,
     5000,
     5001
   ],
-  "postCreateCommand": "dotnet restore || true",
-  "postStartCommand": "dotnet restore && echo 'Dev container ready 🚀'"
+  "portsAttributes": {
+    "8080": {
+      "label": "Finance Tracker API"
+    },
+    "8081": {
+      "label": "Finance Tracker HTTPS"
+    }
+  },
+  "postCreateCommand": "bash .devcontainer/postCreate.sh",
+  "postStartCommand": "bash .devcontainer/postStart.sh"
 }

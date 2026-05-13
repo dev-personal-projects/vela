@@ -12,7 +12,7 @@ public sealed class IntegrationFactAttribute : FactAttribute
         int sourceLineNumber)
         : base(sourceFilePath, sourceLineNumber)
     {
-        Skip = "Docker is not available, so Postgres-backed integration tests are skipped in this environment.";
+        Skip = DockerAvailability.SkipReason;
         SkipType = typeof(DockerAvailability);
         SkipWhen = nameof(DockerAvailability.ShouldSkipIntegrationTests);
     }

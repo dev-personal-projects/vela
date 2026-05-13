@@ -42,6 +42,38 @@ Verify:
 curl -s http://localhost:8080/health
 ```
 
+## Development environment
+The supported team environment is the devcontainer.
+
+Before opening the repository in the devcontainer for the first time:
+1. Create or obtain `appsettings.Development.json`.
+2. Ensure it contains valid development credentials and connection strings for this project.
+3. Keep that file in the repository root before the devcontainer bootstrap runs.
+
+Key files:
+- `.devcontainer/devcontainer.json`
+- `.devcontainer/Dockerfile.Dev`
+- `.devcontainer/postCreate.sh`
+- `.devcontainer/postStart.sh`
+- `scripts/devcontainer/bootstrap.sh`
+- `scripts/devcontainer/validate-env.sh`
+- `scripts/devcontainer/check-testcontainers.sh`
+- `scripts/devcontainer/ensure-dev-db.sh`
+
+What the devcontainer now provides:
+- Docker socket passthrough for Testcontainers-based integration tests
+- shared CLI tooling such as `gh`, `jq`, `rg`, `psql`, `docker`, `redis-cli`, `tree`, and `make`
+- startup bootstrap and environment validation
+- automatic schema validation and migration for the configured development database using `scripts/db`
+- shared VS Code tasks for restore, build, run, unit tests, integration tests, formatting, and commit workflow steps
+- a debug profile that exposes the API on `http://0.0.0.0:8080`
+
+Recommended first-run flow inside the devcontainer:
+1. Prepare `appsettings.Development.json` with valid development credentials before opening the repo in the devcontainer.
+2. Open the repository in the devcontainer.
+3. Let the bootstrap finish.
+4. Run `ensure dev db`, `unit tests`, or `integration tests` from the shared VS Code tasks when you want to recheck the environment manually.
+
 ## Configuration
 Config can be set via `appsettings.json`, `appsettings.Development.json`, or environment variables.
 
@@ -63,6 +95,11 @@ Environment variable equivalents (examples):
 - `ConnectionStrings__Default`
 - `Supabase__Url`
 - `Supabase__AnonKey`
+
+Development database bootstrapping:
+- the devcontainer bootstrap runs `scripts/devcontainer/ensure-dev-db.sh`
+- that script validates and applies the SQL files under `scripts/db` against the database configured in `appsettings.Development.json`
+- first-time contributors must have `appsettings.Development.json` ready before opening the repository in the devcontainer
 
 ## Endpoints
 Default (see console output / launch settings for the bound URL/port):

@@ -1,4 +1,4 @@
-# Dockerfile.dev
+# Dockerfile.Dev
 
 FROM mcr.microsoft.com/dotnet/sdk:10.0
 
@@ -10,6 +10,11 @@ RUN apt-get update && \
     unzip \
     jq \
     ripgrep \
+    make \
+    less \
+    tree \
+    zip \
+    procps \
     iproute2 \
     iputils-ping \
     netcat-openbsd \
@@ -18,7 +23,9 @@ RUN apt-get update && \
     ca-certificates \
     gnupg \
     lsb-release \
-    postgresql-client && \
+    postgresql-client \
+    redis-tools \
+    docker.io && \
     rm -rf /var/lib/apt/lists/*
 
 # Install Node.js (useful for tooling if needed)

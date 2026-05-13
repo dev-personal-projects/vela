@@ -23,25 +23,35 @@ public sealed class PostgresDatabaseFixture : IAsyncLifetime
             return;
         }
 
-        _container = new PostgreSqlBuilder("postgres:17-alpine")
-            .WithDatabase("finance_tracker_tests")
-            .WithUsername("postgres")
-            .WithPassword("postgres")
-            .Build();
-
-        await _container.StartAsync();
-
-        await using var db = CreateDbContext();
-        await db.Database.EnsureCreatedAsync();
-
-        await using var connection = new NpgsqlConnection(ConnectionString);
-        await connection.OpenAsync();
-
-        _respawner = await Respawner.CreateAsync(connection, new RespawnerOptions
+        try
         {
-            DbAdapter = DbAdapter.Postgres,
-            SchemasToInclude = ["public"]
-        });
+            _container = new PostgreSqlBuilder("postgres:17-alpine")
+                .WithDatabase("finance_tracker_tests")
+                .WithUsername("postgres")
+                .WithPassword("postgres")
+                .Build();
+
+            await _container.StartAsync();
+
+            await using var db = CreateDbContext();
+            await db.Database.EnsureCreatedAsync();
+
+            await using var connection = new NpgsqlConnection(ConnectionString);
+            await connection.OpenAsync();
+
+            _respawner = await Respawner.CreateAsync(connection, new RespawnerOptions
+            {
+                DbAdapter = DbAdapter.Postgres,
+                SchemasToInclude = ["public"]
+            });
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException(
+                "Failed to initialize the PostgreSQL Testcontainers fixture. " +
+                "Ensure Docker/Testcontainers access is available inside the supported devcontainer.",
+                ex);
+        }
     }
 
     public async ValueTask DisposeAsync()
@@ -70,8 +80,15 @@ public sealed class PostgresDatabaseFixture : IAsyncLifetime
             return;
         }
 
+        if (_respawner is null)
+        {
+            throw new InvalidOperationException(
+                "The PostgreSQL test fixture was not initialized correctly. " +
+                "The Respawn reset operation cannot run without a ready Testcontainers database.");
+        }
+
         await using var connection = new NpgsqlConnection(ConnectionString);
         await connection.OpenAsync();
-        await _respawner!.ResetAsync(connection);
+        await _respawner.ResetAsync(connection);
     }
 }
