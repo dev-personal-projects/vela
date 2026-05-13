@@ -1,6 +1,6 @@
 # E2E Quickstart (Local + CI-Friendly)
 
-This guide is a practical companion to `docs/TEST-PLAN.md`. It focuses on getting End-to-End (E2E) tests running locally in a repeatable way.
+This guide is a practical companion to `docs/test-plan.md`. It focuses on getting End-to-End (E2E) tests running locally in a repeatable way.
 
 ## What These E2E Tests Are
 E2E here means: real HTTP requests against the API (GraphQL POST), real auth middleware, real DB calls, real serialization, and real status codes.

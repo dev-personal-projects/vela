@@ -2,6 +2,16 @@
     "version": "2.0.0",
     "tasks": [
         {
+            "label": "restore",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "restore",
+                "${workspaceFolder}/finance-tracker-graphql.sln"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
             "label": "build",
             "command": "dotnet",
             "type": "process",
@@ -33,9 +43,96 @@
                 "watch",
                 "run",
                 "--project",
-                "${workspaceFolder}/finance-tracker-graphql.sln"
+                "${workspaceFolder}/FinanceTracker.csproj"
             ],
             "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "run api",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "run",
+                "--project",
+                "${workspaceFolder}/FinanceTracker.csproj",
+                "--launch-profile",
+                "Development"
+            ],
+            "options": {
+                "env": {
+                    "ASPNETCORE_URLS": "http://0.0.0.0:8080"
+                }
+            },
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "validate devcontainer env",
+            "type": "process",
+            "command": "bash",
+            "args": [
+                "${workspaceFolder}/scripts/devcontainer/validate-env.sh"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "ensure dev db",
+            "type": "process",
+            "command": "bash",
+            "args": [
+                "${workspaceFolder}/scripts/devcontainer/ensure-dev-db.sh"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "unit tests",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "test",
+                "${workspaceFolder}/Tests/UnitTests/UnitTests.csproj",
+                "--no-restore"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "integration tests",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "test",
+                "${workspaceFolder}/Tests/IntegrationTests/IntegrationTests.csproj",
+                "--no-restore"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "format",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "format",
+                "${workspaceFolder}/finance-tracker-graphql.sln",
+                "--verify-no-changes"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "prepare commit context",
+            "type": "process",
+            "command": "bash",
+            "args": [
+                "${workspaceFolder}/scripts/git/prepare-commit-context.sh"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "finalize commit",
+            "type": "process",
+            "command": "bash",
+            "args": [
+                "${workspaceFolder}/scripts/git/finalize-commit.sh"
+            ],
+            "problemMatcher": []
         }
     ]
 }

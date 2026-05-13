@@ -42,6 +42,38 @@ Verify:
 curl -s http://localhost:8080/health
 ```
 
+## Development environment
+The supported team environment is the devcontainer.
+
+Before opening the repository in the devcontainer for the first time:
+1. Create or obtain `appsettings.Development.json`.
+2. Ensure it contains valid development credentials and connection strings for this project.
+3. Keep that file in the repository root before the devcontainer bootstrap runs.
+
+Key files:
+- `.devcontainer/devcontainer.json`
+- `.devcontainer/Dockerfile.Dev`
+- `.devcontainer/postCreate.sh`
+- `.devcontainer/postStart.sh`
+- `scripts/devcontainer/bootstrap.sh`
+- `scripts/devcontainer/validate-env.sh`
+- `scripts/devcontainer/check-testcontainers.sh`
+- `scripts/devcontainer/ensure-dev-db.sh`
+
+What the devcontainer now provides:
+- Docker socket passthrough for Testcontainers-based integration tests
+- shared CLI tooling such as `gh`, `jq`, `rg`, `psql`, `docker`, `redis-cli`, `tree`, and `make`
+- startup bootstrap and environment validation
+- automatic schema validation and migration for the configured development database using `scripts/db`
+- shared VS Code tasks for restore, build, run, unit tests, integration tests, formatting, and commit workflow steps
+- a debug profile that exposes the API on `http://0.0.0.0:8080`
+
+Recommended first-run flow inside the devcontainer:
+1. Prepare `appsettings.Development.json` with valid development credentials before opening the repo in the devcontainer.
+2. Open the repository in the devcontainer.
+3. Let the bootstrap finish.
+4. Run `ensure dev db`, `unit tests`, or `integration tests` from the shared VS Code tasks when you want to recheck the environment manually.
+
 ## Configuration
 Config can be set via `appsettings.json`, `appsettings.Development.json`, or environment variables.
 
@@ -64,6 +96,11 @@ Environment variable equivalents (examples):
 - `Supabase__Url`
 - `Supabase__AnonKey`
 
+Development database bootstrapping:
+- the devcontainer bootstrap runs `scripts/devcontainer/ensure-dev-db.sh`
+- that script validates and applies the SQL files under `scripts/db` against the database configured in `appsettings.Development.json`
+- first-time contributors must have `appsettings.Development.json` ready before opening the repository in the devcontainer
+
 ## Endpoints
 Default (see console output / launch settings for the bound URL/port):
 - Health: `GET /health`
@@ -81,18 +118,34 @@ GraphQL highlights:
 
 ## Documentation and lessons
 Product/technical docs:
-- PRD: `docs/PRD.md`
-- TRD: `docs/TRD.md`
+- PRD: `docs/prd.md`
+- TRD: `docs/trd.md`
+- Devcontainer plan: `docs/devcontainer-plan.md`
+- Commit conventions: `docs/git/commit-conventions.md`
+- Commit message template: `docs/git/commit-message-template.md`
+- Commit context tool: `scripts/git/prepare-commit-context.sh`
+- Commit finalize tool: `scripts/git/finalize-commit.sh`
+- Commit proposal file: `commit-message-proposal.md` (contains only the final commit message paragraph)
+
+Commit workflow:
+1. Stage the intended files manually.
+2. Run `bash scripts/git/prepare-commit-context.sh`.
+3. Review `commit-message-proposal.md`.
+4. Tell the agent to proceed.
+5. The agent runs `bash scripts/git/finalize-commit.sh`, commits staged changes only, pushes the current branch, and removes the generated proposal file.
 
 Lessons (guided learning path built around this codebase):
 - Lesson index: `docs/lessons/README.md`
-- Fundamentals: `docs/lessons/LESSON-1-graphql-fundamentals.md`
-- Queries/mutations (Hot Chocolate): `docs/lessons/LESSON-2-queries-and-mutations.md`
-- Error handling: `docs/lessons/LESSON-5-error-handling.md`
-- Auth and security: `docs/lessons/LESSON-6-authentication-and-security.md`
-- Architecture: `docs/lessons/LESSON-7-clean-architecture-and-graphql.md`
+- Fundamentals: `docs/lessons/lesson-01-graphql-fundamentals.md`
+- Queries/mutations (Hot Chocolate): `docs/lessons/lesson-02-queries-and-mutations.md`
+- Error handling: `docs/lessons/lesson-05-error-handling.md`
+- Auth and security: `docs/lessons/lesson-06-authentication-and-security.md`
+- Architecture: `docs/lessons/lesson-07-clean-architecture-and-graphql.md`
 
 ## Testing
 Test plan and coverage:
-- `docs/TEST-PLAN.md`
-- E2E quickstart: `docs/E2E-QUICKSTART.md`
+- `docs/test-requirements.md`
+- `docs/test-plan.md`
+- `docs/unit-test-plan.md`
+- `docs/integration-test-plan.md`
+- E2E quickstart: `docs/e2e-quickstart.md`

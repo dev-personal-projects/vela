@@ -17,4 +17,7 @@
   <ItemGroup>
     <None Remove="global.json" />
   </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="Tests\**\*.cs" />
+  </ItemGroup>
 </Project>

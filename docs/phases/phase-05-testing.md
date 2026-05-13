@@ -5,7 +5,7 @@ Validate the entire backend end-to-end. Cover every service's happy and failure 
 
 ## Test Plan
 Use the detailed plan for what to test, where to test it, and exit criteria:
-- `docs/TEST-PLAN.md`
+- `docs/test-plan.md`
 
 ---
 

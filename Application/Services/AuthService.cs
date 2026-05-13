@@ -14,7 +14,9 @@ public sealed class AuthService(ISupabaseAuthClient authClient, IApiTokenService
 
     public async Task<AppResult<SignUpPayload>> SignUpAsync(SignUpInput input, CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(input.Email) || !_emailRegex.IsMatch(input.Email))
+        var normalizedEmail = input.Email?.Trim().ToLowerInvariant();
+
+        if (string.IsNullOrWhiteSpace(normalizedEmail) || !_emailRegex.IsMatch(normalizedEmail))
         {
             return AppResult<SignUpPayload>.Fail("A valid email address is required.");
         }
@@ -24,12 +26,14 @@ public sealed class AuthService(ISupabaseAuthClient authClient, IApiTokenService
             return AppResult<SignUpPayload>.Fail("Password must be at least 8 characters.");
         }
 
-        return await authClient.SignUpAsync(input.Email.Trim().ToLowerInvariant(), input.Password, ct);
+        return await authClient.SignUpAsync(normalizedEmail, input.Password, ct);
     }
 
     public async Task<AppResult<SignInPayload>> SignInAsync(SignInInput input, CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(input.Email) || !_emailRegex.IsMatch(input.Email))
+        var normalizedEmail = input.Email?.Trim().ToLowerInvariant();
+
+        if (string.IsNullOrWhiteSpace(normalizedEmail) || !_emailRegex.IsMatch(normalizedEmail))
         {
             return AppResult<SignInPayload>.Fail("A valid email address is required.");
         }
@@ -39,7 +43,7 @@ public sealed class AuthService(ISupabaseAuthClient authClient, IApiTokenService
             return AppResult<SignInPayload>.Fail("Password is required.");
         }
 
-        var result = await authClient.SignInAsync(input.Email.Trim().ToLowerInvariant(), input.Password, ct);
+        var result = await authClient.SignInAsync(normalizedEmail, input.Password, ct);
         if (result.IsFailure)
         {
             return AppResult<SignInPayload>.Fail(result.Error!);

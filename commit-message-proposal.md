@@ -1,0 +1,1 @@
+🔧 chore: This updates the repository commit workflow by adding branch-aware commit conventions, a reusable commit message proposal file, VS Code tasks, and helper scripts to prepare and finalize reviewed commits from staged changes only.
