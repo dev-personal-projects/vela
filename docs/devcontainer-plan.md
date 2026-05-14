@@ -29,7 +29,7 @@ A developer should be able to:
 without manual machine-specific setup beyond Docker and the devcontainer host prerequisites.
 
 For this repository, one first-time manual prerequisite remains intentional:
-- the developer must have `appsettings.Development.json` ready with valid development credentials before opening the repository in the devcontainer
+- the developer must have Azure CLI access to the development Azure Key Vault before opening the repository in the devcontainer
 
 ## Current State
 
@@ -75,7 +75,7 @@ Implemented behavior:
 - the devcontainer mounts `/var/run/docker.sock` so Testcontainers can talk to Docker from inside the workspace
 - startup runs a bootstrap pass on create and a validation pass on start
 - environment validation checks required CLI tools and Docker/Testcontainers access
-- the bootstrap also validates and applies the SQL scripts under `scripts/db` to the development database configured in `appsettings.Development.json`
+- the bootstrap also validates and applies the SQL scripts under `scripts/db` to the development database configured in Azure Key Vault
 - the repository now has team-owned VS Code tasks for restore, API run, unit tests, integration tests, and formatting
 - the debug profile binds the API to `http://0.0.0.0:8080`
 - integration fixture errors now distinguish missing Docker/Testcontainers support from actual repository test failures
@@ -124,21 +124,22 @@ Optional compose-managed development services:
 ### 3. Smooth Onboarding
 
 A new contributor should need one path only:
-1. prepare `appsettings.Development.json` with valid development credentials
-2. open repository in devcontainer
-3. wait for bootstrap
-4. run the API or tests from documented tasks
+1. log in to Azure CLI with access to the development Key Vault
+2. create `appsettings.Development.json` from `appsettings.Development.example.json`, or set `AzureKeyVault__VaultUri`
+3. open repository in devcontainer
+4. wait for bootstrap
+5. run the API or tests from documented tasks
 
 The container should bootstrap:
 - `dotnet restore`
 - trusted local tool restore if added later
 - validation of Docker/Testcontainers access
-- validation of required secrets or env vars for auth flows
+- validation of Azure CLI and Key Vault bootstrap configuration
 
 The repository documentation must make this explicit:
-- `appsettings.Development.json` is required before first devcontainer startup
-- the file must contain real development credentials
-- once that file is present, the devcontainer should handle the remaining bootstrap steps automatically
+- local JSON files must not contain real secrets
+- `appsettings.Development.example.json` contains only non-secret Key Vault bootstrap values
+- once Azure CLI and Key Vault access are present, the devcontainer should handle the remaining bootstrap steps automatically
 
 ### 4. Shared Editor Workflow
 
@@ -160,8 +161,8 @@ The devcontainer plan should standardize:
 - which files must never be committed
 
 The repo should prefer:
-- the real `appsettings.Development.json` for the supported development workflow
-- secrets supplied through the local development settings file or environment overrides when needed
+- Azure Key Vault for real secrets
+- local JSON only for non-secret bootstrap and operational settings
 
 ### 6. Collaboration-First Defaults
 

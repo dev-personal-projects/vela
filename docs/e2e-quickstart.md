@@ -26,17 +26,19 @@ docker run --rm --name finance-tracker-test-db \
 ```
 
 ## Configure the API Under Test (E2E)
-E2E tests should provide config via environment variables (not developer machine secrets).
+E2E tests should use a test-only Azure Key Vault, not developer machine secrets or production vaults.
 
 Minimum required:
-- `ConnectionStrings__Default`
-- `Auth__JwtSecret`
+- `AzureKeyVault__VaultUri`
+- `AzureKeyVault__CredentialMode`
+- Key Vault secret `ConnectionStrings--Default`
+- Key Vault secret `Auth--JwtSecret`
 
 Example (bash):
 
 ```bash
-export ConnectionStrings__Default="Host=localhost;Port=5432;Database=finance_tracker_test;Username=postgres;Password=postgres"
-export Auth__JwtSecret="test-secret-min-32-chars-1234567890abcdef"
+export AzureKeyVault__VaultUri="https://<test-vault>.vault.azure.net/"
+export AzureKeyVault__CredentialMode="AzureCli"
 ```
 
 Optional:
@@ -77,7 +79,7 @@ dotnet test Tests/FinanceTracker.ApiTests/FinanceTracker.ApiTests.csproj --filte
 
 ## Token Strategy (No Supabase Needed)
 Because the API validates JWTs using `Auth:JwtSecret`, E2E tests can mint their own JWTs:
-- Sign with the same `Auth__JwtSecret`
+- Sign with the same test-only `Auth--JwtSecret` stored in Key Vault
 - Put the user id in `sub` claim (Guid)
 - Keep expirations short (e.g., 5–15 minutes)
 
@@ -102,9 +104,10 @@ For the loan journey, prefer the current richer flow:
 - verify `loans(status: SETTLED)` includes the loan
 
 ## CI Notes
-In CI, use a Postgres service container and set the same env vars:
-- `ConnectionStrings__Default` points to the CI service
-- `Auth__JwtSecret` fixed test value
+In CI, use a Postgres service container and a test-only Key Vault:
+- `ConnectionStrings--Default` points to the CI service
+- `Auth--JwtSecret` is a fixed test value
+- `AzureKeyVault__CredentialMode` should match the CI identity strategy
 
 If E2E runtime becomes too slow:
 - Run unit + integration on every PR

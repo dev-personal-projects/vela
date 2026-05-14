@@ -17,7 +17,7 @@ require_command() {
 
 cd "${ROOT_DIR}"
 
-for command_name in dotnet git gh jq rg psql node npm docker; do
+for command_name in dotnet git gh jq rg psql node npm docker az; do
     require_command "${command_name}"
 done
 
@@ -28,9 +28,19 @@ fi
 
 bash "${ROOT_DIR}/scripts/devcontainer/check-testcontainers.sh"
 
-if [[ ! -f "${APPSETTINGS_LOCAL}" ]]; then
-    echo "[devcontainer] Missing required local settings file: appsettings.Development.json" >&2
-    echo "[devcontainer] This repository expects the real development settings file to be present for the supported dev workflow." >&2
+if ! az account show >/dev/null 2>&1; then
+    echo "[devcontainer] Azure CLI is installed but not logged in. Run: az login" >&2
+    exit 1
+fi
+
+vault_uri="${AzureKeyVault__VaultUri:-}"
+if [[ -z "${vault_uri}" && -f "${APPSETTINGS_LOCAL}" ]]; then
+    vault_uri="$(jq -r '.AzureKeyVault.VaultUri // empty' "${APPSETTINGS_LOCAL}")"
+fi
+
+if [[ -z "${vault_uri}" ]]; then
+    echo "[devcontainer] Missing Azure Key Vault bootstrap config." >&2
+    echo "[devcontainer] Set AzureKeyVault__VaultUri or create appsettings.Development.json from appsettings.Development.example.json." >&2
     exit 1
 fi
 

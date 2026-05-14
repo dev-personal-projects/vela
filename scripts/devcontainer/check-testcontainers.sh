@@ -19,4 +19,13 @@ if ! docker version >/dev/null 2>&1; then
     exit 1
 fi
 
+if [[ -f "${HOME}/.docker/config.json" ]] && grep -q '"credsStore"[[:space:]]*:' "${HOME}/.docker/config.json"; then
+    cp "${HOME}/.docker/config.json" "${HOME}/.docker/config.json.bak"
+    jq 'del(.credsStore)' "${HOME}/.docker/config.json.bak" > "${HOME}/.docker/config.json"
+fi
+
+if [[ -z "${TESTCONTAINERS_HOST_OVERRIDE:-}" ]]; then
+    export TESTCONTAINERS_HOST_OVERRIDE="host.docker.internal"
+fi
+
 echo "[devcontainer] Docker/Testcontainers access is available."

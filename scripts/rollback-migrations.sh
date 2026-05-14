@@ -2,12 +2,12 @@
 
 # Rollback migrations script
 # Rolls back migrations by running the rollback SQL files in scripts/db/rollback/.
-# Reads the connection URI from appsettings.json by default.
+# Reads the connection URI from Azure Key Vault by default.
 #
 # DANGER: This PERMANENTLY DELETES tables and data. Cannot be undone.
 #
 # Usage:
-#   ./rollback-migrations.sh                                      # reads from appsettings.json
+#   ./rollback-migrations.sh                                      # reads from Azure Key Vault
 #   ./rollback-migrations.sh --connection-uri "postgresql://..."  # override URI
 #   ./rollback-migrations.sh --yes
 
@@ -36,12 +36,12 @@ print_usage() {
 Usage: rollback-migrations.sh [OPTIONS]
 
 Rolls back migrations by executing rollback SQL files in scripts/db/rollback/.
-Reads ConnectionStrings.Default from appsettings.json by default.
+Reads ConnectionStrings--Migration or ConnectionStrings--Default from Azure Key Vault by default.
 
 DANGER: This PERMANENTLY DELETES tables and data. Cannot be undone.
 
 Options:
-  --connection-uri URI   Override the connection URI from appsettings.json
+  --connection-uri URI   Explicit one-off connection URI override
                          Format: postgresql://user:pass@host:port/database
   --yes, -y              Skip confirmation prompts (DANGEROUS)
   -h, --help             Show this help message
@@ -70,21 +70,33 @@ parse_args() {
         esac
     done
 
-    [[ -n "$CONN_URI" ]]        || CONN_URI=$(read_conn_uri_from_appsettings)
-    [[ -n "$CONN_URI" ]]        || fatal "No connection URI found. Set ConnectionStrings.Default in appsettings.json or pass --connection-uri."
+    [[ -n "$CONN_URI" ]]        || CONN_URI=$(read_conn_uri_from_keyvault)
+    [[ -n "$CONN_URI" ]]        || fatal "No connection URI found in Azure Key Vault or --connection-uri."
     [[ -d "$ROLLBACK_DIR" ]]    || fatal "Rollback directory not found: $ROLLBACK_DIR"
 }
 
 # ── Helpers ────────────────────────────────────────────────────────────────────
-read_conn_uri_from_appsettings() {
+read_conn_uri_from_keyvault() {
     local settings_file="${REPO_ROOT}/appsettings.Development.json"
     [[ -f "$settings_file" ]] || settings_file="${REPO_ROOT}/appsettings.json"
     [[ -f "$settings_file" ]] || fatal "No appsettings.json found at $REPO_ROOT"
     command -v jq >/dev/null 2>&1 || fatal "jq is not installed. Install jq or pass --connection-uri."
-    local uri
-    uri=$(jq -r '.ConnectionStrings.Migration // .ConnectionStrings.Default // empty' "$settings_file")
-    [[ -n "$uri" ]] || fatal "ConnectionStrings.Migration or .Default not found in $settings_file"
-    log_info "Reading connection URI from $(basename "$settings_file")" >&2
+    command -v az >/dev/null 2>&1 || fatal "az is not installed. Install Azure CLI or pass --connection-uri."
+
+    local vault_uri vault_name uri
+    vault_uri="${AzureKeyVault__VaultUri:-$(jq -r '.AzureKeyVault.VaultUri // empty' "$settings_file")}"
+    [[ -n "$vault_uri" ]] || fatal "AzureKeyVault:VaultUri is not configured."
+
+    vault_name=$(echo "$vault_uri" | sed -E 's#^https://([^.]+)\..*$#\1#')
+    [[ -n "$vault_name" && "$vault_name" != "$vault_uri" ]] || fatal "Could not parse Key Vault name from AzureKeyVault:VaultUri."
+
+    uri=$(az keyvault secret show --vault-name "$vault_name" --name "ConnectionStrings--Migration" --query value -o tsv 2>/dev/null || true)
+    if [[ -z "$uri" ]]; then
+        uri=$(az keyvault secret show --vault-name "$vault_name" --name "ConnectionStrings--Default" --query value -o tsv 2>/dev/null || true)
+    fi
+
+    [[ -n "$uri" ]] || fatal "ConnectionStrings--Migration or ConnectionStrings--Default not found in Key Vault '$vault_name'."
+    log_info "Reading connection URI from Azure Key Vault '$vault_name'" >&2
     echo "$uri"
 }
 

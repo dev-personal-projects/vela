@@ -2,17 +2,17 @@
 
 # Dry-run migration validation script
 # Validates that migration scripts will apply cleanly WITHOUT committing changes.
-# Reads the connection URI from appsettings.json by default.
+# Reads the connection URI from Azure Key Vault by default.
 #
 # How it works:
-#   1. Reads connection URI from appsettings.json (or --connection-uri override)
+#   1. Reads connection URI from Azure Key Vault (or --connection-uri override)
 #   2. Starts a transaction
 #   3. Runs all migration scripts in order
 #   4. Rolls back the transaction — no changes persisted
 #   5. Reports success or failure
 #
 # Usage:
-#   ./validate-migrations.sh                                      # reads from appsettings.json
+#   ./validate-migrations.sh                                      # reads from Azure Key Vault
 #   ./validate-migrations.sh --connection-uri "postgresql://..."  # override URI
 #   ./validate-migrations.sh --verbose
 
@@ -48,11 +48,11 @@ print_usage() {
 Usage: validate-migrations.sh [OPTIONS]
 
 Validates migration scripts by running them inside a transaction that is rolled back.
-Reads ConnectionStrings.Default from appsettings.json by default.
+Reads ConnectionStrings--Migration or ConnectionStrings--Default from Azure Key Vault by default.
 No changes are persisted to the database.
 
 Options:
-  --connection-uri URI   Override the connection URI from appsettings.json
+  --connection-uri URI   Explicit one-off connection URI override
                          Format: postgresql://user:pass@host:port/database
   --migrations-dir DIR   Directory containing .sql migration files
                          Default: ./db
@@ -94,25 +94,37 @@ parse_args() {
 
     MIGRATIONS_DIR="${MIGRATIONS_DIR:-$DEFAULT_MIGRATIONS_DIR}"
 
-    # Read from appsettings.json if no override provided
+    # Read from Azure Key Vault if no override provided.
     if [[ -z "$CONN_URI" ]]; then
-        CONN_URI=$(read_conn_uri_from_appsettings)
+        CONN_URI=$(read_conn_uri_from_keyvault)
     fi
 
-    [[ -n "$CONN_URI" ]]       || fatal "No connection URI found. Set ConnectionStrings.Default in appsettings.json or pass --connection-uri."
+    [[ -n "$CONN_URI" ]]       || fatal "No connection URI found in Azure Key Vault or --connection-uri."
     [[ -d "$MIGRATIONS_DIR" ]] || fatal "Migrations directory not found: $MIGRATIONS_DIR"
 }
 
 # ── Helpers ────────────────────────────────────────────────────────────────────
-read_conn_uri_from_appsettings() {
+read_conn_uri_from_keyvault() {
     local settings_file="${REPO_ROOT}/appsettings.Development.json"
     [[ -f "$settings_file" ]] || settings_file="${REPO_ROOT}/appsettings.json"
     [[ -f "$settings_file" ]] || fatal "No appsettings.json found at $REPO_ROOT"
     command -v jq >/dev/null 2>&1 || fatal "jq is not installed. Install jq or pass --connection-uri."
-    local uri
-    uri=$(jq -r '.ConnectionStrings.Migration // .ConnectionStrings.Default // empty' "$settings_file")
-    [[ -n "$uri" ]] || fatal "ConnectionStrings.Migration or .Default not found in $settings_file"
-    log_info "Reading connection URI from $(basename "$settings_file")" >&2
+    command -v az >/dev/null 2>&1 || fatal "az is not installed. Install Azure CLI or pass --connection-uri."
+
+    local vault_uri vault_name uri
+    vault_uri="${AzureKeyVault__VaultUri:-$(jq -r '.AzureKeyVault.VaultUri // empty' "$settings_file")}"
+    [[ -n "$vault_uri" ]] || fatal "AzureKeyVault:VaultUri is not configured."
+
+    vault_name=$(echo "$vault_uri" | sed -E 's#^https://([^.]+)\..*$#\1#')
+    [[ -n "$vault_name" && "$vault_name" != "$vault_uri" ]] || fatal "Could not parse Key Vault name from AzureKeyVault:VaultUri."
+
+    uri=$(az keyvault secret show --vault-name "$vault_name" --name "ConnectionStrings--Migration" --query value -o tsv 2>/dev/null || true)
+    if [[ -z "$uri" ]]; then
+        uri=$(az keyvault secret show --vault-name "$vault_name" --name "ConnectionStrings--Default" --query value -o tsv 2>/dev/null || true)
+    fi
+
+    [[ -n "$uri" ]] || fatal "ConnectionStrings--Migration or ConnectionStrings--Default not found in Key Vault '$vault_name'."
+    log_info "Reading connection URI from Azure Key Vault '$vault_name'" >&2
     echo "$uri"
 }
 
