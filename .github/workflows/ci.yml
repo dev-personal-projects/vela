@@ -33,7 +33,10 @@ jobs:
           global-json-file: global.json
 
       - name: Restore
-        run: dotnet restore finance-tracker-graphql.sln
+        run: |
+          dotnet restore FinanceTracker.csproj
+          dotnet restore Tests/UnitTests/UnitTests.csproj
+          dotnet restore Tests/IntegrationTests/IntegrationTests.csproj
 
       - name: Build
         run: dotnet build FinanceTracker.csproj --configuration Release --no-restore
