@@ -70,6 +70,14 @@ This repository standardizes on:
 
 The command-line entry point for all suites is `dotnet test`.
 
+For the clearest local and CI output, use the repository test runner:
+
+```bash
+scripts/test/run-tests.sh all
+```
+
+The runner streams detailed test progress while the suites execute, writes TRX result files under `artifacts/test-results/`, and prints a final summary table with suite totals, slowest tests, and failures.
+
 ## Unit Tests
 
 Unit tests live under [Tests/UnitTests](/workspaces/finance-tracker-graphql/Tests/UnitTests).
@@ -105,13 +113,13 @@ Current feature coverage includes:
 Run the full unit suite:
 
 ```bash
-dotnet test Tests/UnitTests/UnitTests.csproj --logger "console;verbosity=detailed"
+scripts/test/run-tests.sh unit
 ```
 
 Run the full unit suite with TRX output:
 
 ```bash
-dotnet test Tests/UnitTests/UnitTests.csproj --logger "console;verbosity=detailed" --logger "trx;LogFileName=unit-tests.trx"
+scripts/test/run-tests.sh unit --configuration Release --no-restore
 ```
 
 ## Integration Tests
@@ -163,13 +171,13 @@ The repository standard is strict here:
 Run the integration test project:
 
 ```bash
-dotnet test Tests/IntegrationTests/IntegrationTests.csproj --logger "console;verbosity=detailed"
+scripts/test/run-tests.sh integration
 ```
 
 Run with TRX output:
 
 ```bash
-dotnet test Tests/IntegrationTests/IntegrationTests.csproj --logger "console;verbosity=detailed" --logger "trx;LogFileName=integration-tests.trx"
+scripts/test/run-tests.sh integration --configuration Release --no-restore
 ```
 
 ### Environment Expectations
@@ -196,8 +204,8 @@ For normal development, use this sequence:
 Recommended commands:
 
 ```bash
-dotnet test Tests/UnitTests/UnitTests.csproj --no-restore
-dotnet test Tests/IntegrationTests/IntegrationTests.csproj --no-restore
+scripts/test/run-tests.sh unit --no-restore
+scripts/test/run-tests.sh integration --no-restore
 ```
 
 If you are using the supported devcontainer, equivalent VS Code tasks are available for:

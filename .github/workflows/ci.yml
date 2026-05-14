@@ -41,11 +41,8 @@ jobs:
       - name: Build
         run: dotnet build FinanceTracker.csproj --configuration Release --no-restore
 
-      - name: Run unit tests
-        run: dotnet test Tests/UnitTests/UnitTests.csproj --configuration Release --no-restore --logger "trx;LogFileName=unit-tests.trx"
-
-      - name: Run integration tests
-        run: dotnet test Tests/IntegrationTests/IntegrationTests.csproj --configuration Release --no-restore --logger "trx;LogFileName=integration-tests.trx"
+      - name: Run tests
+        run: scripts/test/run-tests.sh all --configuration Release --no-restore
 
       - name: Upload test results
         if: always()
@@ -53,5 +50,5 @@ jobs:
         with:
           name: test-results
           path: |
-            Tests/**/TestResults/*.trx
+            artifacts/test-results/**/*.trx
           if-no-files-found: ignore
