@@ -27,6 +27,7 @@
 #   --include-acr                Delete the Azure Container Registry.
 #   --include-keyvault           Delete the Key Vault (soft-delete).
 #   --purge-keyvault             Purge the deleted Key Vault too. Requires --include-keyvault.
+#   --include-monitoring         Delete Application Insights and Log Analytics.
 #   --include-github-automation  Delete GitHub deployment secrets and the deployment service principal.
 #   --delete-resource-group      Delete the entire configured resource group.
 #   --delete-production          Allow destructive actions for prod/production.
@@ -66,6 +67,7 @@ INCLUDE_ENVIRONMENT=false
 INCLUDE_ACR=false
 INCLUDE_KEYVAULT=false
 PURGE_KEYVAULT=false
+INCLUDE_MONITORING=false
 INCLUDE_GITHUB_AUTOMATION=false
 DELETE_RESOURCE_GROUP=false
 DELETE_PRODUCTION=false
@@ -78,6 +80,7 @@ while [[ $# -gt 0 ]]; do
     --include-acr) INCLUDE_ACR=true; shift ;;
     --include-keyvault) INCLUDE_KEYVAULT=true; shift ;;
     --purge-keyvault) PURGE_KEYVAULT=true; shift ;;
+    --include-monitoring) INCLUDE_MONITORING=true; shift ;;
     --include-github-automation) INCLUDE_GITHUB_AUTOMATION=true; shift ;;
     --delete-resource-group) DELETE_RESOURCE_GROUP=true; shift ;;
     --delete-production) DELETE_PRODUCTION=true; shift ;;
@@ -112,6 +115,7 @@ validate_config() {
     ENVIRONMENT_PREFIX LOG_FOLDER TENANT_ID PROJECT_SUBSCRIPTION_ID
     PROJECT_RESOURCE_GROUP PROJECT_LOCATION ACR_NAME CONTAINER_APP_NAME
     CONTAINER_APP_ENV_NAME KEY_VAULT_NAME GITHUB_REPO
+    LOG_ANALYTICS_WORKSPACE_NAME APPLICATION_INSIGHTS_NAME
   )
 
   for var in "${required[@]}"; do
@@ -124,6 +128,11 @@ validate_config() {
 
 ensure_tools() {
   command -v az >/dev/null 2>&1 || { log_error "Azure CLI (az) is required."; exit 1; }
+
+  if [[ "$PLAN_ONLY" != true && "$INCLUDE_MONITORING" == true ]] && ! az extension show --name application-insights >/dev/null 2>&1; then
+    log_info "Installing application-insights extension"
+    az extension add --name application-insights --only-show-errors
+  fi
 
   if [[ "$INCLUDE_GITHUB_AUTOMATION" == true ]]; then
     command -v gh >/dev/null 2>&1 || { log_error "GitHub CLI (gh) is required for --include-github-automation."; exit 1; }
@@ -179,6 +188,8 @@ print_plan() {
   echo "Container App Env   : $CONTAINER_APP_ENV_NAME"
   echo "ACR                 : $ACR_NAME"
   echo "Key Vault           : $KEY_VAULT_NAME"
+  echo "Log Analytics       : $LOG_ANALYTICS_WORKSPACE_NAME"
+  echo "Application Insights: $APPLICATION_INSIGHTS_NAME"
   echo "GitHub repo         : $(repo_short)"
   echo ""
 
@@ -190,6 +201,8 @@ print_plan() {
     echo "  - Container App: $CONTAINER_APP_NAME"
     [[ "$INCLUDE_ENVIRONMENT" == true ]] && echo "  - Container Apps environment: $CONTAINER_APP_ENV_NAME"
     [[ "$INCLUDE_ACR" == true ]] && echo "  - Azure Container Registry: $ACR_NAME"
+    [[ "$INCLUDE_MONITORING" == true ]] && echo "  - Application Insights: $APPLICATION_INSIGHTS_NAME"
+    [[ "$INCLUDE_MONITORING" == true ]] && echo "  - Log Analytics workspace: $LOG_ANALYTICS_WORKSPACE_NAME"
     [[ "$INCLUDE_KEYVAULT" == true ]] && echo "  - Key Vault: $KEY_VAULT_NAME"
     [[ "$PURGE_KEYVAULT" == true ]] && echo "  - Purged Key Vault tombstone: $KEY_VAULT_NAME"
     [[ "$INCLUDE_GITHUB_AUTOMATION" == true ]] && echo "  - GitHub deployment secrets and service principal"
@@ -199,10 +212,39 @@ print_plan() {
   echo "Preserved unless explicitly included:"
   [[ "$DELETE_RESOURCE_GROUP" != true && "$INCLUDE_ENVIRONMENT" != true ]] && echo "  - Container Apps environment"
   [[ "$DELETE_RESOURCE_GROUP" != true && "$INCLUDE_ACR" != true ]] && echo "  - Azure Container Registry"
+  [[ "$DELETE_RESOURCE_GROUP" != true && "$INCLUDE_MONITORING" != true ]] && echo "  - Log Analytics and Application Insights"
   [[ "$DELETE_RESOURCE_GROUP" != true && "$INCLUDE_KEYVAULT" != true ]] && echo "  - Key Vault and runtime secrets"
   [[ "$DELETE_RESOURCE_GROUP" != true && "$INCLUDE_GITHUB_AUTOMATION" != true ]] && echo "  - GitHub secrets and deployment service principal"
   echo "============================================================"
   echo ""
+}
+
+delete_monitoring() {
+  [[ "$INCLUDE_MONITORING" == true ]] || return 0
+
+  if az monitor app-insights component show --app "$APPLICATION_INSIGHTS_NAME" --resource-group "$PROJECT_RESOURCE_GROUP" >/dev/null 2>&1; then
+    log_info "Deleting Application Insights: $APPLICATION_INSIGHTS_NAME"
+    az resource delete \
+      --resource-group "$PROJECT_RESOURCE_GROUP" \
+      --name "$APPLICATION_INSIGHTS_NAME" \
+      --resource-type "Microsoft.Insights/components" \
+      --output none
+    log_success "Deleted Application Insights: $APPLICATION_INSIGHTS_NAME"
+  else
+    log_warning "Application Insights not found: $APPLICATION_INSIGHTS_NAME"
+  fi
+
+  if az monitor log-analytics workspace show --name "$LOG_ANALYTICS_WORKSPACE_NAME" --resource-group "$PROJECT_RESOURCE_GROUP" >/dev/null 2>&1; then
+    log_info "Deleting Log Analytics workspace: $LOG_ANALYTICS_WORKSPACE_NAME"
+    az monitor log-analytics workspace delete \
+      --name "$LOG_ANALYTICS_WORKSPACE_NAME" \
+      --resource-group "$PROJECT_RESOURCE_GROUP" \
+      --yes \
+      --output none
+    log_success "Deleted Log Analytics workspace: $LOG_ANALYTICS_WORKSPACE_NAME"
+  else
+    log_warning "Log Analytics workspace not found: $LOG_ANALYTICS_WORKSPACE_NAME"
+  fi
 }
 
 confirm_teardown() {
@@ -317,6 +359,8 @@ delete_github_automation() {
     ACR_NAME
     CONTAINER_APP_NAME
     CONTAINER_APP_ENV_NAME
+    LOG_ANALYTICS_WORKSPACE_NAME
+    APPLICATION_INSIGHTS_NAME
     KEYVAULT_NAME
     KEYVAULT_URI
   )
@@ -393,6 +437,7 @@ main() {
   delete_container_app
   delete_environment
   delete_acr
+  delete_monitoring
   delete_keyvault
   delete_github_automation
 

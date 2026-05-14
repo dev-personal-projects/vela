@@ -12,7 +12,9 @@
 #   - Verifies Azure authentication and selects the configured subscription.
 #   - Ensures the Container App has a system-assigned managed identity.
 #   - Ensures that identity can read required runtime secrets from Key Vault.
+#   - Ensures the deployment is still pinned to North Europe.
 #   - Refreshes deterministic runtime environment variables.
+#   - Refreshes Log Analytics and Application Insights settings.
 #   - Refreshes CPU, memory, and replica settings from globalenv.config.
 #   - Waits for /health unless --no-health is supplied.
 #
@@ -108,9 +110,11 @@ load_config() {
 validate_config() {
   local required=(
     ENVIRONMENT_PREFIX LOG_FOLDER TENANT_ID PROJECT_SUBSCRIPTION_ID
-    PROJECT_RESOURCE_GROUP ACR_NAME CONTAINER_APP_NAME CONTAINER_APP_ENV_NAME
+    PROJECT_RESOURCE_GROUP PROJECT_LOCATION EUROPE_LOCATION EUROPE_PREFIX
+    ACR_NAME CONTAINER_APP_NAME CONTAINER_APP_ENV_NAME
     CONTAINER_TARGET_PORT CONTAINER_HEALTH_PATH CONTAINER_CPU CONTAINER_MEMORY
     CONTAINER_MIN_REPLICAS CONTAINER_MAX_REPLICAS KEY_VAULT_NAME KEY_VAULT_URI
+    LOG_ANALYTICS_WORKSPACE_NAME APPLICATION_INSIGHTS_NAME
     GITHUB_REPO GITHUB_BRANCH
   )
 
@@ -128,6 +132,11 @@ repo_short() {
 
 ensure_tools() {
   command -v az >/dev/null 2>&1 || { log_error "Azure CLI (az) is required."; exit 1; }
+
+  if [[ "$PLAN_ONLY" != true ]] && ! az extension show --name application-insights >/dev/null 2>&1; then
+    log_info "Installing application-insights extension"
+    az extension add --name application-insights --only-show-errors
+  fi
 
   if [[ "$TRIGGER_WORKFLOW" == true ]]; then
     command -v gh >/dev/null 2>&1 || { log_error "GitHub CLI (gh) is required for --trigger-workflow."; exit 1; }
@@ -158,6 +167,20 @@ setup_azure() {
   fi
 }
 
+ensure_north_europe_location() {
+  if [[ "$PROJECT_LOCATION" != "northeurope" || "$EUROPE_LOCATION" != "northeurope" || "$EUROPE_PREFIX" != "neu" ]]; then
+    log_error "This deployment is pinned to North Europe. Expected PROJECT_LOCATION=northeurope, EUROPE_LOCATION=northeurope, EUROPE_PREFIX=neu."
+    exit 1
+  fi
+
+  local rg_location
+  rg_location=$(az group show --name "$PROJECT_RESOURCE_GROUP" --query location -o tsv)
+  if [[ "$rg_location" != "$PROJECT_LOCATION" ]]; then
+    log_error "Resource group '$PROJECT_RESOURCE_GROUP' is in '$rg_location', expected '$PROJECT_LOCATION'."
+    exit 1
+  fi
+}
+
 ensure_resources_exist() {
   az group show --name "$PROJECT_RESOURCE_GROUP" >/dev/null 2>&1 || {
     log_error "Resource group not found: $PROJECT_RESOURCE_GROUP"
@@ -173,6 +196,52 @@ ensure_resources_exist() {
     log_error "Key Vault not found: $KEY_VAULT_NAME"
     exit 1
   }
+
+  az monitor log-analytics workspace show --name "$LOG_ANALYTICS_WORKSPACE_NAME" --resource-group "$PROJECT_RESOURCE_GROUP" >/dev/null 2>&1 || {
+    log_error "Log Analytics workspace not found: $LOG_ANALYTICS_WORKSPACE_NAME. Run the deploy script first."
+    exit 1
+  }
+
+  az monitor app-insights component show --app "$APPLICATION_INSIGHTS_NAME" --resource-group "$PROJECT_RESOURCE_GROUP" >/dev/null 2>&1 || {
+    log_error "Application Insights resource not found: $APPLICATION_INSIGHTS_NAME. Run the deploy script first."
+    exit 1
+  }
+}
+
+load_observability_settings() {
+  LOG_ANALYTICS_WORKSPACE_ID=$(az monitor log-analytics workspace show \
+    --name "$LOG_ANALYTICS_WORKSPACE_NAME" \
+    --resource-group "$PROJECT_RESOURCE_GROUP" \
+    --query customerId \
+    -o tsv)
+
+  LOG_ANALYTICS_WORKSPACE_KEY=$(az monitor log-analytics workspace get-shared-keys \
+    --name "$LOG_ANALYTICS_WORKSPACE_NAME" \
+    --resource-group "$PROJECT_RESOURCE_GROUP" \
+    --query primarySharedKey \
+    -o tsv)
+
+  APPLICATIONINSIGHTS_CONNECTION_STRING=$(az monitor app-insights component show \
+    --app "$APPLICATION_INSIGHTS_NAME" \
+    --resource-group "$PROJECT_RESOURCE_GROUP" \
+    --query connectionString \
+    -o tsv)
+
+  if [[ -z "$APPLICATIONINSIGHTS_CONNECTION_STRING" ]]; then
+    log_error "Application Insights connection string was not returned for '$APPLICATION_INSIGHTS_NAME'."
+    exit 1
+  fi
+}
+
+refresh_environment_logging() {
+  log_info "Ensuring Container Apps environment logs go to Log Analytics"
+  az containerapp env update \
+    --name "$CONTAINER_APP_ENV_NAME" \
+    --resource-group "$PROJECT_RESOURCE_GROUP" \
+    --logs-destination log-analytics \
+    --logs-workspace-id "$LOG_ANALYTICS_WORKSPACE_ID" \
+    --logs-workspace-key "$LOG_ANALYTICS_WORKSPACE_KEY" \
+    --output none
 }
 
 ensure_keyvault_secrets() {
@@ -217,6 +286,8 @@ print_plan() {
   echo "Resource group      : $PROJECT_RESOURCE_GROUP"
   echo "Container App       : $CONTAINER_APP_NAME"
   echo "Key Vault           : $KEY_VAULT_URI"
+  echo "Log Analytics       : $LOG_ANALYTICS_WORKSPACE_NAME"
+  echo "Application Insights: $APPLICATION_INSIGHTS_NAME"
   echo "Port                : $CONTAINER_TARGET_PORT"
   echo "Health path         : $CONTAINER_HEALTH_PATH"
   echo "CPU / memory        : $cpu / $memory"
@@ -274,6 +345,8 @@ update_container_app() {
     --set-env-vars \
         ASPNETCORE_ENVIRONMENT=Production \
         ASPNETCORE_URLS="http://0.0.0.0:${CONTAINER_TARGET_PORT}" \
+        APPLICATIONINSIGHTS_CONNECTION_STRING="$APPLICATIONINSIGHTS_CONNECTION_STRING" \
+        OTEL_SERVICE_NAME="$CONTAINER_APP_NAME" \
         AzureKeyVault__VaultUri="$KEY_VAULT_URI" \
         AzureKeyVault__CredentialMode=ManagedIdentity \
     --output none
@@ -408,6 +481,9 @@ main() {
 
   setup_azure
   ensure_resources_exist
+  ensure_north_europe_location
+  load_observability_settings
+  refresh_environment_logging
   ensure_keyvault_secrets
   ensure_keyvault_access
   update_container_app
