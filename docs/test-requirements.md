@@ -45,12 +45,12 @@ Rules:
 - automated test resets must never point at this database
 
 Recommended local files:
-- `appsettings.Development.json` for local-only values
-- user secrets or environment variables for anything sensitive
+- `appsettings.Development.json` for non-secret Key Vault bootstrap values only
+- Azure Key Vault for anything sensitive
 
 Recommended future test-only files:
 - `appsettings.Test.json` for non-secret test defaults
-- environment variables or CI secrets for test database credentials
+- a test-only Azure Key Vault for test database credentials
 - no committed real passwords, tokens, Redis secrets, or Supabase keys
 
 ### Unit Test Environment

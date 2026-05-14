@@ -25,7 +25,7 @@ STAGED_FILES="$(git diff --cached --name-only || true)"
 
 generate_commit_message() {
     if printf '%s\n' "${STAGED_FILES}" | rg -q '(^|/)(commit-conventions\.md|commit-message-template\.md|prepare-commit-context\.sh)$'; then
-        printf '%s\n' '🔧 chore: This updates the repository commit workflow by adding branch-aware commit conventions, a reusable commit message proposal file, VS Code tasks, and helper scripts to prepare and finalize reviewed commits from staged changes only.'
+        printf '%s\n' '📝 docs: This tightens the repository commit message standard by requiring a matching icon, a clear type, and an outcome-focused summary for every staged commit.'
         return
     fi
 
@@ -39,8 +39,13 @@ generate_commit_message() {
         return
     fi
 
+    if printf '%s\n' "${STAGED_FILES}" | rg -q '(^|/)\.github/workflows/'; then
+        printf '%s\n' '🤖 ci: This updates repository automation so branch validation stays aligned with the required build and test workflow.'
+        return
+    fi
+
     if printf '%s\n' "${STAGED_FILES}" | rg -q '(^|/)\.github/|(^|/)\.vscode/|(^|/)scripts/'; then
-        printf '%s\n' '🔧 chore: This updates repository workflow tooling by improving the shared automation, editor tasks, and supporting scripts used to prepare and complete branch work safely.'
+        printf '%s\n' '🔧 chore: This updates repository workflow tooling so shared automation and commit helpers stay clear, consistent, and safe to use.'
         return
     fi
 

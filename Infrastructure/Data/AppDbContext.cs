@@ -15,7 +15,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.HasPostgresEnum<LoanType>("loan_type");
+        modelBuilder.HasPostgresEnum<LoanType>(name: "loan_type");
 
         modelBuilder.Entity<Income>(e =>
         {

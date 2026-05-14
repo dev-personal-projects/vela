@@ -64,10 +64,11 @@ nunit-*.xml
 appsettings.Development.json
 appsettings.*.json
 !appsettings.json
+!appsettings.Development.example.json
 
 #editor files
 .vscode/
 
 # Generated commit message review file
-# commit-message-proposal.md
-# COMMIT_MESSAGE_PROPOSAL.md
+commit-message-proposal.md
+COMMIT_MESSAGE_PROPOSAL.md

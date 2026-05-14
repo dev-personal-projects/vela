@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 
 var builder = WebApplication.CreateBuilder(args);
 
+await builder.Configuration.AddFinanceTrackerKeyVaultAsync(builder.Environment);
+
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddControllers()
     .ConfigureApiBehaviorOptions(options =>

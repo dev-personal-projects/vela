@@ -32,6 +32,17 @@ if [[ -z "${COMMIT_MESSAGE}" ]]; then
     exit 1
 fi
 
+if [[ "$(printf '%s\n' "${COMMIT_MESSAGE}" | wc -l)" -ne 1 ]]; then
+    echo "Commit message must be a single paragraph in ${PROPOSAL_FILE}." >&2
+    exit 1
+fi
+
+if [[ ! "${COMMIT_MESSAGE}" =~ ^[^[:alnum:][:space:]]+[[:space:]](feat|fix|repair|security|test|docs|ci|build|refactor|perf|style|chore|release):[[:space:]]This[[:space:]] ]]; then
+    echo "Commit message must follow: <emoji> <type>: This <clear staged-scope summary>." >&2
+    echo "See .github/commit-message-template.md for the allowed icons and types." >&2
+    exit 1
+fi
+
 CURRENT_BRANCH="$(git branch --show-current)"
 
 printf 'Using commit message\n'

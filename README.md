@@ -46,9 +46,9 @@ curl -s http://localhost:8080/health
 The supported team environment is the devcontainer.
 
 Before opening the repository in the devcontainer for the first time:
-1. Create or obtain `appsettings.Development.json`.
-2. Ensure it contains valid development credentials and connection strings for this project.
-3. Keep that file in the repository root before the devcontainer bootstrap runs.
+1. Ensure Azure CLI is logged in with access to the development Key Vault.
+2. Create `appsettings.Development.json` from `appsettings.Development.example.json`, or set `AzureKeyVault__VaultUri`.
+3. Keep real secrets in Azure Key Vault, not in local JSON files.
 
 Key files:
 - `.devcontainer/devcontainer.json`
@@ -69,37 +69,37 @@ What the devcontainer now provides:
 - a debug profile that exposes the API on `http://0.0.0.0:8080`
 
 Recommended first-run flow inside the devcontainer:
-1. Prepare `appsettings.Development.json` with valid development credentials before opening the repo in the devcontainer.
-2. Open the repository in the devcontainer.
-3. Let the bootstrap finish.
-4. Run `ensure dev db`, `unit tests`, or `integration tests` from the shared VS Code tasks when you want to recheck the environment manually.
+1. Run `az login` if the devcontainer cannot see an active Azure CLI session.
+2. Confirm your account can read `https://kv-fintrack-dev-neu.vault.azure.net/`.
+3. Create `appsettings.Development.json` from `appsettings.Development.example.json` if needed.
+4. Open the repository in the devcontainer.
+5. Let the bootstrap finish.
+6. Run `ensure dev db`, `unit tests`, or `integration tests` from the shared VS Code tasks when you want to recheck the environment manually.
 
 ## Configuration
-Config can be set via `appsettings.json`, `appsettings.Development.json`, or environment variables.
+Production secrets are loaded from Azure Key Vault during startup. Local JSON and environment variables are only for non-secret bootstrap configuration and operational settings.
 
-Required:
-- `Auth:JwtSecret` (>= 32 chars)
-- `ConnectionStrings:Default` (Postgres connection string or URI)
+Required Key Vault secrets:
+- `Auth--JwtSecret`
+- `ConnectionStrings--Default`
+- `Supabase--Url`
+- `Supabase--AnonKey`
+- `Redis--ConnectionString`
 
 Recommended for this persistent backend:
 - Use a direct Postgres connection if available
 - Otherwise use the Supabase session pooler on port `5432`
 - Avoid the transaction pooler on port `6543` for normal EF Core / Npgsql backend traffic unless you specifically need transaction-mode pooling
 
-For `/api/auth/*` sign-up/sign-in:
-- `Supabase:Url`
-- `Supabase:AnonKey`
-
-Environment variable equivalents (examples):
-- `Auth__JwtSecret`
-- `ConnectionStrings__Default`
-- `Supabase__Url`
-- `Supabase__AnonKey`
+Bootstrap environment variable examples:
+- `AzureKeyVault__VaultUri`
+- `AzureKeyVault__CredentialMode`
+- `AzureKeyVault__ManagedIdentityClientId`
 
 Development database bootstrapping:
 - the devcontainer bootstrap runs `scripts/devcontainer/ensure-dev-db.sh`
-- that script validates and applies the SQL files under `scripts/db` against the database configured in `appsettings.Development.json`
-- first-time contributors must have `appsettings.Development.json` ready before opening the repository in the devcontainer
+- that script validates and applies the SQL files under `scripts/db` against the database configured in Azure Key Vault
+- first-time contributors need Azure CLI access to the development Key Vault
 
 ## Endpoints
 Default (see console output / launch settings for the bound URL/port):
@@ -122,7 +122,7 @@ Product/technical docs:
 - TRD: `docs/trd.md`
 - Devcontainer plan: `docs/devcontainer-plan.md`
 - Commit conventions: `docs/git/commit-conventions.md`
-- Commit message template: `docs/git/commit-message-template.md`
+- Commit message template: `.github/commit-message-template.md`
 - Commit context tool: `scripts/git/prepare-commit-context.sh`
 - Commit finalize tool: `scripts/git/finalize-commit.sh`
 - Commit proposal file: `commit-message-proposal.md` (contains only the final commit message paragraph)

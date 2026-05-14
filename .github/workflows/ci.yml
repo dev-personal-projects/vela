@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+      - "feature/**"
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+  DOTNET_NOLOGO: "true"
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: "1"
+
+jobs:
+  ci:
+    name: ci
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Restore
+        run: |
+          dotnet restore FinanceTracker.csproj
+          dotnet restore Tests/UnitTests/UnitTests.csproj
+          dotnet restore Tests/IntegrationTests/IntegrationTests.csproj
+
+      - name: Build
+        run: dotnet build FinanceTracker.csproj --configuration Release --no-restore
+
+      - name: Run unit tests
+        run: dotnet test Tests/UnitTests/UnitTests.csproj --configuration Release --no-restore --logger "trx;LogFileName=unit-tests.trx"
+
+      - name: Run integration tests
+        run: dotnet test Tests/IntegrationTests/IntegrationTests.csproj --configuration Release --no-restore --logger "trx;LogFileName=integration-tests.trx"
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: |
+            Tests/**/TestResults/*.trx
+          if-no-files-found: ignore

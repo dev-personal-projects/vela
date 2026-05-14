@@ -12,7 +12,7 @@ The goal is to keep commits:
 
 The source of truth for this workflow is:
 - this document
-- `docs/git/commit-message-template.md`
+- `.github/commit-message-template.md`
 - `scripts/git/prepare-commit-context.sh`
 - `scripts/git/finalize-commit.sh`
 
@@ -23,8 +23,8 @@ Every commit in this repository should follow these rules:
 1. The commit message must describe the actual scope of the staged changes being committed.
 2. The commit message must be generated only after reviewing branch context against the default branch.
 3. The proposed commit message must be written to a file in the repository root before the commit is created.
-4. The commit message should begin with a clear change tag such as `docs:`, `feat:`, `fix:`, `test:`, `refactor:`, `chore:`, `ci:`, or `build:`.
-5. The commit message may use a matching emoji when it adds clarity, but emoji use should stay restrained and aligned with the tag.
+4. The commit message must begin with one matching icon and one clear type such as `docs:`, `feat:`, `fix:`, `repair:`, `test:`, `refactor:`, `security:`, `chore:`, `ci:`, or `build:`.
+5. The commit message must use the icon and type pairing defined in `.github/commit-message-template.md`.
 6. The message must stay short, readable, and outcome-focused.
 7. Unrelated work must not be mixed into the same commit.
 8. The agent must never stage files on the user's behalf.
@@ -61,14 +61,18 @@ After the commit is created and the current branch is pushed successfully, the g
 
 ## Commit Message Standard
 
-The final commit message should be a short paragraph that:
+The final commit message must be a short paragraph that:
 - describes the staged scope clearly
 - includes the important parts of the change
 - avoids shallow labels that hide the real work
-- begins with a clear change tag
-- may include one matching emoji at the beginning when it improves readability
+- begins with one matching icon and one clear type
+- starts the summary sentence with `This`
 
-The goal is not to produce a rigid subject template. The goal is to produce a readable commit message that captures the real staged work.
+The required template is:
+
+```text
+<emoji> <type>: This <describes the staged change clearly in one short sentence with the important scope and impact>.
+```
 
 Prefer messages like:
 
@@ -91,36 +95,45 @@ fix: stuff
 ## Commit Tags
 
 Use one tag that best describes the staged change:
-- `docs:` for documentation-only changes
 - `feat:` for user-facing features or new behavior
 - `fix:` for bugs or behavioral corrections
+- `repair:` for urgent repair work, production recovery, or corrective cleanup after a failed change
+- `security:` for authentication, authorization, secrets, cryptography, or sensitive-data hardening
 - `test:` for test coverage or test-only infrastructure
-- `refactor:` for internal restructures without behavior change
-- `chore:` for repo maintenance or workflow housekeeping
+- `docs:` for documentation-only changes
 - `ci:` for pipeline or automation changes
 - `build:` for dependency or build-system changes
+- `refactor:` for internal restructures without behavior change
+- `perf:` for performance improvements
+- `style:` for formatting or style-only code changes
+- `chore:` for repo maintenance or workflow housekeeping
+- `release:` for versioning, release notes, or release preparation
 
 Pick the narrowest honest tag for the staged scope.
 
 ## Emoji Guidance
 
-Emoji usage is allowed when it improves scanability.
+Emoji usage is required and must match the chosen type.
 
 Recommended examples:
-- `📝` with `docs:`
 - `✨` with `feat:`
 - `🐛` with `fix:`
+- `🛠️` with `repair:`
+- `🔐` with `security:`
 - `🧪` with `test:`
-- `♻️` with `refactor:`
-- `🔧` or `🚀` with `chore:`
+- `📝` with `docs:`
 - `🤖` with `ci:`
 - `🏗️` with `build:`
+- `♻️` with `refactor:`
+- `⚡` with `perf:`
+- `🎨` with `style:`
+- `🔧` with `chore:`
+- `🚀` with `release:`
 
 Rules for emoji usage:
-- use at most one emoji
+- use exactly one emoji
 - place it at the start of the message
 - keep it consistent with the change tag
-- do not use emoji if it makes the subject noisy or unclear
 - prefer clarity over decoration
 
 ## Message Rules
@@ -129,7 +142,7 @@ The final paragraph should:
 - describe the outcome, not just the activity
 - remain concise while still covering the important staged scope
 - match the full scope of the current commit
-- open with a healthy tag-and-summary prefix such as `📝 docs:` or `🐛 fix:`
+- open with a healthy icon-and-type prefix such as `📝 docs:` or `🐛 fix:`
 - read naturally if someone scans history later
 
 ## Staged-Only Commit Rule
@@ -226,6 +239,7 @@ bash scripts/git/finalize-commit.sh
 
 The standard reusable template lives in:
 
+- [.github/commit-message-template.md](/workspaces/finance-tracker-graphql/.github/commit-message-template.md)
 - [docs/git/commit-message-template.md](/workspaces/finance-tracker-graphql/docs/git/commit-message-template.md)
 - [scripts/git/prepare-commit-context.sh](/workspaces/finance-tracker-graphql/scripts/git/prepare-commit-context.sh)
 - [scripts/git/finalize-commit.sh](/workspaces/finance-tracker-graphql/scripts/git/finalize-commit.sh)
