@@ -122,7 +122,7 @@ Product/technical docs:
 - TRD: `docs/trd.md`
 - Devcontainer plan: `docs/devcontainer-plan.md`
 - Commit conventions: `docs/git/commit-conventions.md`
-- Commit message template: `docs/git/commit-message-template.md`
+- Commit message template: `.github/commit-message-template.md`
 - Commit context tool: `scripts/git/prepare-commit-context.sh`
 - Commit finalize tool: `scripts/git/finalize-commit.sh`
 - Commit proposal file: `commit-message-proposal.md` (contains only the final commit message paragraph)
