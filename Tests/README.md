@@ -76,7 +76,7 @@ For the clearest local and CI output, use the repository test runner:
 scripts/test/run-tests.sh all
 ```
 
-The runner streams detailed test progress while the suites execute, writes TRX result files under `artifacts/test-results/`, and prints a final summary table with suite totals, slowest tests, and failures.
+The runner streams detailed test progress while the suites execute, writes TRX result files under `artifacts/test-results/`, and prints final summary tables for the full run, each executed suite, slowest tests, and failures.
 
 When integration tests run inside the supported devcontainer, the runner also prints a Testcontainers preflight block and applies `TESTCONTAINERS_HOST_OVERRIDE=host.docker.internal` if the current shell is missing it.
 

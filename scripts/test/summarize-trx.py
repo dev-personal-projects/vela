@@ -50,6 +50,10 @@ def format_duration(seconds):
     return f"{seconds:.2f}s"
 
 
+def format_pass_rate(passed, total):
+    return f"{((passed / total) * 100):.1f}%" if total else "0.0%"
+
+
 def int_attr(element, name):
     if element is None:
         return 0
@@ -95,6 +99,41 @@ def print_table(title, headers, rows):
     for row in rows:
         print("| " + " | ".join(str(row[index]).ljust(widths[index]) for index, width in enumerate(widths)) + " |")
     print(separator)
+
+
+def suite_sort_key(suite):
+    order = {
+        "Unit": 0,
+        "Integration": 1,
+    }
+
+    return (order.get(suite["suite"], 99), suite["suite"])
+
+
+def suite_overview_row(suite):
+    return [
+        suite["suite"],
+        suite["total"],
+        suite["passed"],
+        suite["failed"],
+        suite["skipped"],
+        format_pass_rate(suite["passed"], suite["total"]),
+        format_duration(suite["duration"]),
+        suite["result"],
+    ]
+
+
+def suite_detail_rows(suite):
+    return [
+        ["Total Tests", suite["total"]],
+        ["Passed", suite["passed"]],
+        ["Failed", suite["failed"]],
+        ["Skipped", suite["skipped"]],
+        ["Pass Rate", format_pass_rate(suite["passed"], suite["total"])],
+        ["Duration", format_duration(suite["duration"])],
+        ["Result", suite["result"]],
+        ["TRX File", suite["path"].name],
+    ]
 
 
 def load_trx(path):
@@ -152,24 +191,12 @@ def main():
         print(f"No TRX files found under {results_dir}.", file=sys.stderr)
         return 1
 
-    suites = [load_trx(path) for path in trx_files]
+    suites = sorted([load_trx(path) for path in trx_files], key=suite_sort_key)
     all_tests = [test for suite in suites for test in suite["tests"]]
     failed_tests = [test for test in all_tests if test["outcome"] not in {"Passed", "Completed"}]
     slowest_tests = sorted(all_tests, key=lambda test: test["duration"], reverse=True)[: args.top]
 
-    suite_rows = [
-        [
-            suite["suite"],
-            suite["total"],
-            suite["passed"],
-            suite["failed"],
-            suite["skipped"],
-            f"{((suite['passed'] / suite['total']) * 100):.1f}%" if suite["total"] else "0.0%",
-            format_duration(suite["duration"]),
-            suite["result"],
-        ]
-        for suite in suites
-    ]
+    suite_rows = [suite_overview_row(suite) for suite in suites]
 
     total = sum(suite["total"] for suite in suites)
     passed = sum(suite["passed"] for suite in suites)
@@ -177,10 +204,13 @@ def main():
     skipped = sum(suite["skipped"] for suite in suites)
     duration = sum(suite["duration"] for suite in suites)
 
-    pass_rate = f"{((passed / total) * 100):.1f}%" if total else "0.0%"
+    pass_rate = format_pass_rate(passed, total)
     suite_rows.append(["All", total, passed, failed, skipped, pass_rate, format_duration(duration), "Passed" if failed == 0 else "Failed"])
 
     print_table("Test Suite Summary", ["Suite", "Total", "Passed", "Failed", "Skipped", "Pass Rate", "Duration", "Result"], suite_rows)
+
+    for suite in suites:
+        print_table(f"{suite['suite']} Test Summary", ["Metric", "Value"], suite_detail_rows(suite))
 
     slow_rows = [
         [
