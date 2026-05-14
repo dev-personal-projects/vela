@@ -18,6 +18,8 @@ public sealed class PostgresDatabaseFixture : IAsyncLifetime
 
     public async ValueTask InitializeAsync()
     {
+        DockerAvailability.EnsureSupportedDevcontainerDefaults();
+
         if (DockerAvailability.ShouldSkipIntegrationTests)
         {
             return;
@@ -49,7 +51,8 @@ public sealed class PostgresDatabaseFixture : IAsyncLifetime
         {
             throw new InvalidOperationException(
                 "Failed to initialize the PostgreSQL Testcontainers fixture. " +
-                "Ensure Docker/Testcontainers access is available inside the supported devcontainer.",
+                "Ensure Docker/Testcontainers access is available inside the supported devcontainer. " +
+                DockerAvailability.Diagnostics,
                 ex);
         }
     }

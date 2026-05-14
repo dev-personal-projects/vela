@@ -78,6 +78,8 @@ scripts/test/run-tests.sh all
 
 The runner streams detailed test progress while the suites execute, writes TRX result files under `artifacts/test-results/`, and prints a final summary table with suite totals, slowest tests, and failures.
 
+When integration tests run inside the supported devcontainer, the runner also prints a Testcontainers preflight block and applies `TESTCONTAINERS_HOST_OVERRIDE=host.docker.internal` if the current shell is missing it.
+
 ## Unit Tests
 
 Unit tests live under [Tests/UnitTests](/workspaces/finance-tracker-graphql/Tests/UnitTests).
@@ -301,6 +303,7 @@ Check:
 
 Check:
 - Testcontainers startup
+- `TESTCONTAINERS_HOST_OVERRIDE` is set to `host.docker.internal` inside the devcontainer
 - database reset behavior
 - EF mapping changes
 - schema assumptions

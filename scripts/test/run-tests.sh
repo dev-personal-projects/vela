@@ -22,6 +22,29 @@ case "${SUITE}" in
         ;;
 esac
 
+configure_testcontainers() {
+    if [[ "${SUITE}" != "all" && "${SUITE}" != "integration" ]]; then
+        return
+    fi
+
+    if [[ "${DEVCONTAINER:-}" == "true" && -z "${TESTCONTAINERS_HOST_OVERRIDE:-}" ]]; then
+        export TESTCONTAINERS_HOST_OVERRIDE="host.docker.internal"
+    fi
+
+    printf '\n'
+    printf '==> Testcontainers preflight\n'
+    printf '    DEVCONTAINER: %s\n' "${DEVCONTAINER:-<unset>}"
+    printf '    DOCKER_HOST: %s\n' "${DOCKER_HOST:-<unset>}"
+    printf '    TESTCONTAINERS_HOST_OVERRIDE: %s\n' "${TESTCONTAINERS_HOST_OVERRIDE:-<unset>}"
+    printf '    docker.sock: %s\n' "$([[ -S /var/run/docker.sock ]] && printf 'present' || printf 'missing')"
+
+    if command -v docker >/dev/null 2>&1 && docker version >/dev/null 2>&1; then
+        printf '    docker: reachable\n'
+    else
+        printf '    docker: not reachable\n'
+    fi
+}
+
 run_suite() {
     local suite_name="$1"
     local project_path="$2"
@@ -45,6 +68,7 @@ run_suite() {
 }
 
 overall_exit_code=0
+configure_testcontainers
 
 if [[ "${SUITE}" == "all" || "${SUITE}" == "unit" ]]; then
     run_suite "unit" "Tests/UnitTests/UnitTests.csproj" "unit-tests.trx" "$@"
