@@ -12,14 +12,17 @@
 #   1. Loads non-secret deployment identifiers from Infrastructure/Azure/globalenv.config.
 #   2. Verifies Azure CLI authentication and selects the configured subscription.
 #   3. Verifies the Dockerfile and required Key Vault secrets.
-#   4. Creates the resource group, Azure Container Registry, and Container Apps environment if needed.
-#   5. Creates a GitHub Actions service principal and stores deployment automation
+#   4. Enforces the North Europe deployment location.
+#   5. Creates the resource group, Azure Container Registry, Log Analytics,
+#      Application Insights, and Container Apps environment if needed.
+#   6. Creates a GitHub Actions service principal and stores deployment automation
 #      credentials as GitHub repository secrets.
-#   6. Deploys the API through `az containerapp up` and lets Azure create the
+#   7. Deploys the API through `az containerapp up` and lets Azure create the
 #      GitHub Actions workflow for future deployments.
-#   7. Enables a system-assigned managed identity on the Container App.
-#   8. Grants that managed identity Key Vault Secrets User access so the API can
+#   8. Enables a system-assigned managed identity on the Container App.
+#   9. Grants that managed identity Key Vault Secrets User access so the API can
 #      read the required runtime secrets at startup.
+#  10. Wires application telemetry to Application Insights and logs to Log Analytics.
 #
 # Runtime secrets are NOT stored in this file, GitHub secrets, or Container App
 # app settings. They must already exist in the configured Key Vault:
@@ -76,10 +79,13 @@ validate_config() {
   local required=(
     ENVIRONMENT_PREFIX PROJECT_PREFIX PROJECT_LOCATION
     PROJECT_RESOURCE_GROUP PROJECT_SUBSCRIPTION_ID TENANT_ID
+    EUROPE_LOCATION EUROPE_PREFIX WORKLOAD_NAME RESOURCE_INSTANCE
     ACR_NAME CONTAINER_APP_NAME CONTAINER_APP_ENV_NAME
     CONTAINER_TARGET_PORT CONTAINER_CONTEXT_PATH CONTAINER_DOCKERFILE_PATH
     CONTAINER_HEALTH_PATH CONTAINER_CPU CONTAINER_MEMORY
     CONTAINER_MIN_REPLICAS CONTAINER_MAX_REPLICAS
+    LOG_ANALYTICS_WORKSPACE_NAME LOG_ANALYTICS_RETENTION_DAYS
+    LOG_ANALYTICS_DAILY_QUOTA_GB APPLICATION_INSIGHTS_NAME APPLICATION_INSIGHTS_TYPE
     KEY_VAULT_NAME KEY_VAULT_URI
     GITHUB_REPO GITHUB_BRANCH LOG_FOLDER
   )
@@ -109,6 +115,16 @@ setup_azure() {
   log_success "Azure subscription: $PROJECT_SUBSCRIPTION_ID"
 }
 
+# ── Location guard ────────────────────────────────────────────────────────────
+ensure_north_europe_location() {
+  if [[ "$PROJECT_LOCATION" != "northeurope" || "$EUROPE_LOCATION" != "northeurope" || "$EUROPE_PREFIX" != "neu" ]]; then
+    log_error "This deployment is pinned to North Europe. Expected PROJECT_LOCATION=northeurope, EUROPE_LOCATION=northeurope, EUROPE_PREFIX=neu."
+    exit 1
+  fi
+
+  log_success "Location guard passed: North Europe (${EUROPE_PREFIX})"
+}
+
 # ── Prerequisites ─────────────────────────────────────────────────────────────
 ensure_prereqs() {
   command -v az >/dev/null 2>&1 || { log_error "Azure CLI (az) is required."; exit 1; }
@@ -123,8 +139,13 @@ ensure_prereqs() {
     log_info "Installing containerapp extension"
     az extension add --name containerapp --only-show-errors
   fi
+  if ! az extension show --name application-insights &>/dev/null; then
+    log_info "Installing application-insights extension"
+    az extension add --name application-insights --only-show-errors
+  fi
   az provider register --namespace Microsoft.App --wait 2>/dev/null || true
   az provider register --namespace Microsoft.OperationalInsights --wait 2>/dev/null || true
+  az provider register --namespace Microsoft.Insights --wait 2>/dev/null || true
   az provider register --namespace Microsoft.ContainerRegistry --wait 2>/dev/null || true
   log_success "Prerequisites ready"
 }
@@ -214,8 +235,89 @@ ensure_resource_group() {
       --name "$PROJECT_RESOURCE_GROUP" \
       --location "$PROJECT_LOCATION" \
       --output none
+  else
+    local rg_location
+    rg_location=$(az group show --name "$PROJECT_RESOURCE_GROUP" --query location -o tsv)
+    if [[ "$rg_location" != "$PROJECT_LOCATION" ]]; then
+      log_error "Resource group '$PROJECT_RESOURCE_GROUP' is in '$rg_location', expected '$PROJECT_LOCATION'."
+      exit 1
+    fi
   fi
   log_success "Resource group ready: $PROJECT_RESOURCE_GROUP"
+}
+
+# ── Observability ─────────────────────────────────────────────────────────────
+ensure_log_analytics_workspace() {
+  if ! az monitor log-analytics workspace show \
+      --name "$LOG_ANALYTICS_WORKSPACE_NAME" \
+      --resource-group "$PROJECT_RESOURCE_GROUP" >/dev/null 2>&1; then
+    log_info "Creating Log Analytics workspace: $LOG_ANALYTICS_WORKSPACE_NAME"
+    az monitor log-analytics workspace create \
+      --name "$LOG_ANALYTICS_WORKSPACE_NAME" \
+      --resource-group "$PROJECT_RESOURCE_GROUP" \
+      --location "$PROJECT_LOCATION" \
+      --retention-time "$LOG_ANALYTICS_RETENTION_DAYS" \
+      --quota "$LOG_ANALYTICS_DAILY_QUOTA_GB" \
+      --tags app="$WORKLOAD_NAME" environment="$ENVIRONMENT_PREFIX" region="$EUROPE_PREFIX" instance="$RESOURCE_INSTANCE" \
+      --output none
+  fi
+
+  LOG_ANALYTICS_WORKSPACE_ID=$(az monitor log-analytics workspace show \
+    --name "$LOG_ANALYTICS_WORKSPACE_NAME" \
+    --resource-group "$PROJECT_RESOURCE_GROUP" \
+    --query customerId \
+    -o tsv)
+
+  LOG_ANALYTICS_WORKSPACE_RESOURCE_ID=$(az monitor log-analytics workspace show \
+    --name "$LOG_ANALYTICS_WORKSPACE_NAME" \
+    --resource-group "$PROJECT_RESOURCE_GROUP" \
+    --query id \
+    -o tsv)
+
+  LOG_ANALYTICS_WORKSPACE_KEY=$(az monitor log-analytics workspace get-shared-keys \
+    --name "$LOG_ANALYTICS_WORKSPACE_NAME" \
+    --resource-group "$PROJECT_RESOURCE_GROUP" \
+    --query primarySharedKey \
+    -o tsv)
+
+  log_success "Log Analytics workspace ready: $LOG_ANALYTICS_WORKSPACE_NAME"
+}
+
+ensure_application_insights() {
+  if ! az monitor app-insights component show \
+      --app "$APPLICATION_INSIGHTS_NAME" \
+      --resource-group "$PROJECT_RESOURCE_GROUP" >/dev/null 2>&1; then
+    log_info "Creating workspace-based Application Insights: $APPLICATION_INSIGHTS_NAME"
+    az monitor app-insights component create \
+      --app "$APPLICATION_INSIGHTS_NAME" \
+      --resource-group "$PROJECT_RESOURCE_GROUP" \
+      --location "$PROJECT_LOCATION" \
+      --application-type "$APPLICATION_INSIGHTS_TYPE" \
+      --kind web \
+      --workspace "$LOG_ANALYTICS_WORKSPACE_RESOURCE_ID" \
+      --ingestion-access Enabled \
+      --query-access Enabled \
+      --tags app="$WORKLOAD_NAME" environment="$ENVIRONMENT_PREFIX" region="$EUROPE_PREFIX" instance="$RESOURCE_INSTANCE" \
+      --output none
+  fi
+
+  APPLICATIONINSIGHTS_CONNECTION_STRING=$(az monitor app-insights component show \
+    --app "$APPLICATION_INSIGHTS_NAME" \
+    --resource-group "$PROJECT_RESOURCE_GROUP" \
+    --query connectionString \
+    -o tsv)
+
+  if [[ -z "$APPLICATIONINSIGHTS_CONNECTION_STRING" ]]; then
+    log_error "Application Insights connection string was not returned for '$APPLICATION_INSIGHTS_NAME'."
+    exit 1
+  fi
+
+  log_success "Application Insights ready: $APPLICATION_INSIGHTS_NAME"
+}
+
+ensure_observability() {
+  ensure_log_analytics_workspace
+  ensure_application_insights
 }
 
 # ── ACR ───────────────────────────────────────────────────────────────────────
@@ -243,6 +345,18 @@ ensure_container_app_env() {
       --name "$CONTAINER_APP_ENV_NAME" \
       --resource-group "$PROJECT_RESOURCE_GROUP" \
       --location "$PROJECT_LOCATION" \
+      --logs-destination log-analytics \
+      --logs-workspace-id "$LOG_ANALYTICS_WORKSPACE_ID" \
+      --logs-workspace-key "$LOG_ANALYTICS_WORKSPACE_KEY" \
+      --output none
+  else
+    log_info "Ensuring Container Apps environment logs go to Log Analytics"
+    az containerapp env update \
+      --name "$CONTAINER_APP_ENV_NAME" \
+      --resource-group "$PROJECT_RESOURCE_GROUP" \
+      --logs-destination log-analytics \
+      --logs-workspace-id "$LOG_ANALYTICS_WORKSPACE_ID" \
+      --logs-workspace-key "$LOG_ANALYTICS_WORKSPACE_KEY" \
       --output none
   fi
   log_success "Container Apps environment ready: $CONTAINER_APP_ENV_NAME"
@@ -344,6 +458,8 @@ deploy_via_containerapp_up() {
     --env-vars \
         ASPNETCORE_ENVIRONMENT=Production \
         ASPNETCORE_URLS="http://0.0.0.0:${CONTAINER_TARGET_PORT:-8080}" \
+        APPLICATIONINSIGHTS_CONNECTION_STRING="$APPLICATIONINSIGHTS_CONNECTION_STRING" \
+        OTEL_SERVICE_NAME="$CONTAINER_APP_NAME" \
         AzureKeyVault__VaultUri="$KEY_VAULT_URI" \
         AzureKeyVault__CredentialMode=ManagedIdentity
 
@@ -402,6 +518,8 @@ refresh_runtime_settings() {
     --set-env-vars \
         ASPNETCORE_ENVIRONMENT=Production \
         ASPNETCORE_URLS="http://0.0.0.0:${CONTAINER_TARGET_PORT}" \
+        APPLICATIONINSIGHTS_CONNECTION_STRING="$APPLICATIONINSIGHTS_CONNECTION_STRING" \
+        OTEL_SERVICE_NAME="$CONTAINER_APP_NAME" \
         AzureKeyVault__VaultUri="$KEY_VAULT_URI" \
         AzureKeyVault__CredentialMode=ManagedIdentity \
     --output none
@@ -451,6 +569,8 @@ print_summary() {
   log_success "  Deployment complete!"
   log_info   "  App URL     : https://${fqdn}"
   log_info   "  Health check: https://${fqdn}${CONTAINER_HEALTH_PATH}"
+  log_info   "  Logs        : $LOG_ANALYTICS_WORKSPACE_NAME"
+  log_info   "  App Insights: $APPLICATION_INSIGHTS_NAME"
   log_info   "  GitHub Actions workflow committed to: $GITHUB_REPO"
   log_info   "  Future pushes to '$GITHUB_BRANCH' will auto-deploy"
   log_success "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -478,11 +598,13 @@ main() {
 
   setup_azure
   ensure_prereqs
+  ensure_north_europe_location
   ensure_local_dockerfile
   ensure_remote_dockerfile
   ensure_resource_group
   ensure_keyvault_ready
   ensure_acr
+  ensure_observability
   ensure_container_app_env
   ensure_service_principal_and_github_secrets
   deploy_via_containerapp_up
