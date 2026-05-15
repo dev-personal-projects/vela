@@ -451,6 +451,9 @@ ensure_service_principal_and_github_secrets() {
   gh secret set AZURE_SUBSCRIPTION_ID    --body "$subscription_id"       --repo "$repo_short"
   gh secret set AZURE_RESOURCE_GROUP     --body "$PROJECT_RESOURCE_GROUP" --repo "$repo_short"
   gh secret set ACR_NAME                 --body "$ACR_NAME"              --repo "$repo_short"
+  gh secret set ACR_LOGIN_SERVER         --body "${ACR_NAME}.azurecr.io" --repo "$repo_short"
+  gh secret set ACR_USERNAME             --body "$SP_CLIENT_ID"          --repo "$repo_short"
+  gh secret set ACR_PASSWORD             --body "$SP_CLIENT_SECRET"      --repo "$repo_short"
   gh secret set CONTAINER_APP_NAME       --body "$CONTAINER_APP_NAME"    --repo "$repo_short"
   gh secret set CONTAINER_APP_ENV_NAME   --body "$CONTAINER_APP_ENV_NAME" --repo "$repo_short"
   gh secret set KEYVAULT_NAME            --body "$KEY_VAULT_NAME"        --repo "$repo_short"
@@ -493,6 +496,9 @@ deploy_via_containerapp_up() {
   log_info "  Branch      : $GITHUB_BRANCH"
   log_info "  Context path: $CONTAINER_CONTEXT_PATH"
 
+  local github_token
+  github_token=$(gh auth token --hostname github.com)
+
   az containerapp up \
     --name "$CONTAINER_APP_NAME" \
     --resource-group "$PROJECT_RESOURCE_GROUP" \
@@ -501,9 +507,12 @@ deploy_via_containerapp_up() {
     --branch "$GITHUB_BRANCH" \
     --context-path "$CONTAINER_CONTEXT_PATH" \
     --registry-server "${ACR_NAME}.azurecr.io" \
+    --registry-username "$SP_CLIENT_ID" \
+    --registry-password "$SP_CLIENT_SECRET" \
     --service-principal-client-id "$SP_CLIENT_ID" \
     --service-principal-client-secret "$SP_CLIENT_SECRET" \
     --service-principal-tenant-id "$SP_TENANT_ID" \
+    --token "$github_token" \
     --ingress external \
     --target-port "${CONTAINER_TARGET_PORT:-8080}" \
     --env-vars \
