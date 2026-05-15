@@ -132,6 +132,11 @@ validate_config() {
       exit 1
     fi
   done
+
+  if (( ${#ACR_NAME} >= 20 )); then
+    log_error "ACR_NAME must be less than 20 characters when using az containerapp up --repo. Current value '${ACR_NAME}' is ${#ACR_NAME} characters."
+    exit 1
+  fi
 }
 
 # ── Azure auth ────────────────────────────────────────────────────────────────

@@ -45,7 +45,7 @@ Container App resources use a compact resource-type/workload/environment/region/
 | --- | --- |
 | Container App | `ca-fintrack-api-dev-neu-001` |
 | Container Apps environment | `cae-fintrack-api-dev-neu-001` |
-| Azure Container Registry | `crfintrackapidevneu001` |
+| Azure Container Registry | `crftapidevneu001` |
 | Log Analytics workspace | `log-fintrack-api-dev-neu-001` |
 | Application Insights | `appi-fintrack-api-dev-neu-001` |
 
@@ -119,7 +119,7 @@ Useful options:
 
 ```bash
 ./Infrastructure/Azure/AzureContainers/3.update-financetracker-AzCont.sh --restart --logs
-./Infrastructure/Azure/AzureContainers/3.update-financetracker-AzCont.sh --image crfintrackapidevneu001.azurecr.io/app:tag
+./Infrastructure/Azure/AzureContainers/3.update-financetracker-AzCont.sh --image crftapidevneu001.azurecr.io/app:tag
 ./Infrastructure/Azure/AzureContainers/3.update-financetracker-AzCont.sh --trigger-workflow --workflow <workflow-file.yml>
 ```
 
