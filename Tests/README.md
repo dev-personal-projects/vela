@@ -1,6 +1,6 @@
 # Tests
 
-This directory contains the automated test suites for the Finance Tracker backend.
+This directory contains the automated test suites for the Vela backend.
 
 The goal of this test structure is to keep the codebase:
 - correct
@@ -11,12 +11,12 @@ The goal of this test structure is to keep the codebase:
 This document explains what lives in `Tests/`, how to run it, and how to extend it without drifting from the project testing architecture.
 
 Related documentation:
-- [Test Requirements](/workspaces/finance-tracker-graphql/docs/test-requirements.md)
-- [Test Plan](/workspaces/finance-tracker-graphql/docs/test-plan.md)
-- [Unit Test Plan](/workspaces/finance-tracker-graphql/docs/unit-test-plan.md)
-- [Integration Test Plan](/workspaces/finance-tracker-graphql/docs/integration-test-plan.md)
-- [Testing Conventions](/workspaces/finance-tracker-graphql/docs/testing-conventions.md)
-- [Devcontainer Plan](/workspaces/finance-tracker-graphql/docs/devcontainer-plan.md)
+- [Test Requirements](/workspaces/vela/docs/test-requirements.md)
+- [Test Plan](/workspaces/vela/docs/test-plan.md)
+- [Unit Test Plan](/workspaces/vela/docs/unit-test-plan.md)
+- [Integration Test Plan](/workspaces/vela/docs/integration-test-plan.md)
+- [Testing Conventions](/workspaces/vela/docs/testing-conventions.md)
+- [Archived Devcontainer Plan](/workspaces/vela/docs/archive/implementation-plans/devcontainer-plan.md)
 
 ## Purpose
 
@@ -28,7 +28,7 @@ Each layer answers a different question:
 | --- | --- | --- |
 | Unit tests | `Tests/UnitTests` | Does the business logic behave correctly in isolation? |
 | Integration tests | `Tests/IntegrationTests` | Does the repository, database, and infrastructure behavior work correctly with real dependencies? |
-| API integration tests | planned | Does the real HTTP/GraphQL pipeline behave correctly end to end? |
+| API integration tests | planned | Does the real HTTP/REST pipeline behave correctly end to end? |
 
 The current repository implements the first two layers.
 
@@ -82,7 +82,7 @@ When integration tests run inside the supported devcontainer, the runner also pr
 
 ## Unit Tests
 
-Unit tests live under [Tests/UnitTests](/workspaces/finance-tracker-graphql/Tests/UnitTests).
+Unit tests live under [Tests/UnitTests](/workspaces/vela/Tests/UnitTests).
 
 These tests are intended to be:
 - fast
@@ -126,7 +126,7 @@ scripts/test/run-tests.sh unit --configuration Release --no-restore
 
 ## Integration Tests
 
-Integration tests live under [Tests/IntegrationTests](/workspaces/finance-tracker-graphql/Tests/IntegrationTests).
+Integration tests live under [Tests/IntegrationTests](/workspaces/vela/Tests/IntegrationTests).
 
 These tests validate infrastructure behavior with real dependencies, especially:
 - EF Core mappings
@@ -149,7 +149,7 @@ The current implemented integration suites cover:
 - loan repository behavior
 - loan repayment repository behavior
 
-Shared infrastructure for these tests lives under [Tests/IntegrationTests/Common](/workspaces/finance-tracker-graphql/Tests/IntegrationTests/Common).
+Shared infrastructure for these tests lives under [Tests/IntegrationTests/Common](/workspaces/vela/Tests/IntegrationTests/Common).
 
 ### Database Model
 
@@ -192,8 +192,8 @@ For Postgres-backed integration tests to execute fully, the environment must pro
 If Docker/Testcontainers access is unavailable, the Postgres-backed integration tests are expected to skip rather than run against a substitute database.
 
 That behavior is controlled by:
-- [DockerAvailability.cs](/workspaces/finance-tracker-graphql/Tests/IntegrationTests/Common/DockerAvailability.cs)
-- [IntegrationFactAttribute.cs](/workspaces/finance-tracker-graphql/Tests/IntegrationTests/Common/IntegrationFactAttribute.cs)
+- [DockerAvailability.cs](/workspaces/vela/Tests/IntegrationTests/Common/DockerAvailability.cs)
+- [IntegrationFactAttribute.cs](/workspaces/vela/Tests/IntegrationTests/Common/IntegrationFactAttribute.cs)
 
 ## Recommended Local Workflow
 
@@ -229,14 +229,14 @@ Once that is in place, the devcontainer is expected to handle:
 - Docker/Testcontainers readiness checks
 
 Relevant scripts:
-- [bootstrap.sh](/workspaces/finance-tracker-graphql/scripts/devcontainer/bootstrap.sh)
-- [validate-env.sh](/workspaces/finance-tracker-graphql/scripts/devcontainer/validate-env.sh)
-- [check-testcontainers.sh](/workspaces/finance-tracker-graphql/scripts/devcontainer/check-testcontainers.sh)
-- [ensure-dev-db.sh](/workspaces/finance-tracker-graphql/scripts/devcontainer/ensure-dev-db.sh)
+- [bootstrap.sh](/workspaces/vela/scripts/devcontainer/bootstrap.sh)
+- [validate-env.sh](/workspaces/vela/scripts/devcontainer/validate-env.sh)
+- [check-testcontainers.sh](/workspaces/vela/scripts/devcontainer/check-testcontainers.sh)
+- [ensure-dev-db.sh](/workspaces/vela/scripts/devcontainer/ensure-dev-db.sh)
 
 ## Conventions for New Tests
 
-New tests should follow the shared conventions in [Testing Conventions](/workspaces/finance-tracker-graphql/docs/testing-conventions.md).
+New tests should follow the shared conventions in [Testing Conventions](/workspaces/vela/docs/testing-conventions.md).
 
 At a minimum:
 - use readable Arrange / Act / Assert structure
@@ -264,7 +264,7 @@ Use this rule of thumb:
 
 - if the behavior is pure business logic or orchestration, add a unit test
 - if the behavior depends on PostgreSQL, EF Core mapping, real ordering, filtering, or reset behavior, add an integration test
-- if the behavior depends on HTTP, GraphQL, authorization middleware, resolver payload shape, or end-to-end request handling, add an API integration test
+- if the behavior depends on HTTP, authorization middleware, response payload shape, or end-to-end request handling, add an API integration test
 
 Avoid forcing infrastructure behavior into unit tests with unrealistic mocks.
 
@@ -273,7 +273,7 @@ Avoid forcing infrastructure behavior into unit tests with unrealistic mocks.
 The test architecture is not complete yet.
 
 Planned next additions:
-- API-level GraphQL integration tests
+- API-level REST integration tests
 - REST endpoint tests for auth and health
 - more consistent trait usage across suites
 - optional stronger cache-environment coverage if Redis-specific scenarios become necessary
@@ -317,7 +317,7 @@ If the dev environment appears out of sync, rerun:
 bash scripts/devcontainer/ensure-dev-db.sh
 ```
 
-This validates and reapplies the SQL under [scripts/db](/workspaces/finance-tracker-graphql/scripts/db) against the configured development database.
+This validates and reapplies the SQL under [scripts/db](/workspaces/vela/scripts/db) against the configured development database.
 
 ## Review Standard
 

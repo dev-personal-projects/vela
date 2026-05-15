@@ -2,7 +2,7 @@
 
 The canonical commit message template now lives in:
 
-- [.github/commit-message-template.md](/workspaces/finance-tracker-graphql/.github/commit-message-template.md)
+- [.github/commit-message-template.md](/workspaces/vela/.github/commit-message-template.md)
 
 Every commit must use:
 

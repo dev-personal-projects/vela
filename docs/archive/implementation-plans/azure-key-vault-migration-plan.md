@@ -157,7 +157,7 @@ The app must fail before service registration if Key Vault does not contain a re
 
 ## Required Dependencies
 
-Add these package references to [FinanceTracker.csproj](/workspaces/finance-tracker-graphql/FinanceTracker.csproj):
+Add these package references to [FinanceTracker.csproj](/workspaces/vela/FinanceTracker.csproj):
 
 ```xml
 <PackageReference Include="Azure.Extensions.AspNetCore.Configuration.Secrets" Version="<pin-current-stable>" />
@@ -229,11 +229,11 @@ Do not grant local developer identities access to production vaults for normal d
 
 ## Files To Change
 
-### [FinanceTracker.csproj](/workspaces/finance-tracker-graphql/FinanceTracker.csproj)
+### [FinanceTracker.csproj](/workspaces/vela/FinanceTracker.csproj)
 
 Add Azure Key Vault and Azure Identity dependencies.
 
-### [Program.cs](/workspaces/finance-tracker-graphql/Program.cs)
+### [Program.cs](/workspaces/vela/Program.cs)
 
 Load Key Vault secrets before these existing calls:
 - `AddApiAuth`
@@ -270,7 +270,7 @@ Own:
 - environment-specific required secrets
 - mapping from Key Vault names to configuration keys
 
-### [Api/Extensions/AuthExtensions.cs](/workspaces/finance-tracker-graphql/Api/Extensions/AuthExtensions.cs)
+### [Api/Extensions/AuthExtensions.cs](/workspaces/vela/Api/Extensions/AuthExtensions.cs)
 
 Add hard validation for `Auth:JwtSecret`:
 - required
@@ -279,7 +279,7 @@ Add hard validation for `Auth:JwtSecret`:
 
 The current README documents this rule, but startup should enforce it.
 
-### [Infrastructure/Auth/ApiTokenService.cs](/workspaces/finance-tracker-graphql/Infrastructure/Auth/ApiTokenService.cs)
+### [Infrastructure/Auth/ApiTokenService.cs](/workspaces/vela/Infrastructure/Auth/ApiTokenService.cs)
 
 Stop duplicating JWT secret parsing logic.
 
@@ -288,7 +288,7 @@ Move shared JWT key parsing and validation into one helper, for example:
 
 Both token creation and token validation should use the same validation behavior.
 
-### [appsettings.json](/workspaces/finance-tracker-graphql/appsettings.json)
+### [appsettings.json](/workspaces/vela/appsettings.json)
 
 Remove secret-shaped placeholders.
 
@@ -328,7 +328,7 @@ Optional allowed local values:
 - `AzureKeyVault:VaultUri` for the development vault
 - `AzureKeyVault:CredentialMode` set to `AzureCli`
 
-### [.gitignore](/workspaces/finance-tracker-graphql/.gitignore)
+### [.gitignore](/workspaces/vela/.gitignore)
 
 Keep local settings ignored.
 
@@ -337,7 +337,7 @@ Add comments clarifying:
 - secrets must live in Azure Key Vault
 - no `.env` file containing real secrets should be committed
 
-### [README.md](/workspaces/finance-tracker-graphql/README.md)
+### [README.md](/workspaces/vela/README.md)
 
 Replace the current local-secret setup instructions with:
 - Key Vault setup
@@ -346,21 +346,21 @@ Replace the current local-secret setup instructions with:
 - production with managed identity
 - secret names and examples
 
-### [docs/test-requirements.md](/workspaces/finance-tracker-graphql/docs/test-requirements.md)
+### [docs/test-requirements.md](/workspaces/vela/docs/test-requirements.md)
 
 Update environment requirements:
 - unit tests do not need Key Vault
 - integration tests should use test-only secrets or container-provided values
 - production Key Vault must never be used by automated tests
 
-### [docs/e2e-quickstart.md](/workspaces/finance-tracker-graphql/docs/e2e-quickstart.md)
+### [docs/e2e-quickstart.md](/workspaces/vela/docs/e2e-quickstart.md)
 
 Update E2E startup instructions:
 - local test JWTs can still use test-only config
 - production-like E2E should load `Auth:JwtSecret` from a test Key Vault
 - never point E2E tests at production Key Vault
 
-### [docs/devcontainer-plan.md](/workspaces/finance-tracker-graphql/docs/devcontainer-plan.md)
+### [docs/devcontainer-plan.md](/workspaces/vela/docs/devcontainer-plan.md)
 
 Remove the requirement that a developer must prepare `appsettings.Development.json` with real credentials before opening the devcontainer.
 
@@ -369,7 +369,7 @@ Replace it with:
 - developer must have access to the development Key Vault
 - local bootstrap config points to the development vault
 
-### [scripts/devcontainer/validate-env.sh](/workspaces/finance-tracker-graphql/scripts/devcontainer/validate-env.sh)
+### [scripts/devcontainer/validate-env.sh](/workspaces/vela/scripts/devcontainer/validate-env.sh)
 
 Stop requiring `appsettings.Development.json` with real credentials.
 
@@ -378,13 +378,13 @@ Validate instead:
 - `az account show` succeeds when local Key Vault mode is enabled
 - `AzureKeyVault:VaultUri` or equivalent bootstrap variable exists
 
-### [scripts/devcontainer/ensure-dev-db.sh](/workspaces/finance-tracker-graphql/scripts/devcontainer/ensure-dev-db.sh)
+### [scripts/devcontainer/ensure-dev-db.sh](/workspaces/vela/scripts/devcontainer/ensure-dev-db.sh)
 
 Stop reading database credentials from `appsettings.Development.json`.
 
 Read the development database connection string from Key Vault or accept an explicit non-production override for disposable local containers.
 
-### [scripts/apply-migrations.sh](/workspaces/finance-tracker-graphql/scripts/apply-migrations.sh)
+### [scripts/apply-migrations.sh](/workspaces/vela/scripts/apply-migrations.sh)
 
 Add Key Vault support for migration connection strings.
 
@@ -396,11 +396,11 @@ Recommended order:
 
 Do not fall back to `appsettings.Development.json`.
 
-### [scripts/validate-migrations.sh](/workspaces/finance-tracker-graphql/scripts/validate-migrations.sh)
+### [scripts/validate-migrations.sh](/workspaces/vela/scripts/validate-migrations.sh)
 
 Mirror the migration connection-string lookup used by `apply-migrations.sh`.
 
-### [scripts/rollback-migrations.sh](/workspaces/finance-tracker-graphql/scripts/rollback-migrations.sh)
+### [scripts/rollback-migrations.sh](/workspaces/vela/scripts/rollback-migrations.sh)
 
 Mirror the migration connection-string lookup used by `apply-migrations.sh`.
 

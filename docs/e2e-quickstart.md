@@ -3,7 +3,7 @@
 This guide is a practical companion to `docs/test-plan.md`. It focuses on getting End-to-End (E2E) tests running locally in a repeatable way.
 
 ## What These E2E Tests Are
-E2E here means: real HTTP requests against the API (GraphQL POST), real auth middleware, real DB calls, real serialization, and real status codes.
+E2E here means: real HTTP requests against the REST API, real auth middleware, real DB calls, real serialization, and real status codes.
 
 Recommended setup:
 - In-process API via `WebApplicationFactory`
@@ -43,7 +43,6 @@ export AzureKeyVault__CredentialMode="AzureCli"
 
 Optional:
 - `Database__CommandTimeoutSeconds=60`
-- `GraphQL__ExecutionTimeoutSeconds=60`
 
 ## Database Schema
 Pick one approach and stick to it:
@@ -99,9 +98,9 @@ Keep the initial E2E suite lean and high signal:
 For the loan journey, prefer the current richer flow:
 - add loan with `type` and optional `counterpartyPhoneNumber`
 - record repayment with `date` and `note`
-- query `loanRepaymentHistory`
+- query `GET /api/v1/loans/{id}/repayments`
 - settle the remaining balance
-- verify `loans(status: SETTLED)` includes the loan
+- verify `GET /api/v1/loans?status=settled` includes the loan
 
 ## CI Notes
 In CI, use a Postgres service container and a test-only Key Vault:

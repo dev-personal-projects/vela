@@ -1,4 +1,4 @@
-# Finance Tracker REST API
+# Vela REST API
 
 Production REST routes are versioned under `/api/v1`.
 

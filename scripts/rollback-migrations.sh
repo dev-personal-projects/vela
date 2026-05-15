@@ -104,6 +104,7 @@ get_rollback_files() {
     # Rollback order: drop dependent tables first, then parent tables
     # Explicit preferred order — reverse of migration apply order
     local -a preferred=(
+        "$ROLLBACK_DIR/rollback_loan_repayments.sql"
         "$ROLLBACK_DIR/rollback_loans.sql"
         "$ROLLBACK_DIR/rollback_savings_goals.sql"
         "$ROLLBACK_DIR/rollback_expenses.sql"

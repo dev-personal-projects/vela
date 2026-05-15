@@ -1,4 +1,4 @@
-# Finance Tracker Azure Functions
+# Vela Azure Functions
 
 This folder contains the Azure Functions cutover scripts for the production REST API.
 
@@ -34,4 +34,3 @@ The Function App uses:
 - system-assigned managed identity
 - Key Vault RBAC via `Key Vault Secrets User`
 - GitHub Actions OIDC deployment
-

@@ -2,9 +2,9 @@
 
 ## Purpose
 
-This document defines the unit test strategy for the Finance Tracker backend.
+This document defines the unit test strategy for the Vela backend.
 
-Unit tests in this codebase should verify business rules, service orchestration, and small pure helpers without touching a real database, Redis, HTTP, or GraphQL runtime behavior.
+Unit tests in this codebase should verify business rules, service orchestration, and small pure helpers without touching a real database, Redis, HTTP, or host runtime behavior.
 
 ---
 
@@ -22,7 +22,7 @@ Unit tests do **not** cover:
 - real database behavior
 - repository SQL correctness
 - Redis connectivity
-- GraphQL resolver pipeline
+- HTTP endpoint pipeline
 - HTTP status codes
 
 ---
@@ -100,7 +100,7 @@ All examples, naming conventions, and reporting expectations in this document as
 - keep shared helpers under `Builders/` or `Common/`, not hidden inside individual test files
 
 Shared conventions:
-- [testing-conventions.md](/workspaces/finance-tracker-graphql/docs/testing-conventions.md)
+- [testing-conventions.md](/workspaces/vela/docs/testing-conventions.md)
 
 ## Unit Test Naming and Identity Standard
 

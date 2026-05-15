@@ -534,7 +534,7 @@ Optional authenticated smoke:
 3. Run:
 
 ```bash
-dotnet test finance-tracker-graphql.sln
+dotnet test vela.sln
 func start
 curl http://localhost:7071/api/v1/health
 ```

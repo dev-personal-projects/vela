@@ -74,7 +74,7 @@ print_plan() {
   cat <<PLAN
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Finance Tracker Azure Functions Deployment Plan
+Vela Azure Functions Deployment Plan
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Environment       : $ENVIRONMENT_PREFIX
 Resource Group    : $PROJECT_RESOURCE_GROUP
@@ -159,7 +159,39 @@ ensure_storage() {
   log_success "Function storage ready: $FUNCTION_STORAGE_ACCOUNT_NAME"
 }
 
-ensure_observability_values() {
+ensure_observability() {
+  if ! az monitor log-analytics workspace show \
+      --workspace-name "$LOG_ANALYTICS_WORKSPACE_NAME" \
+      --resource-group "$PROJECT_RESOURCE_GROUP" >/dev/null 2>&1; then
+    log_info "Creating Log Analytics workspace: $LOG_ANALYTICS_WORKSPACE_NAME"
+    az monitor log-analytics workspace create \
+      --workspace-name "$LOG_ANALYTICS_WORKSPACE_NAME" \
+      --resource-group "$PROJECT_RESOURCE_GROUP" \
+      --location "$PROJECT_LOCATION" \
+      --retention-time "${LOG_ANALYTICS_RETENTION_DAYS:-30}" \
+      --output none
+  fi
+
+  if ! az monitor app-insights component show \
+      --app "$APPLICATION_INSIGHTS_NAME" \
+      --resource-group "$PROJECT_RESOURCE_GROUP" >/dev/null 2>&1; then
+    log_info "Creating Application Insights: $APPLICATION_INSIGHTS_NAME"
+    local workspace_id
+    workspace_id=$(az monitor log-analytics workspace show \
+      --workspace-name "$LOG_ANALYTICS_WORKSPACE_NAME" \
+      --resource-group "$PROJECT_RESOURCE_GROUP" \
+      --query id \
+      -o tsv)
+
+    az monitor app-insights component create \
+      --app "$APPLICATION_INSIGHTS_NAME" \
+      --resource-group "$PROJECT_RESOURCE_GROUP" \
+      --location "$PROJECT_LOCATION" \
+      --application-type "${APPLICATION_INSIGHTS_TYPE:-web}" \
+      --workspace "$workspace_id" \
+      --output none
+  fi
+
   APPLICATIONINSIGHTS_CONNECTION_STRING=$(az monitor app-insights component show \
     --app "$APPLICATION_INSIGHTS_NAME" \
     --resource-group "$PROJECT_RESOURCE_GROUP" \
@@ -170,6 +202,8 @@ ensure_observability_values() {
     log_error "Application Insights connection string not found for $APPLICATION_INSIGHTS_NAME"
     exit 1
   }
+
+  log_success "Observability ready: $LOG_ANALYTICS_WORKSPACE_NAME, $APPLICATION_INSIGHTS_NAME"
 }
 
 ensure_function_app() {
@@ -312,7 +346,7 @@ main() {
   ensure_providers
   ensure_resource_group
   ensure_storage
-  ensure_observability_values
+  ensure_observability
   ensure_function_app
   configure_function_settings
   ensure_managed_identity_and_keyvault_access

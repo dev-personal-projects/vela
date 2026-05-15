@@ -29,6 +29,7 @@ bld/
 
 # Solution files (using .slnx instead)
 *.sln
+!vela.sln
 
 # .NET Core
 project.lock.json
@@ -64,11 +65,11 @@ nunit-*.xml
 # Local secrets — never commit real credentials
 appsettings.Development.json
 appsettings.*.json
+local.settings.json
 !appsettings.json
 !appsettings.Development.example.json
 
 #editor files
-.vscode/
 
 # Generated commit message review file
 commit-message-proposal.md

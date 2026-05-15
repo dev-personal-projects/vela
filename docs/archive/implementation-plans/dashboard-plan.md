@@ -84,8 +84,8 @@ Current GraphQL `dashboard` returns:
   - `happenedAt`
 
 Source:
-- [Query.cs](/workspaces/finance-tracker-graphql/Api/GraphQL/Query.cs:146)
-- [DashboardDtos.cs](/workspaces/finance-tracker-graphql/Application/DTOs/Dashboard/DashboardDtos.cs:1)
+- [Query.cs](/workspaces/vela/Api/GraphQL/Query.cs:146)
+- [DashboardDtos.cs](/workspaces/vela/Application/DTOs/Dashboard/DashboardDtos.cs:1)
 
 ### Additional supporting queries already available
 

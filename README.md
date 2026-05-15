@@ -1,4 +1,4 @@
-# Finance Tracker API
+# Vela API
 
 Backend API for personal finance tracking (incomes, expenses, savings goals, loans) exposed as versioned REST endpoints on Azure Functions. Built in .NET with a Clean Architecture-style separation.
 
@@ -118,9 +118,9 @@ GraphQL is preserved on the `graphql-learning` branch only.
 
 ## Documentation and lessons
 Product/technical docs:
-- PRD: `docs/prd.md`
-- TRD: `docs/trd.md`
-- Devcontainer plan: `docs/devcontainer-plan.md`
+- REST API reference: `docs/rest-api.md`
+- Azure Functions local development: `docs/functions-local-development.md`
+- Azure Functions deployment runbook: `docs/functions-deployment-runbook.md`
 - Commit conventions: `docs/git/commit-conventions.md`
 - Commit message template: `.github/commit-message-template.md`
 - Commit context tool: `scripts/git/prepare-commit-context.sh`
@@ -134,15 +134,10 @@ Commit workflow:
 4. Tell the agent to proceed.
 5. The agent runs `bash scripts/git/finalize-commit.sh`, commits staged changes only, pushes the current branch, and removes the generated proposal file.
 
-Lessons (guided learning path built around this codebase):
-- Lesson index: `docs/lessons/README.md`
-- REST API reference: `docs/rest-api.md`
-- Azure Functions local development: `docs/functions-local-development.md`
-- Azure Functions deployment runbook: `docs/functions-deployment-runbook.md`
+Archived design history:
+- GraphQL-era product, technical, lesson, and phase docs: `docs/archive/graphql-era/`
+- Historical implementation plans: `docs/archive/implementation-plans/`
 - GraphQL learning material is retained for the `graphql-learning` branch.
-- Error handling: `docs/lessons/lesson-05-error-handling.md`
-- Auth and security: `docs/lessons/lesson-06-authentication-and-security.md`
-- Architecture: `docs/lessons/lesson-07-clean-architecture-and-graphql.md`
 
 ## Testing
 Test plan and coverage:

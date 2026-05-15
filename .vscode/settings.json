@@ -1,4 +1,9 @@
 {
     "editor.fontSize": 12,
-    "workbench.colorTheme": "One Dark Pro Night Flat"
+    "workbench.colorTheme": "One Dark Pro Night Flat",
+    "azureFunctions.deploySubpath": "bin/Release/net10.0/publish",
+    "azureFunctions.projectLanguage": "C#",
+    "azureFunctions.projectRuntime": "~4",
+    "debug.internalConsoleOptions": "neverOpen",
+    "azureFunctions.preDeployTask": "publish (functions)"
 }

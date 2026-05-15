@@ -3,7 +3,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-SOLUTION_FILE="${ROOT_DIR}/finance-tracker-graphql.sln"
+SOLUTION_FILE="${ROOT_DIR}/vela.sln"
 
 cd "${ROOT_DIR}"
 

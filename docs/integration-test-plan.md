@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This document defines the integration test strategy for the Finance Tracker backend.
+This document defines the integration test strategy for the Vela backend.
 
 Integration tests in this codebase should validate that infrastructure components behave correctly with real dependencies, especially:
 - PostgreSQL
@@ -12,7 +12,7 @@ Integration tests in this codebase should validate that infrastructure component
 - distributed cache implementation behavior
 
 Environment and database safety requirements are defined in:
-- [test-requirements.md](/workspaces/finance-tracker-graphql/docs/test-requirements.md)
+- [test-requirements.md](/workspaces/vela/docs/test-requirements.md)
 
 ---
 
@@ -25,11 +25,11 @@ Integration tests cover:
 - dashboard cache service behavior with distributed cache abstractions
 
 Integration tests do **not** cover:
-- full GraphQL request pipeline in the repository-focused suite
+- full REST request pipeline in the repository-focused suite
 - REST controller status-code behavior
 - full browser/client journeys
 
-GraphQL and REST pipeline coverage should be added as API integration tests. Those tests may live in a separate `Tests/ApiTests` project or under `Tests/IntegrationTests/Api`, but they should still use an isolated test database.
+REST pipeline coverage should be added as API integration tests. Those tests may live in a separate `Tests/ApiTests` project or under `Tests/IntegrationTests/Api`, but they should still use an isolated test database.
 
 ---
 
@@ -112,7 +112,7 @@ Required setup:
 The only supported database path for automated integration tests is Testcontainers PostgreSQL. Development happens inside devcontainers, so the devcontainer must expose Docker/Testcontainers support. If Docker/Testcontainers is unavailable in the devcontainer or CI, that is an environment setup failure, not a reason to use another database path.
 
 Repository SQL alignment rules:
-- project SQL files stay under [scripts](/workspaces/finance-tracker-graphql/scripts)
+- project SQL files stay under [scripts](/workspaces/vela/scripts)
 - automated tests may read SQL assets from `scripts/` if needed
 - `.devcontainer/` is for environment setup, not duplicate schema ownership
 - automated integration tests do not rely on a long-lived Postgres container managed separately from the test run
@@ -145,7 +145,7 @@ Database reset strategy decision:
 - keep database reset logic in shared fixtures, not duplicated in feature tests
 
 Shared conventions:
-- [testing-conventions.md](/workspaces/finance-tracker-graphql/docs/testing-conventions.md)
+- [testing-conventions.md](/workspaces/vela/docs/testing-conventions.md)
 
 ## Integration Test Naming and Identity Standard
 

@@ -34,15 +34,15 @@ For this repository, one first-time manual prerequisite remains intentional:
 ## Current State
 
 The repository already has:
-- [devcontainer.json](/workspaces/finance-tracker-graphql/.devcontainer/devcontainer.json)
-- [Dockerfile.Dev](/workspaces/finance-tracker-graphql/.devcontainer/Dockerfile.Dev)
-- VS Code settings, tasks, and launch config under [.vscode](/workspaces/finance-tracker-graphql/.vscode)
-- bootstrap and validation scripts under [scripts/devcontainer](/workspaces/finance-tracker-graphql/scripts/devcontainer)
+- [devcontainer.json](/workspaces/vela/.devcontainer/devcontainer.json)
+- [Dockerfile.Dev](/workspaces/vela/.devcontainer/Dockerfile.Dev)
+- VS Code settings, tasks, and launch config under [.vscode](/workspaces/vela/.vscode)
+- bootstrap and validation scripts under [scripts/devcontainer](/workspaces/vela/scripts/devcontainer)
 - development database bootstrap script:
-  - [ensure-dev-db.sh](/workspaces/finance-tracker-graphql/scripts/devcontainer/ensure-dev-db.sh)
+  - [ensure-dev-db.sh](/workspaces/vela/scripts/devcontainer/ensure-dev-db.sh)
 - devcontainer lifecycle hooks:
-  - [postCreate.sh](/workspaces/finance-tracker-graphql/.devcontainer/postCreate.sh)
-  - [postStart.sh](/workspaces/finance-tracker-graphql/.devcontainer/postStart.sh)
+  - [postCreate.sh](/workspaces/vela/.devcontainer/postCreate.sh)
+  - [postStart.sh](/workspaces/vela/.devcontainer/postStart.sh)
 
 Current strengths:
 - .NET 10 SDK base image
@@ -62,14 +62,14 @@ Current gaps:
 The first hardening pass is now in place.
 
 Implemented files:
-- [devcontainer.json](/workspaces/finance-tracker-graphql/.devcontainer/devcontainer.json)
-- [Dockerfile.Dev](/workspaces/finance-tracker-graphql/.devcontainer/Dockerfile.Dev)
-- [postCreate.sh](/workspaces/finance-tracker-graphql/.devcontainer/postCreate.sh)
-- [postStart.sh](/workspaces/finance-tracker-graphql/.devcontainer/postStart.sh)
-- [bootstrap.sh](/workspaces/finance-tracker-graphql/scripts/devcontainer/bootstrap.sh)
-- [validate-env.sh](/workspaces/finance-tracker-graphql/scripts/devcontainer/validate-env.sh)
-- [check-testcontainers.sh](/workspaces/finance-tracker-graphql/scripts/devcontainer/check-testcontainers.sh)
-- [ensure-dev-db.sh](/workspaces/finance-tracker-graphql/scripts/devcontainer/ensure-dev-db.sh)
+- [devcontainer.json](/workspaces/vela/.devcontainer/devcontainer.json)
+- [Dockerfile.Dev](/workspaces/vela/.devcontainer/Dockerfile.Dev)
+- [postCreate.sh](/workspaces/vela/.devcontainer/postCreate.sh)
+- [postStart.sh](/workspaces/vela/.devcontainer/postStart.sh)
+- [bootstrap.sh](/workspaces/vela/scripts/devcontainer/bootstrap.sh)
+- [validate-env.sh](/workspaces/vela/scripts/devcontainer/validate-env.sh)
+- [check-testcontainers.sh](/workspaces/vela/scripts/devcontainer/check-testcontainers.sh)
+- [ensure-dev-db.sh](/workspaces/vela/scripts/devcontainer/ensure-dev-db.sh)
 
 Implemented behavior:
 - the devcontainer mounts `/var/run/docker.sock` so Testcontainers can talk to Docker from inside the workspace
@@ -111,7 +111,7 @@ The team standard is:
 - the devcontainer provides the capability to launch disposable test databases on demand
 
 SQL source of truth:
-- SQL files required by the project stay under [scripts](/workspaces/finance-tracker-graphql/scripts)
+- SQL files required by the project stay under [scripts](/workspaces/vela/scripts)
 - `.devcontainer/` may contain environment/bootstrap scripts, but not duplicated schema SQL
 - test fixtures and bootstrap scripts may read from `scripts/` when SQL assets are needed
 
@@ -310,14 +310,14 @@ The devcontainer and testing architecture should improve specific existing test 
 ### Current Unit Tests To Keep and Harden
 
 These suites already fit the architecture and should remain fast, deterministic, and dependency-free:
-- [AuthServiceSignInTests.cs](/workspaces/finance-tracker-graphql/Tests/UnitTests/Auth/AuthServiceSignInTests.cs)
-- [AuthServiceSignUpTests.cs](/workspaces/finance-tracker-graphql/Tests/UnitTests/Auth/AuthServiceSignUpTests.cs)
-- [DashboardServiceCacheTests.cs](/workspaces/finance-tracker-graphql/Tests/UnitTests/Dashboard/DashboardServiceCacheTests.cs)
-- [DashboardServiceSummaryTests.cs](/workspaces/finance-tracker-graphql/Tests/UnitTests/Dashboard/DashboardServiceSummaryTests.cs)
-- [ExpenseServiceTests.cs](/workspaces/finance-tracker-graphql/Tests/UnitTests/Expense/ExpenseServiceTests.cs)
-- [IncomeServiceTests.cs](/workspaces/finance-tracker-graphql/Tests/UnitTests/Income/IncomeServiceTests.cs)
-- [LoanServiceTests.cs](/workspaces/finance-tracker-graphql/Tests/UnitTests/Loan/LoanServiceTests.cs)
-- [SavingsGoalServiceTests.cs](/workspaces/finance-tracker-graphql/Tests/UnitTests/Savings/SavingsGoalServiceTests.cs)
+- [AuthServiceSignInTests.cs](/workspaces/vela/Tests/UnitTests/Auth/AuthServiceSignInTests.cs)
+- [AuthServiceSignUpTests.cs](/workspaces/vela/Tests/UnitTests/Auth/AuthServiceSignUpTests.cs)
+- [DashboardServiceCacheTests.cs](/workspaces/vela/Tests/UnitTests/Dashboard/DashboardServiceCacheTests.cs)
+- [DashboardServiceSummaryTests.cs](/workspaces/vela/Tests/UnitTests/Dashboard/DashboardServiceSummaryTests.cs)
+- [ExpenseServiceTests.cs](/workspaces/vela/Tests/UnitTests/Expense/ExpenseServiceTests.cs)
+- [IncomeServiceTests.cs](/workspaces/vela/Tests/UnitTests/Income/IncomeServiceTests.cs)
+- [LoanServiceTests.cs](/workspaces/vela/Tests/UnitTests/Loan/LoanServiceTests.cs)
+- [SavingsGoalServiceTests.cs](/workspaces/vela/Tests/UnitTests/Savings/SavingsGoalServiceTests.cs)
 
 Improvements planned:
 - make `Trait` usage consistent across all unit suites
@@ -328,20 +328,20 @@ Improvements planned:
 ### Current Integration Tests To Harden Under the New Model
 
 These suites should remain Postgres-backed and run through Testcontainers from inside the devcontainer:
-- [DashboardCacheServiceTests.cs](/workspaces/finance-tracker-graphql/Tests/IntegrationTests/Caching/DashboardCacheServiceTests.cs)
-- [DashboardRepositoryTests.cs](/workspaces/finance-tracker-graphql/Tests/IntegrationTests/Dashboard/DashboardRepositoryTests.cs)
-- [ExpenseRepositoryTests.cs](/workspaces/finance-tracker-graphql/Tests/IntegrationTests/Expense/ExpenseRepositoryTests.cs)
-- [IncomeRepositoryTests.cs](/workspaces/finance-tracker-graphql/Tests/IntegrationTests/Income/IncomeRepositoryTests.cs)
-- [LoanRepaymentRepositoryTests.cs](/workspaces/finance-tracker-graphql/Tests/IntegrationTests/Loan/LoanRepaymentRepositoryTests.cs)
-- [LoanRepositoryTests.cs](/workspaces/finance-tracker-graphql/Tests/IntegrationTests/Loan/LoanRepositoryTests.cs)
-- [SavingsGoalRepositoryTests.cs](/workspaces/finance-tracker-graphql/Tests/IntegrationTests/Savings/SavingsGoalRepositoryTests.cs)
+- [DashboardCacheServiceTests.cs](/workspaces/vela/Tests/IntegrationTests/Caching/DashboardCacheServiceTests.cs)
+- [DashboardRepositoryTests.cs](/workspaces/vela/Tests/IntegrationTests/Dashboard/DashboardRepositoryTests.cs)
+- [ExpenseRepositoryTests.cs](/workspaces/vela/Tests/IntegrationTests/Expense/ExpenseRepositoryTests.cs)
+- [IncomeRepositoryTests.cs](/workspaces/vela/Tests/IntegrationTests/Income/IncomeRepositoryTests.cs)
+- [LoanRepaymentRepositoryTests.cs](/workspaces/vela/Tests/IntegrationTests/Loan/LoanRepaymentRepositoryTests.cs)
+- [LoanRepositoryTests.cs](/workspaces/vela/Tests/IntegrationTests/Loan/LoanRepositoryTests.cs)
+- [SavingsGoalRepositoryTests.cs](/workspaces/vela/Tests/IntegrationTests/Savings/SavingsGoalRepositoryTests.cs)
 
 Fixture and infrastructure files to improve:
-- [PostgresDatabaseFixture.cs](/workspaces/finance-tracker-graphql/Tests/IntegrationTests/Common/PostgresDatabaseFixture.cs)
-- [RepositoryIntegrationTestBase.cs](/workspaces/finance-tracker-graphql/Tests/IntegrationTests/Common/RepositoryIntegrationTestBase.cs)
-- [IntegrationFactAttribute.cs](/workspaces/finance-tracker-graphql/Tests/IntegrationTests/Common/IntegrationFactAttribute.cs)
-- [DockerAvailability.cs](/workspaces/finance-tracker-graphql/Tests/IntegrationTests/Common/DockerAvailability.cs)
-- [PostgresCollection.cs](/workspaces/finance-tracker-graphql/Tests/IntegrationTests/Common/PostgresCollection.cs)
+- [PostgresDatabaseFixture.cs](/workspaces/vela/Tests/IntegrationTests/Common/PostgresDatabaseFixture.cs)
+- [RepositoryIntegrationTestBase.cs](/workspaces/vela/Tests/IntegrationTests/Common/RepositoryIntegrationTestBase.cs)
+- [IntegrationFactAttribute.cs](/workspaces/vela/Tests/IntegrationTests/Common/IntegrationFactAttribute.cs)
+- [DockerAvailability.cs](/workspaces/vela/Tests/IntegrationTests/Common/DockerAvailability.cs)
+- [PostgresCollection.cs](/workspaces/vela/Tests/IntegrationTests/Common/PostgresCollection.cs)
 
 Improvements planned:
 - replace skip-oriented local assumptions with devcontainer-first environment validation
@@ -432,5 +432,5 @@ The devcontainer work is successful when all of the following are true:
 
 Two repo-specific details are worth handling carefully during implementation:
 
-- The project already treats devcontainers as part of the testing architecture through the Testcontainers requirement documented in [test-requirements.md](/workspaces/finance-tracker-graphql/docs/test-requirements.md).
+- The project already treats devcontainers as part of the testing architecture through the Testcontainers requirement documented in [test-requirements.md](/workspaces/vela/docs/test-requirements.md).
 - The repository currently tracks some `.vscode` files while `.gitignore` also ignores `.vscode/`, so we should explicitly decide which workspace files are team-owned and supported.

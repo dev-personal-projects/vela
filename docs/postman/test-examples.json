@@ -1,6 +1,6 @@
 {
   "info": {
-    "title": "Finance Tracker REST API — Postman Test Examples",
+    "title": "Vela REST API — Postman Test Examples",
     "baseUrl": "http://localhost:7071",
     "instructions": [
       "Step 1 — Run the Function App locally: func start",

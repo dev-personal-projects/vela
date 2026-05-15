@@ -239,8 +239,8 @@ bash scripts/git/finalize-commit.sh
 
 The standard reusable template lives in:
 
-- [.github/commit-message-template.md](/workspaces/finance-tracker-graphql/.github/commit-message-template.md)
-- [docs/git/commit-message-template.md](/workspaces/finance-tracker-graphql/docs/git/commit-message-template.md)
-- [scripts/git/prepare-commit-context.sh](/workspaces/finance-tracker-graphql/scripts/git/prepare-commit-context.sh)
-- [scripts/git/finalize-commit.sh](/workspaces/finance-tracker-graphql/scripts/git/finalize-commit.sh)
-- [commit-message-proposal.md](/workspaces/finance-tracker-graphql/commit-message-proposal.md)
+- [.github/commit-message-template.md](/workspaces/vela/.github/commit-message-template.md)
+- [docs/git/commit-message-template.md](/workspaces/vela/docs/git/commit-message-template.md)
+- [scripts/git/prepare-commit-context.sh](/workspaces/vela/scripts/git/prepare-commit-context.sh)
+- [scripts/git/finalize-commit.sh](/workspaces/vela/scripts/git/finalize-commit.sh)
+- [commit-message-proposal.md](/workspaces/vela/commit-message-proposal.md)

@@ -1,20 +1,20 @@
-# Test Plan — Finance Tracker API (.NET + GraphQL)
+# Test Plan — Vela API (.NET + REST)
 
 ## Purpose
-This document defines a practical, end-to-end testing strategy for the Finance Tracker backend:
+This document defines a practical, end-to-end testing strategy for the Vela backend:
 
 - Unit tests for business rules (fast, deterministic).
-- Integration tests for persistence, auth, and GraphQL behavior (real dependencies).
+- Integration tests for persistence, auth, and REST behavior (real dependencies).
 - Clear “done” criteria for correctness, isolation, and error handling.
 
 This plan is written so that a new contributor can implement tests incrementally without guessing what to cover.
 
 Related focused plans:
-- [test-requirements.md](/workspaces/finance-tracker-graphql/docs/test-requirements.md)
-- [unit-test-plan.md](/workspaces/finance-tracker-graphql/docs/unit-test-plan.md)
-- [integration-test-plan.md](/workspaces/finance-tracker-graphql/docs/integration-test-plan.md)
-- [testing-conventions.md](/workspaces/finance-tracker-graphql/docs/testing-conventions.md)
-- [ci-plan.md](/workspaces/finance-tracker-graphql/docs/ci-plan.md)
+- [test-requirements.md](/workspaces/vela/docs/test-requirements.md)
+- [unit-test-plan.md](/workspaces/vela/docs/unit-test-plan.md)
+- [integration-test-plan.md](/workspaces/vela/docs/integration-test-plan.md)
+- [testing-conventions.md](/workspaces/vela/docs/testing-conventions.md)
+- [archived ci-plan.md](/workspaces/vela/docs/archive/implementation-plans/ci-plan.md)
 
 ## Testing Standard
 
@@ -48,14 +48,14 @@ For the next testing phase, the focus is:
 
 - unit tests
 - integration tests
-- API-level GraphQL integration tests
+- API-level REST integration tests
 
-E2E coverage is intentionally deferred to a later iteration. API-level GraphQL tests are not full E2E tests; they are backend pipeline tests and should be added before browser/client E2E work.
+E2E coverage is intentionally deferred to a later iteration. API-level REST tests are not full E2E tests; they are backend pipeline tests and should be added before browser/client E2E work.
 
 ## Testing Pyramid (Current Split)
 - Unit tests (majority): `Application/Services/*` and small pure helpers.
 - Integration tests (some): `Infrastructure/*`, database behavior, and cache integration behavior.
-- API integration tests (targeted): GraphQL/HTTP auth, resolver behavior, payload shapes, and error formatting.
+- API integration tests (targeted): REST auth, endpoint behavior, payload shapes, and error formatting.
 - Full E2E/client tests: planned later, not part of the immediate implementation scope.
 
 ## E2E Status
@@ -260,7 +260,7 @@ When CI is added, the workflow should surface:
 This should feel obvious and actionable, similar to strong enterprise CI pipelines.
 
 For CI/deployment workflow design, see:
-- [ci-plan.md](/workspaces/finance-tracker-graphql/docs/ci-plan.md)
+- [archived ci-plan.md](/workspaces/vela/docs/archive/implementation-plans/ci-plan.md)
 
 ## Proposed Test Project Layout
 Create a top-level `Tests/` directory with two projects only for now:
@@ -306,7 +306,7 @@ Tests/
 - `Caching/`: Redis/distributed cache integration coverage
 
 Shared naming, traits, and output rules live in:
-- [testing-conventions.md](/workspaces/finance-tracker-graphql/docs/testing-conventions.md)
+- [testing-conventions.md](/workspaces/vela/docs/testing-conventions.md)
 
 ## Test Data Strategy
 - Prefer builders/factories for inputs and entities (avoid copy/paste).
@@ -462,7 +462,7 @@ Use this as a punch-list when implementing tests.
 
 ### Cross-Cutting
 - `Auth:JwtSecret` present and works for test tokens.
-- Every `[Authorize]` GraphQL field rejects:
+- Every protected REST endpoint rejects:
   - missing token
   - expired token
   - invalid signature
@@ -486,7 +486,7 @@ Use this as a punch-list when implementing tests.
 - `counterparty_phone_number` persists and round-trips correctly.
 - `loan_repayments` history persists with correct ordering and cascade delete behavior.
 - Loan status filtering behaves correctly for `ACTIVE`, `SETTLED`, and `OVERDUE`.
-- PostgreSQL enum mapping for `LoanType` round-trips correctly (`OWED` / `GIVEN` at GraphQL level).
+- PostgreSQL enum mapping for `LoanType` round-trips correctly (`owed` / `given` at the API level).
 
 ### Timeout/Resilience
 - Simulated DB delay surfaces `REQUEST_TIMEOUT` (or payload `errors`) with guidance to refresh before retrying.
@@ -553,7 +553,7 @@ The scenarios below are still valuable, but they are intentionally deferred unti
 ## Coverage Matrix (What We Test Where)
 This matrix helps prevent gaps and prevents duplicating work in the wrong layer.
 
-| Area | Unit (Services) | Integration (Repos/DB) | API (GraphQL/HTTP) |
+| Area | Unit (Services) | Integration (Repos/DB) | API (REST/HTTP) |
 |---|---|---|---|
 | Income | ✅ validations, not-found, delete result | ✅ CRUD + scoping + delete bool | ✅ auth + payload + isolation |
 | Expense | ✅ validations, not-found, delete result | ✅ CRUD + scoping + delete bool | ✅ auth + payload + isolation |
@@ -569,7 +569,7 @@ Legend:
 
 ### Later API Auth Enforcement
 For every protected query/mutation:
-- No JWT -> 401 (or GraphQL auth error mapped to 401)
+- No JWT -> 401
 - Expired JWT -> 401
 - Valid JWT -> 200 and operation succeeds
 
@@ -589,7 +589,7 @@ For add/update/delete mutations:
   - `accessToken`
   - `refreshToken`
   - `tokenType`
-- `accessToken` must be the API-issued JWT used for GraphQL authorization.
+- `accessToken` must be the API-issued JWT used for REST authorization.
 - `refreshToken` must not be blank when the upstream auth provider returns one.
 - Until a refresh endpoint exists, tests should verify the field is present but should not assume `/api/auth/refresh` behavior.
 

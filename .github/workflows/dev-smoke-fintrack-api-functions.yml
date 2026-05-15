@@ -1,10 +1,10 @@
-name: Smoke Finance Tracker API Functions
+name: Smoke Vela API Functions
 
 on:
   workflow_dispatch:
   workflow_run:
     workflows:
-      - Build and Deploy Finance Tracker API Functions
+      - Build and Deploy Vela API Functions
     types:
       - completed
 

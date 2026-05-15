@@ -7,7 +7,8 @@
     "FUNCTIONS_ENVIRONMENT": "Development",
     "AzureKeyVault__VaultUri": "https://kv-fintrack-dev-neu.vault.azure.net/",
     "AzureKeyVault__CredentialMode": "AzureCli",
-    "DashboardCache__AbsoluteExpirationMinutes": "5",
-    "DashboardCache__SlidingExpirationMinutes": "2"
+    "DashboardCache__Enabled": "true",
+    "DashboardCache__TtlSeconds": "60",
+    "DashboardCache__VersionTtlHours": "24"
   }
 }

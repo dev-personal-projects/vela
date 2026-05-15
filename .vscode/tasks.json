@@ -1,136 +1,200 @@
 {
-    "version": "2.0.0",
-    "tasks": [
-        {
-            "label": "restore",
-            "command": "dotnet",
-            "type": "process",
-            "args": [
-                "restore",
-                "${workspaceFolder}/finance-tracker-graphql.sln"
-            ],
-            "problemMatcher": "$msCompile"
-        },
-        {
-            "label": "build",
-            "command": "dotnet",
-            "type": "process",
-            "args": [
-                "build",
-                "${workspaceFolder}/finance-tracker-graphql.sln",
-                "/property:GenerateFullPaths=true",
-                "/consoleloggerparameters:NoSummary;ForceNoAlign"
-            ],
-            "problemMatcher": "$msCompile"
-        },
-        {
-            "label": "publish",
-            "command": "dotnet",
-            "type": "process",
-            "args": [
-                "publish",
-                "${workspaceFolder}/finance-tracker-graphql.sln",
-                "/property:GenerateFullPaths=true",
-                "/consoleloggerparameters:NoSummary;ForceNoAlign"
-            ],
-            "problemMatcher": "$msCompile"
-        },
-        {
-            "label": "func start",
-            "command": "func",
-            "type": "process",
-            "args": [
-                "start",
-                "--port",
-                "7071"
-            ],
-            "options": {
-                "cwd": "${workspaceFolder}"
-            },
-            "problemMatcher": "$msCompile"
-        },
-        {
-            "label": "publish function app",
-            "command": "dotnet",
-            "type": "process",
-            "args": [
-                "publish",
-                "${workspaceFolder}/FinanceTracker.csproj",
-                "--configuration",
-                "Release",
-                "--output",
-                "${workspaceFolder}/publish"
-            ],
-            "problemMatcher": "$msCompile"
-        },
-        {
-            "label": "validate devcontainer env",
-            "type": "process",
-            "command": "bash",
-            "args": [
-                "${workspaceFolder}/scripts/devcontainer/validate-env.sh"
-            ],
-            "problemMatcher": []
-        },
-        {
-            "label": "ensure dev db",
-            "type": "process",
-            "command": "bash",
-            "args": [
-                "${workspaceFolder}/scripts/devcontainer/ensure-dev-db.sh"
-            ],
-            "problemMatcher": []
-        },
-        {
-            "label": "unit tests",
-            "command": "dotnet",
-            "type": "process",
-            "args": [
-                "test",
-                "${workspaceFolder}/Tests/UnitTests/UnitTests.csproj",
-                "--no-restore"
-            ],
-            "problemMatcher": "$msCompile"
-        },
-        {
-            "label": "integration tests",
-            "command": "dotnet",
-            "type": "process",
-            "args": [
-                "test",
-                "${workspaceFolder}/Tests/IntegrationTests/IntegrationTests.csproj",
-                "--no-restore"
-            ],
-            "problemMatcher": "$msCompile"
-        },
-        {
-            "label": "format",
-            "command": "dotnet",
-            "type": "process",
-            "args": [
-                "format",
-                "${workspaceFolder}/finance-tracker-graphql.sln",
-                "--verify-no-changes"
-            ],
-            "problemMatcher": "$msCompile"
-        },
-        {
-            "label": "prepare commit context",
-            "type": "process",
-            "command": "bash",
-            "args": [
-                "${workspaceFolder}/scripts/git/prepare-commit-context.sh"
-            ],
-            "problemMatcher": []
-        },
-        {
-            "label": "finalize commit",
-            "type": "process",
-            "command": "bash",
-            "args": [
-                "${workspaceFolder}/scripts/git/finalize-commit.sh"
-            ],
-            "problemMatcher": []
-        }
-    ]
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "restore",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "restore",
+        "${workspaceFolder}/vela.sln"
+      ],
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "build",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "build",
+        "${workspaceFolder}/vela.sln",
+        "/property:GenerateFullPaths=true",
+        "/consoleloggerparameters:NoSummary;ForceNoAlign"
+      ],
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "publish",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "publish",
+        "${workspaceFolder}/vela.sln",
+        "/property:GenerateFullPaths=true",
+        "/consoleloggerparameters:NoSummary;ForceNoAlign"
+      ],
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "func start",
+      "command": "func",
+      "type": "process",
+      "args": [
+        "start",
+        "--port",
+        "7071"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "publish function app",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "publish",
+        "${workspaceFolder}/FinanceTracker.csproj",
+        "--configuration",
+        "Release",
+        "--output",
+        "${workspaceFolder}/publish"
+      ],
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "validate devcontainer env",
+      "type": "process",
+      "command": "bash",
+      "args": [
+        "${workspaceFolder}/scripts/devcontainer/validate-env.sh"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "ensure dev db",
+      "type": "process",
+      "command": "bash",
+      "args": [
+        "${workspaceFolder}/scripts/devcontainer/ensure-dev-db.sh"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "unit tests",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "test",
+        "${workspaceFolder}/Tests/UnitTests/UnitTests.csproj",
+        "--no-restore"
+      ],
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "integration tests",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "test",
+        "${workspaceFolder}/Tests/IntegrationTests/IntegrationTests.csproj",
+        "--no-restore"
+      ],
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "format",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "format",
+        "${workspaceFolder}/vela.sln",
+        "--verify-no-changes"
+      ],
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "prepare commit context",
+      "type": "process",
+      "command": "bash",
+      "args": [
+        "${workspaceFolder}/scripts/git/prepare-commit-context.sh"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "finalize commit",
+      "type": "process",
+      "command": "bash",
+      "args": [
+        "${workspaceFolder}/scripts/git/finalize-commit.sh"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "clean (functions)",
+      "command": "dotnet",
+      "args": [
+        "clean",
+        "/property:GenerateFullPaths=true",
+        "/consoleloggerparameters:NoSummary"
+      ],
+      "type": "process",
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "build (functions)",
+      "command": "dotnet",
+      "args": [
+        "build",
+        "/property:GenerateFullPaths=true",
+        "/consoleloggerparameters:NoSummary"
+      ],
+      "type": "process",
+      "dependsOn": "clean (functions)",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "clean release (functions)",
+      "command": "dotnet",
+      "args": [
+        "clean",
+        "--configuration",
+        "Release",
+        "/property:GenerateFullPaths=true",
+        "/consoleloggerparameters:NoSummary"
+      ],
+      "type": "process",
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "publish (functions)",
+      "command": "dotnet",
+      "args": [
+        "publish",
+        "--configuration",
+        "Release",
+        "/property:GenerateFullPaths=true",
+        "/consoleloggerparameters:NoSummary"
+      ],
+      "type": "process",
+      "dependsOn": "clean release (functions)",
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "type": "func",
+      "dependsOn": "build (functions)",
+      "options": {
+        "cwd": "${workspaceFolder}/bin/Debug/net10.0"
+      },
+      "command": "host start",
+      "isBackground": true,
+      "problemMatcher": "$func-dotnet-watch"
+    }
+  ]
 }
