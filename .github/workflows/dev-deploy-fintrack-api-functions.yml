@@ -52,13 +52,18 @@ jobs:
         run: func --version
 
       - name: Restore
-        run: dotnet restore finance-tracker-graphql.sln
+        run: |
+          dotnet restore FinanceTracker.csproj
+          dotnet restore Tests/UnitTests/UnitTests.csproj
+          dotnet restore Tests/IntegrationTests/IntegrationTests.csproj
 
       - name: Build
-        run: dotnet build finance-tracker-graphql.sln --configuration Release --no-restore
+        run: dotnet build FinanceTracker.csproj --configuration Release --no-restore
 
       - name: Test
-        run: dotnet test finance-tracker-graphql.sln --configuration Release --no-build --verbosity normal
+        run: |
+          dotnet test Tests/UnitTests/UnitTests.csproj --configuration Release --no-build --verbosity normal
+          dotnet test Tests/IntegrationTests/IntegrationTests.csproj --configuration Release --no-build --verbosity normal
 
       - name: Publish
         run: dotnet publish FinanceTracker.csproj --configuration Release --output ./publish

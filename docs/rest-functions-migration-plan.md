@@ -490,9 +490,14 @@ steps:
     with:
       node-version: '20.x'
   - run: npm i -g azure-functions-core-tools@4 --unsafe-perm true
-  - run: dotnet restore finance-tracker-graphql.sln
-  - run: dotnet build finance-tracker-graphql.sln --configuration Release --no-restore
-  - run: dotnet test finance-tracker-graphql.sln --configuration Release --no-build --verbosity normal
+  - run: |
+      dotnet restore FinanceTracker.csproj
+      dotnet restore Tests/UnitTests/UnitTests.csproj
+      dotnet restore Tests/IntegrationTests/IntegrationTests.csproj
+  - run: dotnet build FinanceTracker.csproj --configuration Release --no-restore
+  - run: |
+      dotnet test Tests/UnitTests/UnitTests.csproj --configuration Release --no-build --verbosity normal
+      dotnet test Tests/IntegrationTests/IntegrationTests.csproj --configuration Release --no-build --verbosity normal
   - run: dotnet publish FinanceTracker.csproj --configuration Release --output ./publish
   - uses: azure/login@v2
     with:
@@ -649,4 +654,3 @@ https://ca-fintrack-api-dev-neu-001.graypebble-a19184aa.northeurope.azurecontain
 - GitHub OIDC workflow instead of storing Azure client secrets.
 - Narrow deploy workflow paths.
 - Separate live smoke workflow after deploy.
-
