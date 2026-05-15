@@ -2,6 +2,7 @@ using System.Text.Json;
 using FinanceTracker.Application.DTOs.Dashboard;
 using FinanceTracker.Application.Interfaces;
 using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace FinanceTracker.Infrastructure.Caching;

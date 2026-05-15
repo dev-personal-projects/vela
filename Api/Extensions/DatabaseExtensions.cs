@@ -1,5 +1,7 @@
 using FinanceTracker.Infrastructure.Data;
 using FinanceTracker.Domain.Enums;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 

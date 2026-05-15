@@ -1,0 +1,23 @@
+name: Smoke Finance Tracker API Functions
+
+on:
+  workflow_dispatch:
+  workflow_run:
+    workflows:
+      - Build and Deploy Finance Tracker API Functions
+    types:
+      - completed
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Health check
+        run: |
+          curl -fsS "${{ secrets.FUNCTION_BASE_URL }}/api/v1/health"

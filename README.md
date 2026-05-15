@@ -1,6 +1,6 @@
 # Finance Tracker API
 
-Backend API for personal finance tracking (incomes, expenses, savings goals, loans) with a GraphQL surface and a small REST auth/health layer. Built in .NET with a Clean Architecture-style separation.
+Backend API for personal finance tracking (incomes, expenses, savings goals, loans) exposed as versioned REST endpoints on Azure Functions. Built in .NET with a Clean Architecture-style separation.
 
 ## Contents
 - Overview
@@ -14,18 +14,18 @@ Backend API for personal finance tracking (incomes, expenses, savings goals, loa
 ## Overview
 Core capabilities:
 - Income, expense, savings goal, and loan CRUD (user-scoped)
-- Savings contributions via `addSavingsContribution`, plus direct progress correction via `updateSavingsProgress`
+- Savings contributions and direct progress correction
 - Loan repayment history, settlement, and status-aware filtering
 - Optional `counterpartyPhoneNumber` on loans for contact-friendly clients
 - Dashboard summary aggregates
-- Public GraphQL `health` query and JWT-protected finance operations
+- Public REST health/auth endpoints and JWT-protected finance operations
 
 ## Architecture
 Layering:
 - `Domain/`: entities and core types
 - `Application/`: service-level business rules and interfaces
 - `Infrastructure/`: EF Core/Postgres repositories and adapters
-- `Api/`: HTTP controllers + GraphQL queries/mutations and middleware
+- `Api/`: Azure Functions HTTP triggers and API adapter helpers
 
 ## Getting started
 Prereqs:
@@ -34,12 +34,12 @@ Prereqs:
 
 Run:
 ```bash
-dotnet run
+func start --port 7071
 ```
 
 Verify:
 ```bash
-curl -s http://localhost:8080/health
+curl -s http://localhost:7071/api/v1/health
 ```
 
 ## Development environment
@@ -66,7 +66,8 @@ What the devcontainer now provides:
 - startup bootstrap and environment validation
 - automatic schema validation and migration for the configured development database using `scripts/db`
 - shared VS Code tasks for restore, build, run, unit tests, integration tests, formatting, and commit workflow steps
-- a debug profile that exposes the API on `http://0.0.0.0:8080`
+- Azure Functions Core Tools and Azurite for local Function App execution
+- a VS Code task that starts the API on `http://localhost:7071`
 
 Recommended first-run flow inside the devcontainer:
 1. Run `az login` if the devcontainer cannot see an active Azure CLI session.
@@ -102,19 +103,18 @@ Development database bootstrapping:
 - first-time contributors need Azure CLI access to the development Key Vault
 
 ## Endpoints
-Default (see console output / launch settings for the bound URL/port):
-- Health: `GET /health`
-- Auth: `POST /api/auth/signup`, `POST /api/auth/signin`
-- GraphQL: `POST /graphql`
+Default local Function host:
+- Health: `GET /api/v1/health`
+- Auth: `POST /api/v1/auth/signup`, `POST /api/v1/auth/signin`
+- REST resources: `/api/v1/incomes`, `/api/v1/expenses`, `/api/v1/savings-goals`, `/api/v1/loans`, `/api/v1/dashboard`
 
 Postman:
 - `docs/postman/test-examples.json`
 
-GraphQL highlights:
-- Public query: `health`
-- Filtered queries: `incomes(fromDate?, toDate?, source?)`, `expenses(fromDate?, toDate?, category?)`, `loans(type?, status?)`
-- Savings: `addSavingsContribution`, `updateSavingsProgress`
-- Loans: `recordRepayment`, `loanRepaymentHistory`, `settleLoan`
+REST reference:
+- `docs/rest-api.md`
+
+GraphQL is preserved on the `graphql-learning` branch only.
 
 ## Documentation and lessons
 Product/technical docs:
@@ -136,8 +136,10 @@ Commit workflow:
 
 Lessons (guided learning path built around this codebase):
 - Lesson index: `docs/lessons/README.md`
-- Fundamentals: `docs/lessons/lesson-01-graphql-fundamentals.md`
-- Queries/mutations (Hot Chocolate): `docs/lessons/lesson-02-queries-and-mutations.md`
+- REST API reference: `docs/rest-api.md`
+- Azure Functions local development: `docs/functions-local-development.md`
+- Azure Functions deployment runbook: `docs/functions-deployment-runbook.md`
+- GraphQL learning material is retained for the `graphql-learning` branch.
 - Error handling: `docs/lessons/lesson-05-error-handling.md`
 - Auth and security: `docs/lessons/lesson-06-authentication-and-security.md`
 - Architecture: `docs/lessons/lesson-07-clean-architecture-and-graphql.md`

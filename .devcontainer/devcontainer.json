@@ -27,7 +27,10 @@
         "ms-dotnettools.csharp",
         "ms-dotnettools.csdevkit",
         "ms-dotnettools.vscode-dotnet-runtime",
+        "ms-azuretools.vscode-azurefunctions",
         "ms-azuretools.vscode-docker",
+        "ms-azuretools.vscode-azurestorage",
+        "Azurite.azurite",
         "EditorConfig.EditorConfig",
         "csharpier.csharpier-vscode",
         "DavidAnson.vscode-markdownlint",
@@ -36,17 +39,25 @@
     }
   },
   "forwardPorts": [
-    8080,
-    8081,
+    7071,
+    10000,
+    10001,
+    10002,
     5000,
     5001
   ],
   "portsAttributes": {
-    "8080": {
-      "label": "Finance Tracker API"
+    "7071": {
+      "label": "Finance Tracker Functions"
     },
-    "8081": {
-      "label": "Finance Tracker HTTPS"
+    "10000": {
+      "label": "Azurite Blob"
+    },
+    "10001": {
+      "label": "Azurite Queue"
+    },
+    "10002": {
+      "label": "Azurite Table"
     }
   },
   "postCreateCommand": "bash .devcontainer/postCreate.sh",

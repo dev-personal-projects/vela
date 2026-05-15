@@ -36,33 +36,31 @@
             "problemMatcher": "$msCompile"
         },
         {
-            "label": "watch",
-            "command": "dotnet",
+            "label": "func start",
+            "command": "func",
             "type": "process",
             "args": [
-                "watch",
-                "run",
-                "--project",
-                "${workspaceFolder}/FinanceTracker.csproj"
+                "start",
+                "--port",
+                "7071"
             ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
             "problemMatcher": "$msCompile"
         },
         {
-            "label": "run api",
+            "label": "publish function app",
             "command": "dotnet",
             "type": "process",
             "args": [
-                "run",
-                "--project",
+                "publish",
                 "${workspaceFolder}/FinanceTracker.csproj",
-                "--launch-profile",
-                "Development"
+                "--configuration",
+                "Release",
+                "--output",
+                "${workspaceFolder}/publish"
             ],
-            "options": {
-                "env": {
-                    "ASPNETCORE_URLS": "http://0.0.0.0:8080"
-                }
-            },
             "problemMatcher": "$msCompile"
         },
         {

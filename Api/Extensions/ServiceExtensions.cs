@@ -1,6 +1,7 @@
 using FinanceTracker.Application.Interfaces;
 using FinanceTracker.Application.Services;
 using FinanceTracker.Infrastructure.Auth;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace FinanceTracker.Api.Extensions;
 

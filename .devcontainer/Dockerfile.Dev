@@ -15,6 +15,7 @@ RUN apt-get update && \
     tree \
     zip \
     procps \
+    supervisor \
     iproute2 \
     iputils-ping \
     netcat-openbsd \
@@ -49,6 +50,20 @@ RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
 RUN curl -fsSL https://raw.githubusercontent.com/AlDanial/cloc/master/cloc -o /usr/local/bin/cloc && \
     chmod 0755 /usr/local/bin/cloc
 
+# Install Azure Functions Core Tools v4 for local Function App execution.
+RUN curl -sL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > microsoft.gpg && \
+    mv microsoft.gpg /etc/apt/trusted.gpg.d/microsoft.gpg && \
+    echo "deb [arch=$(dpkg --print-architecture)] https://packages.microsoft.com/debian/12/prod bookworm main" \
+    > /etc/apt/sources.list.d/azure-functions-core-tools.list && \
+    apt-get update && \
+    apt-get install -y azure-functions-core-tools-4 && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install Azurite for AzureWebJobsStorage during local Functions runs.
+RUN npm install -g azurite
+
+COPY .devcontainer/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
 WORKDIR /workspace
 
-CMD ["bash"]
+CMD ["/usr/bin/supervisord", "-n"]

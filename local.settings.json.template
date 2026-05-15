@@ -1,0 +1,13 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
+    "ASPNETCORE_ENVIRONMENT": "Development",
+    "FUNCTIONS_ENVIRONMENT": "Development",
+    "AzureKeyVault__VaultUri": "https://kv-fintrack-dev-neu.vault.azure.net/",
+    "AzureKeyVault__CredentialMode": "AzureCli",
+    "DashboardCache__AbsoluteExpirationMinutes": "5",
+    "DashboardCache__SlidingExpirationMinutes": "2"
+  }
+}

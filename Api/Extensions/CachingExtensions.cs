@@ -1,5 +1,7 @@
 using FinanceTracker.Application.Interfaces;
 using FinanceTracker.Infrastructure.Caching;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace FinanceTracker.Api.Extensions;
 

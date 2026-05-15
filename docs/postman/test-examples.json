@@ -1,682 +1,275 @@
 {
   "info": {
-    "title": "Finance Tracker API — Postman Test Examples",
-    "baseUrl": "http://localhost:8080",
+    "title": "Finance Tracker REST API — Postman Test Examples",
+    "baseUrl": "http://localhost:7071",
     "instructions": [
-      "Step 1 — Run the app: dotnet run",
-      "Step 2 — Sign In (request 6) to get your JWT token",
-      "Step 3 — Copy the accessToken from the Sign In response",
+      "Step 1 — Run the Function App locally: func start",
+      "Step 2 — Call Health Check to confirm the host is ready",
+      "Step 3 — Sign In to get your JWT token",
       "Step 4 — Paste it as: Authorization: Bearer <accessToken>",
-      "Step 5 — For GraphQL requests, send the value inside requests[n].body.query as the POST body JSON",
-      "Step 6 — Use expected_response only as a reference for what should come back, not as the request body",
-      "Step 7 — If you are using a remote Supabase database, increase Postman Request timeout above 60000ms or set it to 0 (no timeout)",
-      "Step 8 — Wait for each request to finish before clicking Send again, otherwise the earlier request may be canceled client-side",
-      "Step 9 — Run requests in the testing_order below"
+      "Step 5 — Use expected_response only as a reference for what should come back, not as the request body",
+      "Step 6 — For Azure, replace baseUrl with the Function App URL",
+      "Step 7 — Run requests in the testing_order below"
     ],
-    "note": "Always copy the id from an Add or GetAll response before running GetById, Update, or Delete. For GraphQL, the request you send is always the JSON object in body, usually with a query property. If you see HTTP 499 in the server logs, the client canceled the request before the API finished."
+    "note": "All production endpoints are REST under /api/v1. GraphQL examples live on the graphql-learning branch."
   },
-
   "requests": [
-
     {
       "id": 1,
       "name": "Health Check",
       "method": "GET",
-      "url": "http://localhost:8080/health",
+      "url": "http://localhost:7071/api/v1/health",
       "headers": {},
       "body": null,
-      "expected_response": { "status": 200, "body": { "status": "healthy", "service": "Finance Tracker API" } }
+      "expected_response": {
+        "status": 200,
+        "body": { "status": "healthy", "service": "Finance Tracker API" }
+      }
     },
-
     {
       "id": 2,
       "name": "Sign Up",
       "method": "POST",
-      "url": "http://localhost:8080/api/auth/signup",
+      "url": "http://localhost:7071/api/v1/auth/signup",
       "headers": { "Content-Type": "application/json" },
       "body": { "email": "user@example.com", "password": "Password123!" },
-      "expected_response": { "status": 201, "body": { "message": "Account created successfully. Please sign in." } }
+      "expected_response": {
+        "status": 201,
+        "body": { "message": "Account created successfully. Please sign in." }
+      }
     },
-
     {
       "id": 3,
-      "name": "Sign Up — Invalid Email",
+      "name": "Sign In",
       "method": "POST",
-      "url": "http://localhost:8080/api/auth/signup",
+      "url": "http://localhost:7071/api/v1/auth/signin",
       "headers": { "Content-Type": "application/json" },
-      "body": { "email": "notanemail", "password": "Password123!" },
-      "expected_response": { "status": 400, "body": { "error": "A valid email address is required." } }
+      "body": { "email": "user@example.com", "password": "Password123!" },
+      "expected_response": {
+        "status": 200,
+        "body": {
+          "accessToken": "eyJhbGci...",
+          "refreshToken": "<supabase-refresh-token>",
+          "tokenType": "bearer"
+        }
+      }
     },
-
     {
       "id": 4,
-      "name": "Sign Up — Short Password",
-      "method": "POST",
-      "url": "http://localhost:8080/api/auth/signup",
-      "headers": { "Content-Type": "application/json" },
-      "body": { "email": "user@example.com", "password": "123" },
-      "expected_response": { "status": 400, "body": { "error": "Password must be at least 8 characters." } }
-    },
-
-    {
-      "id": 5,
-      "name": "Sign Up — Email Already Exists",
-      "method": "POST",
-      "url": "http://localhost:8080/api/auth/signup",
-      "headers": { "Content-Type": "application/json" },
-      "body": { "email": "user@example.com", "password": "Password123!" },
-      "expected_response": { "status": 400, "body": { "error": "An account with this email already exists." } }
-    },
-
-    {
-      "id": 6,
-      "name": "Sign In",
-      "description": "Copy the accessToken for all GraphQL requests below.",
-      "method": "POST",
-      "url": "http://localhost:8080/api/auth/signin",
-      "headers": { "Content-Type": "application/json" },
-      "body": { "email": "user@example.com", "password": "Password123!" },
-      "expected_response": {
-        "status": 200,
-        "body": { "accessToken": "eyJhbGci...", "refreshToken": "<supabase-refresh-token>", "tokenType": "bearer" }
-      }
-    },
-
-    {
-      "id": 7,
-      "name": "Sign In — Wrong Password",
-      "method": "POST",
-      "url": "http://localhost:8080/api/auth/signin",
-      "headers": { "Content-Type": "application/json" },
-      "body": { "email": "user@example.com", "password": "wrongpassword" },
-      "expected_response": { "status": 401, "body": { "error": "Incorrect email or password." } }
-    },
-
-    {
-      "id": 8,
-      "name": "Protected Query — No Token",
-      "method": "POST",
-      "url": "http://localhost:8080/graphql",
-      "headers": { "Content-Type": "application/json" },
-      "body": { "query": "{ incomes { id amount } }" },
+      "name": "Protected Endpoint — No Token",
+      "method": "GET",
+      "url": "http://localhost:7071/api/v1/incomes",
+      "headers": {},
+      "body": null,
       "expected_response": {
         "status": 401,
-        "body": { "errors": [{ "message": "The current user is not authorized to access this resource.", "extensions": { "code": "AUTH_NOT_AUTHENTICATED" } }] }
+        "body": { "error": "Authorization header is required." }
       }
     },
-
+    {
+      "id": 5,
+      "name": "Add Income",
+      "method": "POST",
+      "url": "http://localhost:7071/api/v1/incomes",
+      "headers": {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer <JWT_TOKEN>"
+      },
+      "body": {
+        "amount": 5000.00,
+        "source": "Salary",
+        "description": "Monthly salary",
+        "date": "2026-01-15T00:00:00Z"
+      },
+      "expected_response": {
+        "status": 201,
+        "body": {
+          "id": "<uuid>",
+          "amount": 5000.00,
+          "source": "Salary",
+          "description": "Monthly salary",
+          "date": "2026-01-15T00:00:00Z"
+        }
+      }
+    },
+    {
+      "id": 6,
+      "name": "Get Incomes",
+      "method": "GET",
+      "url": "http://localhost:7071/api/v1/incomes?fromDate=2026-01-01T00:00:00Z&toDate=2026-12-31T23:59:59Z&source=Salary",
+      "headers": { "Authorization": "Bearer <JWT_TOKEN>" },
+      "body": null,
+      "expected_response": {
+        "status": 200,
+        "body": [{ "id": "<uuid>", "amount": 5000.00, "source": "Salary" }]
+      }
+    },
+    {
+      "id": 7,
+      "name": "Update Income",
+      "method": "PUT",
+      "url": "http://localhost:7071/api/v1/incomes/<PASTE_ID>",
+      "headers": {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer <JWT_TOKEN>"
+      },
+      "body": {
+        "id": "<PASTE_ID>",
+        "amount": 5500.00,
+        "source": "Salary",
+        "description": "Monthly salary - updated",
+        "date": "2026-01-15T00:00:00Z"
+      },
+      "expected_response": {
+        "status": 200,
+        "body": { "id": "<uuid>", "amount": 5500.00 }
+      }
+    },
+    {
+      "id": 8,
+      "name": "Delete Income",
+      "method": "DELETE",
+      "url": "http://localhost:7071/api/v1/incomes/<PASTE_ID>",
+      "headers": { "Authorization": "Bearer <JWT_TOKEN>" },
+      "body": null,
+      "expected_response": { "status": 204, "body": null }
+    },
     {
       "id": 9,
-      "name": "Add Income",
-      "description": "Copy the id from the response for GetById, Update, Delete.",
+      "name": "Add Expense",
       "method": "POST",
-      "url": "http://localhost:8080/graphql",
-      "headers": { "Content-Type": "application/json", "Authorization": "Bearer <JWT_TOKEN>" },
-      "body": {
-        "query": "mutation { addIncome(input: { amount: 5000.00, source: \"Salary\", description: \"Monthly salary\", date: \"2025-01-15T00:00:00Z\" }) { income { id amount source description date } message errors } }"
+      "url": "http://localhost:7071/api/v1/expenses",
+      "headers": {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer <JWT_TOKEN>"
       },
-      "expected_response": {
-        "status": 200,
-        "body": { "data": { "addIncome": { "income": { "id": "<uuid>", "amount": 5000.00, "source": "Salary", "description": "Monthly salary", "date": "2025-01-15T00:00:00Z" }, "message": "Income added successfully.", "errors": null } } }
-      }
+      "body": {
+        "amount": 120.50,
+        "category": "Groceries",
+        "description": "Weekly groceries",
+        "date": "2026-01-16T00:00:00Z"
+      },
+      "expected_response": { "status": 201, "body": { "id": "<uuid>", "category": "Groceries" } }
     },
-
     {
       "id": 10,
-      "name": "Get All Incomes",
-      "method": "POST",
-      "url": "http://localhost:8080/graphql",
-      "headers": { "Content-Type": "application/json", "Authorization": "Bearer <JWT_TOKEN>" },
-      "body": { "query": "{ incomes { id amount source description date } }" },
-      "expected_response": {
-        "status": 200,
-        "body": { "data": { "incomes": [{ "id": "<uuid>", "amount": 5000.00, "source": "Salary", "description": "Monthly salary", "date": "2025-01-15T00:00:00Z" }] } }
-      }
+      "name": "Get Expenses",
+      "method": "GET",
+      "url": "http://localhost:7071/api/v1/expenses?category=Groceries",
+      "headers": { "Authorization": "Bearer <JWT_TOKEN>" },
+      "body": null,
+      "expected_response": { "status": 200, "body": [{ "id": "<uuid>", "category": "Groceries" }] }
     },
-
     {
       "id": 11,
-      "name": "Get Income By Id",
-      "description": "Paste the id from Add Income or Get All Incomes.",
+      "name": "Create Savings Goal",
       "method": "POST",
-      "url": "http://localhost:8080/graphql",
-      "headers": { "Content-Type": "application/json", "Authorization": "Bearer <JWT_TOKEN>" },
-      "body": { "query": "{ income(id: \"<PASTE_ID>\") { id amount source description date } }" },
-      "expected_response": {
-        "status": 200,
-        "body": { "data": { "income": { "id": "<uuid>", "amount": 5000.00, "source": "Salary", "description": "Monthly salary", "date": "2025-01-15T00:00:00Z" } } }
-      }
+      "url": "http://localhost:7071/api/v1/savings-goals",
+      "headers": {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer <JWT_TOKEN>"
+      },
+      "body": {
+        "name": "Emergency Fund",
+        "targetAmount": 3000.00,
+        "deadline": "2026-12-31T00:00:00Z"
+      },
+      "expected_response": { "status": 201, "body": { "id": "<uuid>", "name": "Emergency Fund" } }
     },
-
     {
       "id": 12,
-      "name": "Get Income By Id — Not Found",
+      "name": "Add Savings Contribution",
       "method": "POST",
-      "url": "http://localhost:8080/graphql",
-      "headers": { "Content-Type": "application/json", "Authorization": "Bearer <JWT_TOKEN>" },
-      "body": { "query": "{ income(id: \"00000000-0000-0000-0000-000000000000\") { id amount } }" },
-      "expected_response": { "status": 200, "body": { "data": { "income": null } } }
+      "url": "http://localhost:7071/api/v1/savings-goals/<PASTE_ID>/contributions",
+      "headers": {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer <JWT_TOKEN>"
+      },
+      "body": { "id": "<PASTE_ID>", "amount": 250.00 },
+      "expected_response": { "status": 200, "body": { "id": "<uuid>", "currentAmount": 250.00 } }
     },
-
     {
       "id": 13,
-      "name": "Update Income",
-      "description": "Paste the id from Add Income. Updates amount, source, description and date.",
-      "method": "POST",
-      "url": "http://localhost:8080/graphql",
-      "headers": { "Content-Type": "application/json", "Authorization": "Bearer <JWT_TOKEN>" },
-      "body": {
-        "query": "mutation { updateIncome(input: { id: \"<PASTE_ID>\", amount: 5500.00, source: \"Salary\", description: \"Monthly salary - updated\", date: \"2025-01-15T00:00:00Z\" }) { income { id amount source description date } message errors } }"
+      "name": "Update Savings Progress",
+      "method": "PATCH",
+      "url": "http://localhost:7071/api/v1/savings-goals/<PASTE_ID>/progress",
+      "headers": {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer <JWT_TOKEN>"
       },
-      "expected_response": {
-        "status": 200,
-        "body": { "data": { "updateIncome": { "income": { "id": "<uuid>", "amount": 5500.00, "source": "Salary", "description": "Monthly salary - updated", "date": "2025-01-15T00:00:00Z" }, "message": "Income updated successfully.", "errors": null } } }
-      }
+      "body": { "amount": 500.00 },
+      "expected_response": { "status": 200, "body": { "id": "<uuid>", "currentAmount": 500.00 } }
     },
-
     {
       "id": 14,
-      "name": "Update Income — Not Found",
-      "description": "Should return error when id does not exist.",
+      "name": "Add Loan",
       "method": "POST",
-      "url": "http://localhost:8080/graphql",
-      "headers": { "Content-Type": "application/json", "Authorization": "Bearer <JWT_TOKEN>" },
-      "body": {
-        "query": "mutation { updateIncome(input: { id: \"00000000-0000-0000-0000-000000000000\", amount: 1000, source: \"Test\", description: \"\", date: \"2025-01-15T00:00:00Z\" }) { income { id } message errors } }"
+      "url": "http://localhost:7071/api/v1/loans",
+      "headers": {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer <JWT_TOKEN>"
       },
-      "expected_response": {
-        "status": 200,
-        "body": { "data": { "updateIncome": { "income": null, "errors": ["Income record not found."] } } }
-      }
+      "body": {
+        "counterpartyName": "Jane Doe",
+        "counterpartyPhoneNumber": "+15551234567",
+        "amount": 1000.00,
+        "type": "Given",
+        "description": "Short-term loan",
+        "date": "2026-01-20T00:00:00Z",
+        "dueDate": "2026-02-20T00:00:00Z"
+      },
+      "expected_response": { "status": 201, "body": { "id": "<uuid>", "counterpartyName": "Jane Doe" } }
     },
-
     {
       "id": 15,
-      "name": "Delete Income",
-      "description": "Paste the id from Add Income. Returns success: true on success.",
+      "name": "Record Loan Repayment",
       "method": "POST",
-      "url": "http://localhost:8080/graphql",
-      "headers": { "Content-Type": "application/json", "Authorization": "Bearer <JWT_TOKEN>" },
-      "body": { "query": "mutation { deleteIncome(id: \"<PASTE_ID>\") { success message errors } }" },
-      "expected_response": {
-        "status": 200,
-        "body": { "data": { "deleteIncome": { "success": true, "message": "Income deleted successfully.", "errors": null } } }
-      }
+      "url": "http://localhost:7071/api/v1/loans/<PASTE_ID>/repayments",
+      "headers": {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer <JWT_TOKEN>"
+      },
+      "body": {
+        "loanId": "<PASTE_ID>",
+        "amount": 100.00,
+        "date": "2026-01-25T00:00:00Z",
+        "note": "First repayment"
+      },
+      "expected_response": { "status": 200, "body": { "id": "<uuid>" } }
     },
-
     {
       "id": 16,
-      "name": "Delete Income — Not Found",
-      "description": "Should return error when id does not exist.",
-      "method": "POST",
-      "url": "http://localhost:8080/graphql",
-      "headers": { "Content-Type": "application/json", "Authorization": "Bearer <JWT_TOKEN>" },
-      "body": { "query": "mutation { deleteIncome(id: \"00000000-0000-0000-0000-000000000000\") { success message errors } }" },
-      "expected_response": {
-        "status": 200,
-        "body": { "data": { "deleteIncome": { "success": false, "errors": ["Income record not found."] } } }
-      }
-    },
-
-    {
-      "id": 17,
-      "name": "Add Expense",
-      "description": "Copy the id for GetById, Update, Delete.",
-      "method": "POST",
-      "url": "http://localhost:8080/graphql",
-      "headers": { "Content-Type": "application/json", "Authorization": "Bearer <JWT_TOKEN>" },
-      "body": {
-        "query": "mutation { addExpense(input: { amount: 120.50, category: \"Groceries\", description: \"Weekly groceries\", date: \"2025-01-15T00:00:00Z\" }) { expense { id amount category description date } message errors } }"
-      },
-      "expected_response": {
-        "status": 200,
-        "body": { "data": { "addExpense": { "expense": { "id": "<uuid>", "amount": 120.50, "category": "Groceries", "description": "Weekly groceries", "date": "2025-01-15T00:00:00Z" }, "message": "Expense added successfully.", "errors": null } } }
-      }
-    },
-
-    {
-      "id": 18,
-      "name": "Get All Expenses",
-      "method": "POST",
-      "url": "http://localhost:8080/graphql",
-      "headers": { "Content-Type": "application/json", "Authorization": "Bearer <JWT_TOKEN>" },
-      "body": { "query": "{ expenses { id amount category description date } }" },
-      "expected_response": {
-        "status": 200,
-        "body": { "data": { "expenses": [{ "id": "<uuid>", "amount": 120.50, "category": "Groceries", "description": "Weekly groceries", "date": "2025-01-15T00:00:00Z" }] } }
-      }
-    },
-
-    {
-      "id": 19,
-      "name": "Get Expense By Id",
-      "method": "POST",
-      "url": "http://localhost:8080/graphql",
-      "headers": { "Content-Type": "application/json", "Authorization": "Bearer <JWT_TOKEN>" },
-      "body": { "query": "{ expense(id: \"<PASTE_ID>\") { id amount category description date } }" },
-      "expected_response": {
-        "status": 200,
-        "body": { "data": { "expense": { "id": "<uuid>", "amount": 120.50, "category": "Groceries", "description": "Weekly groceries", "date": "2025-01-15T00:00:00Z" } } }
-      }
-    },
-
-    {
-      "id": 20,
-      "name": "Update Expense",
-      "description": "Paste the id from Add Expense.",
-      "method": "POST",
-      "url": "http://localhost:8080/graphql",
-      "headers": { "Content-Type": "application/json", "Authorization": "Bearer <JWT_TOKEN>" },
-      "body": {
-        "query": "mutation { updateExpense(input: { id: \"<PASTE_ID>\", amount: 150.00, category: \"Groceries\", description: \"Weekly groceries - updated\", date: \"2025-01-15T00:00:00Z\" }) { expense { id amount category description } message errors } }"
-      },
-      "expected_response": {
-        "status": 200,
-        "body": { "data": { "updateExpense": { "expense": { "id": "<uuid>", "amount": 150.00, "category": "Groceries", "description": "Weekly groceries - updated" }, "message": "Expense updated successfully.", "errors": null } } }
-      }
-    },
-
-    {
-      "id": 21,
-      "name": "Delete Expense",
-      "method": "POST",
-      "url": "http://localhost:8080/graphql",
-      "headers": { "Content-Type": "application/json", "Authorization": "Bearer <JWT_TOKEN>" },
-      "body": { "query": "mutation { deleteExpense(id: \"<PASTE_ID>\") { success message errors } }" },
-      "expected_response": {
-        "status": 200,
-        "body": { "data": { "deleteExpense": { "success": true, "message": "Expense deleted successfully.", "errors": null } } }
-      }
-    },
-
-    {
-      "id": 22,
-      "name": "Create Savings Goal",
-      "description": "Copy the id for GetById, Update, AddSavingsContribution, UpdateSavingsProgress, and Delete.",
-      "method": "POST",
-      "url": "http://localhost:8080/graphql",
-      "headers": { "Content-Type": "application/json", "Authorization": "Bearer <JWT_TOKEN>" },
-      "body": {
-        "query": "mutation { createSavingsGoal(input: { name: \"Emergency Fund\", targetAmount: 10000.00, deadline: \"2025-12-31T00:00:00Z\" }) { savingsGoal { id name targetAmount currentAmount remainingAmount progress deadline } message errors } }"
-      },
-      "expected_response": {
-        "status": 200,
-        "body": { "data": { "createSavingsGoal": { "savingsGoal": { "id": "<uuid>", "name": "Emergency Fund", "targetAmount": 10000.00, "currentAmount": 0.00, "remainingAmount": 10000.00, "progress": 0.00, "deadline": "2025-12-31T00:00:00Z" }, "message": "Savings goal created successfully.", "errors": null } } }
-      }
-    },
-
-    {
-      "id": 23,
-      "name": "Get All Savings Goals",
-      "method": "POST",
-      "url": "http://localhost:8080/graphql",
-      "headers": { "Content-Type": "application/json", "Authorization": "Bearer <JWT_TOKEN>" },
-      "body": { "query": "{ savingsGoals { id name targetAmount currentAmount remainingAmount progress deadline } }" },
-      "expected_response": {
-        "status": 200,
-        "body": { "data": { "savingsGoals": [{ "id": "<uuid>", "name": "Emergency Fund", "targetAmount": 10000.00, "currentAmount": 0.00, "remainingAmount": 10000.00, "progress": 0.00 }] } }
-      }
-    },
-
-    {
-      "id": 24,
-      "name": "Get Savings Goal By Id",
-      "method": "POST",
-      "url": "http://localhost:8080/graphql",
-      "headers": { "Content-Type": "application/json", "Authorization": "Bearer <JWT_TOKEN>" },
-      "body": { "query": "{ savingsGoal(id: \"<PASTE_ID>\") { id name targetAmount currentAmount remainingAmount progress deadline } }" },
-      "expected_response": {
-        "status": 200,
-        "body": { "data": { "savingsGoal": { "id": "<uuid>", "name": "Emergency Fund", "targetAmount": 10000.00, "currentAmount": 0.00, "remainingAmount": 10000.00, "progress": 0.00 } } }
-      }
-    },
-
-    {
-      "id": 25,
-      "name": "Update Savings Goal",
-      "description": "Updates name, targetAmount and deadline. Cannot set targetAmount below currentAmount. Query remainingAmount if you want the updated balance left to save.",
-      "method": "POST",
-      "url": "http://localhost:8080/graphql",
-      "headers": { "Content-Type": "application/json", "Authorization": "Bearer <JWT_TOKEN>" },
-      "body": {
-        "query": "mutation { updateSavingsGoal(input: { id: \"<PASTE_ID>\", name: \"Emergency Fund - Updated\", targetAmount: 15000.00, deadline: \"2026-06-30T00:00:00Z\" }) { savingsGoal { id name targetAmount deadline } message errors } }"
-      },
-      "expected_response": {
-        "status": 200,
-        "body": { "data": { "updateSavingsGoal": { "savingsGoal": { "id": "<uuid>", "name": "Emergency Fund - Updated", "targetAmount": 15000.00, "deadline": "2026-06-30T00:00:00Z" }, "message": "Savings goal updated successfully.", "errors": null } } }
-      }
-    },
-
-    {
-      "id": 40,
-      "name": "Add Savings Contribution",
-      "description": "Adds a contribution amount to the current saved balance. Use this for normal contributions toward the goal.",
-      "method": "POST",
-      "url": "http://localhost:8080/graphql",
-      "headers": { "Content-Type": "application/json", "Authorization": "Bearer <JWT_TOKEN>" },
-      "body": {
-        "query": "mutation { addSavingsContribution(input: { id: \"<PASTE_ID>\", amount: 2500.00 }) { savingsGoal { id name currentAmount targetAmount remainingAmount progress } message errors } }"
-      },
-      "expected_response": {
-        "status": 200,
-        "body": { "data": { "addSavingsContribution": { "savingsGoal": { "id": "<uuid>", "name": "Emergency Fund - Updated", "currentAmount": 2500.00, "targetAmount": 15000.00, "remainingAmount": 12500.00, "progress": 16.67 }, "message": "Savings contribution added successfully.", "errors": null } } }
-      }
-    },
-
-    {
-      "id": 26,
-      "name": "Update Savings Progress",
-      "description": "Sets the total saved amount directly. Use this when you want to correct or override the saved balance. Query remainingAmount if you also want the amount still left to save.",
-      "method": "POST",
-      "url": "http://localhost:8080/graphql",
-      "headers": { "Content-Type": "application/json", "Authorization": "Bearer <JWT_TOKEN>" },
-      "body": {
-        "query": "mutation { updateSavingsProgress(id: \"<PASTE_ID>\", newAmount: 6500.00) { savingsGoal { id name currentAmount targetAmount remainingAmount progress } message errors } }"
-      },
-      "expected_response": {
-        "status": 200,
-        "body": { "data": { "updateSavingsProgress": { "savingsGoal": { "id": "<uuid>", "name": "Emergency Fund - Updated", "currentAmount": 6500.00, "targetAmount": 15000.00, "remainingAmount": 8500.00, "progress": 43.33 }, "message": "Savings progress updated successfully.", "errors": null } } }
-      }
-    },
-
-    {
-      "id": 27,
-      "name": "Delete Savings Goal",
-      "method": "POST",
-      "url": "http://localhost:8080/graphql",
-      "headers": { "Content-Type": "application/json", "Authorization": "Bearer <JWT_TOKEN>" },
-      "body": { "query": "mutation { deleteSavingsGoal(id: \"<PASTE_ID>\") { success message errors } }" },
-      "expected_response": {
-        "status": 200,
-        "body": { "data": { "deleteSavingsGoal": { "success": true, "message": "Savings goal deleted successfully.", "errors": null } } }
-      }
-    },
-
-    {
-      "id": 28,
-      "name": "Add Loan — Owed",
-      "description": "Copy the id for GetById, Update, Repayment, History, Settle, and Delete. counterpartyPhoneNumber is optional and useful when the mobile app chooses a person from contacts.",
-      "method": "POST",
-      "url": "http://localhost:8080/graphql",
-      "headers": { "Content-Type": "application/json", "Authorization": "Bearer <JWT_TOKEN>" },
-      "body": {
-        "query": "mutation { addLoan(input: { counterpartyName: \"John Smith\", counterpartyPhoneNumber: \"+256700000000\", amount: 2000.00, type: OWED, description: \"Personal loan\", date: \"2025-01-01T00:00:00Z\", dueDate: \"2025-06-01T00:00:00Z\" }) { loan { id counterpartyName counterpartyPhoneNumber amount amountRepaid remainingBalance type isSettled dueDate } message errors } }"
-      },
-      "expected_response": {
-        "status": 200,
-        "body": { "data": { "addLoan": { "loan": { "id": "<uuid>", "counterpartyName": "John Smith", "counterpartyPhoneNumber": "+256700000000", "amount": 2000.00, "amountRepaid": 0.00, "remainingBalance": 2000.00, "type": "OWED", "isSettled": false, "dueDate": "2025-06-01T00:00:00Z" }, "message": "Loan added successfully.", "errors": null } } }
-      }
-    },
-
-    {
-      "id": 29,
-      "name": "Get All Loans",
-      "method": "POST",
-      "url": "http://localhost:8080/graphql",
-      "headers": { "Content-Type": "application/json", "Authorization": "Bearer <JWT_TOKEN>" },
-      "body": { "query": "{ loans { id counterpartyName counterpartyPhoneNumber amount amountRepaid remainingBalance type isSettled date dueDate } }" },
-      "expected_response": {
-        "status": 200,
-        "body": { "data": { "loans": [{ "id": "<uuid>", "counterpartyName": "John Smith", "counterpartyPhoneNumber": "+256700000000", "amount": 2000.00, "remainingBalance": 2000.00, "type": "OWED", "isSettled": false }] } }
-      }
-    },
-
-    {
-      "id": 30,
-      "name": "Get Loan By Id",
-      "method": "POST",
-      "url": "http://localhost:8080/graphql",
-      "headers": { "Content-Type": "application/json", "Authorization": "Bearer <JWT_TOKEN>" },
-      "body": { "query": "{ loan(id: \"<PASTE_ID>\") { id counterpartyName counterpartyPhoneNumber amount amountRepaid remainingBalance type isSettled date dueDate } }" },
-      "expected_response": {
-        "status": 200,
-        "body": { "data": { "loan": { "id": "<uuid>", "counterpartyName": "John Smith", "counterpartyPhoneNumber": "+256700000000", "amount": 2000.00, "remainingBalance": 2000.00, "type": "OWED", "isSettled": false } } }
-      }
-    },
-
-    {
-      "id": 31,
-      "name": "Update Loan",
-      "description": "Updates counterpartyName, optional counterpartyPhoneNumber, amount, description and dueDate. Type remains unchanged. The new amount cannot be less than amountRepaid, so if amountRepaid is 300.00 the smallest valid amount is 300.00.",
-      "method": "POST",
-      "url": "http://localhost:8080/graphql",
-      "headers": { "Content-Type": "application/json", "Authorization": "Bearer <JWT_TOKEN>" },
-      "body": {
-        "query": "mutation { updateLoan(input: { id: \"<PASTE_ID>\", counterpartyName: \"John Smith\", counterpartyPhoneNumber: \"+256711111111\", amount: 2500.00, description: \"Updated description\", dueDate: \"2025-09-01T00:00:00Z\" }) { loan { id counterpartyName counterpartyPhoneNumber amount amountRepaid remainingBalance description dueDate } message errors } }"
-      },
-      "expected_response": {
-        "status": 200,
-        "body": { "data": { "updateLoan": { "loan": { "id": "<uuid>", "counterpartyName": "John Smith", "counterpartyPhoneNumber": "+256711111111", "amount": 2500.00, "amountRepaid": 0.00, "remainingBalance": 2500.00, "description": "Updated description", "dueDate": "2025-09-01T00:00:00Z" }, "message": "Loan updated successfully.", "errors": null } } }
-      }
-    },
-
-    {
-      "id": 32,
-      "name": "Record Repayment",
-      "method": "POST",
-      "url": "http://localhost:8080/graphql",
-      "headers": { "Content-Type": "application/json", "Authorization": "Bearer <JWT_TOKEN>" },
-      "body": {
-        "query": "mutation { recordRepayment(input: { loanId: \"<PASTE_ID>\", amount: 500.00, date: \"2025-02-01T00:00:00Z\", note: \"First repayment\" }) { loan { id amount amountRepaid remainingBalance isSettled status } message errors } }"
-      },
-      "expected_response": {
-        "status": 200,
-        "body": { "data": { "recordRepayment": { "loan": { "id": "<uuid>", "amount": 2000.00, "amountRepaid": 500.00, "remainingBalance": 1500.00, "isSettled": false, "status": "ACTIVE" }, "message": "Repayment recorded successfully.", "errors": null } } }
-      }
-    },
-
-    {
-      "id": 33,
-      "name": "Record Repayment — Exceeds Balance",
-      "method": "POST",
-      "url": "http://localhost:8080/graphql",
-      "headers": { "Content-Type": "application/json", "Authorization": "Bearer <JWT_TOKEN>" },
-      "body": {
-        "query": "mutation { recordRepayment(input: { loanId: \"<PASTE_ID>\", amount: 999999.00 }) { loan { id } message errors } }"
-      },
-      "expected_response": {
-        "status": 200,
-        "body": { "data": { "recordRepayment": { "loan": null, "errors": ["Repayment amount exceeds the remaining balance of $1,500.00."] } } }
-      }
-    },
-
-    {
-      "id": 34,
-      "name": "Delete Loan",
-      "method": "POST",
-      "url": "http://localhost:8080/graphql",
-      "headers": { "Content-Type": "application/json", "Authorization": "Bearer <JWT_TOKEN>" },
-      "body": { "query": "mutation { deleteLoan(id: \"<PASTE_ID>\") { success message errors } }" },
-      "expected_response": {
-        "status": 200,
-        "body": { "data": { "deleteLoan": { "success": true, "message": "Loan deleted successfully.", "errors": null } } }
-      }
-    },
-
-    {
-      "id": 35,
       "name": "Get Dashboard",
-      "description": "Fetches the richer dashboard contract, including period metadata, insights, savings overview, loan status counts, and recent activity.",
-      "method": "POST",
-      "url": "http://localhost:8080/graphql",
-      "headers": { "Content-Type": "application/json", "Authorization": "Bearer <JWT_TOKEN>" },
-      "body": {
-        "query": "{ dashboard(activityLimit: 5) { totalIncome totalExpenses netBalance period { fromDate toDate isFiltered } insights { expenseToIncomeRatio hasNegativeNetBalance hasOverdueLoans } savingsOverview { totalGoals completedGoals focusGoal { id name targetAmount currentAmount remainingAmount progress } } savingsProgress { id name targetAmount currentAmount remainingAmount progress } loanSummary { totalOwed totalGiven activeLoanCount overdueLoanCount settledLoanCount } recentActivity { referenceId type title subtitle amount happenedAt } } }"
-      },
+      "method": "GET",
+      "url": "http://localhost:7071/api/v1/dashboard?activityLimit=10",
+      "headers": { "Authorization": "Bearer <JWT_TOKEN>" },
+      "body": null,
       "expected_response": {
         "status": 200,
-        "body": { "data": { "dashboard": { "totalIncome": 5000.00, "totalExpenses": 120.50, "netBalance": 4879.50, "period": { "fromDate": null, "toDate": null, "isFiltered": false }, "insights": { "expenseToIncomeRatio": 2.41, "hasNegativeNetBalance": false, "hasOverdueLoans": false }, "savingsOverview": { "totalGoals": 1, "completedGoals": 0, "focusGoal": { "id": "<uuid>", "name": "Emergency Fund - Updated", "targetAmount": 15000.00, "currentAmount": 6500.00, "remainingAmount": 8500.00, "progress": 43.33 } }, "savingsProgress": [{ "id": "<uuid>", "name": "Emergency Fund - Updated", "targetAmount": 15000.00, "currentAmount": 6500.00, "remainingAmount": 8500.00, "progress": 43.33 }], "loanSummary": { "totalOwed": 1500.00, "totalGiven": 0.00, "activeLoanCount": 1, "overdueLoanCount": 0, "settledLoanCount": 0 }, "recentActivity": [{ "referenceId": "<uuid>", "type": "INCOME", "title": "Salary", "subtitle": "Monthly salary", "amount": 5000.00, "happenedAt": "2025-01-15T00:00:00Z" }, { "referenceId": "<uuid>", "type": "EXPENSE", "title": "Groceries", "subtitle": "Weekly groceries", "amount": 120.50, "happenedAt": "2025-01-15T00:00:00Z" }, { "referenceId": "<uuid>", "type": "SAVINGS_GOAL", "title": "Emergency Fund - Updated", "subtitle": "Savings goal created", "amount": 15000.00, "happenedAt": "2025-01-15T00:00:00Z" }] } } }
-      }
-    },
-
-
-    {
-      "id": 37,
-      "name": "Get Incomes — Filtered By Date And Source",
-      "description": "Shows the new optional income filters. Useful for dashboards, monthly reports, or source-specific views.",
-      "method": "POST",
-      "url": "http://localhost:8080/graphql",
-      "headers": { "Content-Type": "application/json", "Authorization": "Bearer <JWT_TOKEN>" },
-      "body": {
-        "query": "{ incomes(fromDate: \"2025-01-01T00:00:00Z\", toDate: \"2025-01-31T23:59:59Z\", source: \"Salary\") { id amount source description date } }"
-      },
-      "expected_response": {
-        "status": 200,
-        "body": { "data": { "incomes": [{ "id": "<uuid>", "amount": 5000.00, "source": "Salary", "description": "Monthly salary", "date": "2025-01-15T00:00:00Z" }] } }
-      }
-    },
-
-    {
-      "id": 38,
-      "name": "Get Expenses — Filtered By Date And Category",
-      "description": "Shows the new optional expense filters. Useful for category-based spending reviews.",
-      "method": "POST",
-      "url": "http://localhost:8080/graphql",
-      "headers": { "Content-Type": "application/json", "Authorization": "Bearer <JWT_TOKEN>" },
-      "body": {
-        "query": "{ expenses(fromDate: \"2025-01-01T00:00:00Z\", toDate: \"2025-01-31T23:59:59Z\", category: \"Groceries\") { id amount category description date } }"
-      },
-      "expected_response": {
-        "status": 200,
-        "body": { "data": { "expenses": [{ "id": "<uuid>", "amount": 120.50, "category": "Groceries", "description": "Weekly groceries", "date": "2025-01-15T00:00:00Z" }] } }
-      }
-    },
-
-    {
-      "id": 39,
-      "name": "Get Loans — Filtered By Type",
-      "description": "Shows the optional loan type filter. Useful when the UI wants liabilities and assets separately.",
-      "method": "POST",
-      "url": "http://localhost:8080/graphql",
-      "headers": { "Content-Type": "application/json", "Authorization": "Bearer <JWT_TOKEN>" },
-      "body": {
-        "query": "{ loans(type: OWED) { id counterpartyName counterpartyPhoneNumber amount amountRepaid remainingBalance type isSettled date dueDate } }"
-      },
-      "expected_response": {
-        "status": 200,
-        "body": { "data": { "loans": [{ "id": "<uuid>", "counterpartyName": "John Smith", "counterpartyPhoneNumber": "+256700000000", "amount": 2000.00, "amountRepaid": 0.00, "remainingBalance": 2000.00, "type": "OWED", "isSettled": false, "date": "2025-01-01T00:00:00Z", "dueDate": "2025-06-01T00:00:00Z" }] } }
-      }
-    },
-
-    {
-      "id": 44,
-      "name": "Get Loans — Filtered By Status",
-      "description": "Shows the optional loan status filter. Useful for screens like Active, Settled, or Overdue loans.",
-      "method": "POST",
-      "url": "http://localhost:8080/graphql",
-      "headers": { "Content-Type": "application/json", "Authorization": "Bearer <JWT_TOKEN>" },
-      "body": {
-        "query": "{ loans(status: ACTIVE) { id counterpartyName amount amountRepaid remainingBalance type isSettled status dueDate } }"
-      },
-      "expected_response": {
-        "status": 200,
-        "body": { "data": { "loans": [{ "id": "<uuid>", "counterpartyName": "John Smith", "amount": 2000.00, "amountRepaid": 500.00, "remainingBalance": 1500.00, "type": "OWED", "isSettled": false, "status": "ACTIVE", "dueDate": "2025-06-01T00:00:00Z" }] } }
-      }
-    },
-
-    {
-      "id": 45,
-      "name": "Get Loan Repayment History",
-      "description": "Returns repayment history events for a specific loan, newest first.",
-      "method": "POST",
-      "url": "http://localhost:8080/graphql",
-      "headers": { "Content-Type": "application/json", "Authorization": "Bearer <JWT_TOKEN>" },
-      "body": {
-        "query": "{ loanRepaymentHistory(loanId: \"<PASTE_ID>\") { id amount date note createdAt } }"
-      },
-      "expected_response": {
-        "status": 200,
-        "body": { "data": { "loanRepaymentHistory": [{ "id": "<uuid>", "amount": 500.00, "date": "2025-02-01T00:00:00Z", "note": "First repayment" }] } }
-      }
-    },
-
-    {
-      "id": 46,
-      "name": "Settle Loan",
-      "description": "Repays the full remaining balance and records a final repayment history event.",
-      "method": "POST",
-      "url": "http://localhost:8080/graphql",
-      "headers": { "Content-Type": "application/json", "Authorization": "Bearer <JWT_TOKEN>" },
-      "body": {
-        "query": "mutation { settleLoan(input: { loanId: \"<PASTE_ID>\", date: \"2025-03-01T00:00:00Z\", note: \"Settled in full\" }) { loan { id amount amountRepaid remainingBalance isSettled status } message errors } }"
-      },
-      "expected_response": {
-        "status": 200,
-        "body": { "data": { "settleLoan": { "loan": { "id": "<uuid>", "amount": 2000.00, "amountRepaid": 2000.00, "remainingBalance": 0.00, "isSettled": true, "status": "SETTLED" }, "message": "Loan settled successfully.", "errors": null } } }
-      }
-    },
-
-
-    {
-      "id": 43,
-      "name": "Update Loan — Amount Below Repaid",
-      "description": "Run this after Record Repayment. If amountRepaid is 500.00, updating the loan amount to 400.00 should fail.",
-      "method": "POST",
-      "url": "http://localhost:8080/graphql",
-      "headers": { "Content-Type": "application/json", "Authorization": "Bearer <JWT_TOKEN>" },
-      "body": {
-        "query": "mutation { updateLoan(input: { id: \"<PASTE_ID>\", counterpartyName: \"John Smith\", counterpartyPhoneNumber: \"+256711111111\", amount: 400.00, description: \"Too low after repayment\", dueDate: \"2025-09-01T00:00:00Z\" }) { loan { id amount amountRepaid remainingBalance } message errors } }"
-      },
-      "expected_response": {
-        "status": 200,
-        "body": { "data": { "updateLoan": { "loan": null, "message": null, "errors": ["Amount cannot be less than the amount already repaid ($500.00)."] } } }
+        "body": {
+          "totalIncome": 5000.00,
+          "totalExpenses": 120.50,
+          "netBalance": 4879.50
+        }
       }
     }
-
   ],
-
   "testing_order": [
-    "1  — Health Check                GET  /health",
-    "36 — GraphQL Health Query        POST /graphql",
-    "2  — Sign Up                     POST /api/auth/signup",
-    "6  — Sign In                     POST /api/auth/signin     → copy accessToken",
-    "41 — GraphQL Sign Up             POST /graphql",
-    "42 — GraphQL Sign In             POST /graphql",
-    "--- Income (full CRUD) ---",
-    "9  — Add Income                  POST /graphql             → copy id",
-    "10 — Get All Incomes             POST /graphql",
-    "37 — Get Incomes filtered        POST /graphql",
-    "11 — Get Income By Id            POST /graphql             → paste id",
-    "12 — Get Income By Id Not Found  POST /graphql             → returns null",
-    "13 — Update Income               POST /graphql             → paste id",
-    "15 — Delete Income               POST /graphql             → paste id",
-    "--- Expense (full CRUD) ---",
-    "17 — Add Expense                 POST /graphql             → copy id",
-    "18 — Get All Expenses            POST /graphql",
-    "38 — Get Expenses filtered       POST /graphql",
-    "19 — Get Expense By Id           POST /graphql             → paste id",
-    "20 — Update Expense              POST /graphql             → paste id",
-    "21 — Delete Expense              POST /graphql             → paste id",
-    "--- Savings Goals (full CRUD) ---",
-    "22 — Create Savings Goal         POST /graphql             → copy id",
-    "23 — Get All Savings Goals       POST /graphql",
-    "24 — Get Savings Goal By Id      POST /graphql             → paste id",
-    "25 — Update Savings Goal         POST /graphql             → paste id",
-    "40 — Add Savings Contribution    POST /graphql             → paste id",
-    "26 — Update Savings Progress     POST /graphql             → paste id",
-    "27 — Delete Savings Goal         POST /graphql             → paste id",
-    "--- Loans (full CRUD) ---",
-    "28 — Add Loan                    POST /graphql             → copy id",
-    "29 — Get All Loans               POST /graphql",
-    "39 — Get Loans filtered          POST /graphql",
-    "44 — Get Loans by status         POST /graphql",
-    "30 — Get Loan By Id              POST /graphql             → paste id",
-    "31 — Update Loan                 POST /graphql             → paste id",
-    "32 — Record Repayment            POST /graphql             → paste id",
-    "45 — Get Loan repayment history  POST /graphql             → paste id",
-    "46 — Settle Loan                 POST /graphql             → paste id",
-    "43 — Update Loan below repaid    POST /graphql             → paste same id",
-    "34 — Delete Loan                 POST /graphql             → paste id",
-    "--- Dashboard ---",
-    "35 — Get Dashboard               POST /graphql",
-    "--- Validation errors ---",
-    "3  — Sign Up invalid email",
-    "4  — Sign Up short password",
-    "5  — Sign Up duplicate email",
-    "7  — Sign In wrong password",
-    "8  — Protected query no token",
-    "14 — Update Income not found",
-    "16 — Delete Income not found",
-    "33 — Repayment exceeds balance"
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16
   ]
 }

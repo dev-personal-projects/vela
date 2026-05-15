@@ -2,6 +2,8 @@ using Azure;
 using Azure.Core;
 using Azure.Identity;
 using Azure.Security.KeyVault.Secrets;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
 
 namespace FinanceTracker.Api.Extensions;
 
@@ -22,7 +24,7 @@ public static class KeyVaultExtensions
 
     public static async Task<ConfigurationManager> AddFinanceTrackerKeyVaultAsync(
         this ConfigurationManager configuration,
-        IWebHostEnvironment environment,
+        IHostEnvironment environment,
         CancellationToken cancellationToken = default)
     {
         var vaultUriRaw = configuration[$"{_sectionName}:VaultUri"];
@@ -49,7 +51,7 @@ public static class KeyVaultExtensions
 
     private static TokenCredential CreateCredential(
         IConfiguration configuration,
-        IWebHostEnvironment environment)
+        IHostEnvironment environment)
     {
         var mode = configuration[$"{_sectionName}:CredentialMode"];
         if (string.IsNullOrWhiteSpace(mode))
