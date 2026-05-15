@@ -57,6 +57,43 @@ log_error()   { echo -e "${RED}[ERROR]   $*${NC}" >&2; }
 
 trap 'log_error "Failed at line $LINENO: $BASH_COMMAND"; exit 1' ERR
 
+# ── Azure CLI resiliency ─────────────────────────────────────────────────────
+is_transient_az_network_error() {
+  local output="$1"
+  [[ "$output" == *"Temporary failure in name resolution"* ]] ||
+    [[ "$output" == *"NameResolutionError"* ]] ||
+    [[ "$output" == *"Failed to resolve"* ]] ||
+    [[ "$output" == *"Max retries exceeded with url"* ]] ||
+    [[ "$output" == *"ConnectionError"* ]]
+}
+
+az_with_retry() {
+  local attempts="${AZURE_CLI_RETRY_ATTEMPTS:-3}"
+  local delay="${AZURE_CLI_RETRY_DELAY_SECONDS:-15}"
+  local attempt output status
+
+  for (( attempt = 1; attempt <= attempts; attempt++ )); do
+    set +e
+    output="$("$@" 2>&1)"
+    status=$?
+    set -e
+
+    if (( status == 0 )); then
+      [[ -n "$output" ]] && printf '%s\n' "$output"
+      return 0
+    fi
+
+    if is_transient_az_network_error "$output" && (( attempt < attempts )); then
+      log_warning "Transient Azure CLI network error (${attempt}/${attempts}); retrying in ${delay}s"
+      sleep "$delay"
+      continue
+    fi
+
+    printf '%s\n' "$output" >&2
+    return "$status"
+  done
+}
+
 # ── Load config ───────────────────────────────────────────────────────────────
 load_config() {
   local dir
@@ -341,17 +378,26 @@ ensure_container_app_env() {
       --name "$CONTAINER_APP_ENV_NAME" \
       --resource-group "$PROJECT_RESOURCE_GROUP" &>/dev/null; then
     log_info "Creating Container Apps environment: $CONTAINER_APP_ENV_NAME"
-    az containerapp env create \
+    if ! az_with_retry az containerapp env create \
       --name "$CONTAINER_APP_ENV_NAME" \
       --resource-group "$PROJECT_RESOURCE_GROUP" \
       --location "$PROJECT_LOCATION" \
       --logs-destination log-analytics \
       --logs-workspace-id "$LOG_ANALYTICS_WORKSPACE_ID" \
       --logs-workspace-key "$LOG_ANALYTICS_WORKSPACE_KEY" \
-      --output none
+      --output none; then
+      log_warning "Container Apps environment create command failed; checking whether Azure completed the async operation"
+      if ! az containerapp env show \
+          --name "$CONTAINER_APP_ENV_NAME" \
+          --resource-group "$PROJECT_RESOURCE_GROUP" &>/dev/null; then
+        log_error "Container Apps environment was not created: $CONTAINER_APP_ENV_NAME"
+        return 1
+      fi
+      log_warning "Container Apps environment exists after failed poll; continuing"
+    fi
   else
     log_info "Ensuring Container Apps environment logs go to Log Analytics"
-    az containerapp env update \
+    az_with_retry az containerapp env update \
       --name "$CONTAINER_APP_ENV_NAME" \
       --resource-group "$PROJECT_RESOURCE_GROUP" \
       --logs-destination log-analytics \
