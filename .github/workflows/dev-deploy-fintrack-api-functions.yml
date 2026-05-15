@@ -62,8 +62,8 @@ jobs:
 
       - name: Test
         run: |
-          dotnet test Tests/UnitTests/UnitTests.csproj --configuration Release --no-build --verbosity normal
-          dotnet test Tests/IntegrationTests/IntegrationTests.csproj --configuration Release --no-build --verbosity normal
+          dotnet test Tests/UnitTests/UnitTests.csproj --configuration Release --no-restore --verbosity normal
+          dotnet test Tests/IntegrationTests/IntegrationTests.csproj --configuration Release --no-restore --verbosity normal
 
       - name: Publish
         run: dotnet publish FinanceTracker.csproj --configuration Release --output ./publish
