@@ -5,7 +5,7 @@
 # Usage: ./scripts/kill-port.sh [port]
 # Default port: 8080
 
-PORT=${1:-8080}
+PORT=${1:-7071}
 HEX_PORT=$(printf '%04X' "$PORT")
 KILLED=false
 

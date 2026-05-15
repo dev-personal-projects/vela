@@ -7,7 +7,7 @@
       "type": "process",
       "args": [
         "restore",
-        "${workspaceFolder}/vela.sln"
+        "${workspaceFolder}/build/vela.sln"
       ],
       "problemMatcher": "$msCompile"
     },
@@ -17,7 +17,7 @@
       "type": "process",
       "args": [
         "build",
-        "${workspaceFolder}/vela.sln",
+        "${workspaceFolder}/build/vela.sln",
         "/property:GenerateFullPaths=true",
         "/consoleloggerparameters:NoSummary;ForceNoAlign"
       ],
@@ -29,7 +29,7 @@
       "type": "process",
       "args": [
         "publish",
-        "${workspaceFolder}/vela.sln",
+        "${workspaceFolder}/build/vela.sln",
         "/property:GenerateFullPaths=true",
         "/consoleloggerparameters:NoSummary;ForceNoAlign"
       ],
@@ -109,7 +109,7 @@
       "type": "process",
       "args": [
         "format",
-        "${workspaceFolder}/vela.sln",
+        "${workspaceFolder}/build/vela.sln",
         "--verify-no-changes"
       ],
       "problemMatcher": "$msCompile"

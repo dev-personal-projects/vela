@@ -29,7 +29,7 @@ bld/
 
 # Solution files (using .slnx instead)
 *.sln
-!vela.sln
+!build/vela.sln
 
 # .NET Core
 project.lock.json

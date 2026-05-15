@@ -3,7 +3,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-SOLUTION_FILE="${ROOT_DIR}/vela.sln"
+SOLUTION_FILE="${ROOT_DIR}/build/vela.sln"
 APPSETTINGS_LOCAL="${ROOT_DIR}/appsettings.Development.json"
 
 require_command() {

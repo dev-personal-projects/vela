@@ -3,7 +3,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-SOLUTION_FILE="${ROOT_DIR}/vela.sln"
+SOLUTION_FILE="${ROOT_DIR}/build/vela.sln"
 
 cd "${ROOT_DIR}"
 

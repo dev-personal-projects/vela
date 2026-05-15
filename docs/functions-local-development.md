@@ -43,4 +43,3 @@ Verify:
 ```bash
 curl -fsS http://localhost:7071/api/v1/health
 ```
-
