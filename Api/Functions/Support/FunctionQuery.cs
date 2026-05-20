@@ -71,6 +71,46 @@ public static class FunctionQuery
         return true;
     }
 
+    public static bool TryOptionalPagination(
+        IDictionary<string, StringValues> query,
+        out PaginationOptions? pagination,
+        out string? error)
+    {
+        pagination = null;
+        error = null;
+
+        var hasLimit = OptionalString(query, "limit") is not null;
+        var hasOffset = OptionalString(query, "offset") is not null;
+        if (!hasLimit && !hasOffset)
+        {
+            return true;
+        }
+
+        if (!TryOptionalInt(query, "limit", out var limit, out error) ||
+            !TryOptionalInt(query, "offset", out var offset, out error))
+        {
+            return false;
+        }
+
+        var resolvedLimit = limit ?? PaginationOptions.DefaultLimit;
+        var resolvedOffset = offset ?? 0;
+
+        if (resolvedLimit is < 1 or > PaginationOptions.MaxLimit)
+        {
+            error = $"Invalid limit. Expected a value between 1 and {PaginationOptions.MaxLimit}.";
+            return false;
+        }
+
+        if (resolvedOffset < 0)
+        {
+            error = "Invalid offset. Expected a value greater than or equal to 0.";
+            return false;
+        }
+
+        pagination = new PaginationOptions(resolvedLimit, resolvedOffset);
+        return true;
+    }
+
     public static bool TryOptionalEnum<T>(
         IDictionary<string, StringValues> query,
         string key,

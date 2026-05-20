@@ -30,6 +30,7 @@ public static class CachingExtensions
         }
 
         services.AddSingleton<IDashboardCacheService, DashboardCacheService>();
+        services.AddSingleton<IIdempotencyService, IdempotencyService>();
 
         return services;
     }

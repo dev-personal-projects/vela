@@ -11,7 +11,7 @@ public sealed class HealthFunction
     public IActionResult Run(
         [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = ApiRoutes.Health)]
         HttpRequestData req) =>
-        new OkObjectResult(new
+        FunctionHttpResults.Ok(req, new
         {
             status = "healthy",
             service = "Finance Tracker API",

@@ -119,6 +119,8 @@ GraphQL is preserved on the `graphql-learning` branch only.
 ## Documentation and lessons
 Product/technical docs:
 - REST API reference: `docs/rest-api.md`
+- OpenAPI starter contract: `docs/openapi.yaml`
+- API compatibility policy: `docs/api-compatibility.md`
 - Azure Functions local development: `docs/functions-local-development.md`
 - Azure Functions deployment runbook: `docs/functions-deployment-runbook.md`
 - Commit conventions: `docs/git/commit-conventions.md`

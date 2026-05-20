@@ -10,6 +10,7 @@
     "DashboardCache__Enabled": "true",
     "DashboardCache__TtlSeconds": "60",
     "DashboardCache__VersionTtlHours": "24",
+    "Idempotency__TtlHours": "24",
     "Auth__JwtSecret": "vela-local-dev-jwt-secret-keep-out-of-git-32-bytes",
     "ConnectionStrings__Default": "Host=localhost;Port=5432;Database=vela_dev;Username=postgres;Password=postgres",
     "Supabase__Url": "https://localhost",

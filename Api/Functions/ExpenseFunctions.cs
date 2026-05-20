@@ -1,13 +1,17 @@
 using Vela.Api.Functions.Support;
 using Vela.Application.DTOs.Expense;
 using Vela.Application.Interfaces;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 
 namespace Vela.Api.Functions;
 
-public sealed class ExpenseFunctions(IExpenseService expenseService, FunctionAuth auth)
+public sealed class ExpenseFunctions(
+    IExpenseService expenseService,
+    FunctionAuth auth,
+    IIdempotencyService idempotencyService)
 {
     [Function("GetExpenses")]
     public async Task<IActionResult> GetAllAsync(
@@ -16,18 +20,19 @@ public sealed class ExpenseFunctions(IExpenseService expenseService, FunctionAut
         CancellationToken ct)
     {
         var user = auth.GetUserId(req);
-        if (user.IsFailure) return FunctionHttpResults.Unauthorized(user.Error);
+        if (user.IsFailure) return FunctionHttpResults.Unauthorized(req, user.Error);
 
         var query = FunctionQuery.Parse(req);
         if (!FunctionQuery.TryOptionalDate(query, "fromDate", out var fromDate, out var error) ||
-            !FunctionQuery.TryOptionalDate(query, "toDate", out var toDate, out error))
+            !FunctionQuery.TryOptionalDate(query, "toDate", out var toDate, out error) ||
+            !FunctionQuery.TryOptionalPagination(query, out var pagination, out error))
         {
-            return FunctionHttpResults.Validation(error);
+            return FunctionHttpResults.Validation(req, error);
         }
 
         var category = FunctionQuery.OptionalString(query, "category");
         var result = await expenseService.GetAllAsync(user.Value, ct);
-        if (result.IsFailure) return FunctionHttpResults.FromResult(result);
+        if (result.IsFailure) return FunctionHttpResults.FromResult(req, result);
 
         var items = result.Value!
             .Where(x => (!fromDate.HasValue || x.Date >= fromDate.Value) &&
@@ -36,7 +41,7 @@ public sealed class ExpenseFunctions(IExpenseService expenseService, FunctionAut
                         string.Equals(x.Category, category.Trim(), StringComparison.OrdinalIgnoreCase))
             .ToList();
 
-        return new OkObjectResult(items);
+        return FunctionHttpResults.OkList(req, items, pagination);
     }
 
     [Function("GetExpense")]
@@ -48,8 +53,8 @@ public sealed class ExpenseFunctions(IExpenseService expenseService, FunctionAut
     {
         var user = auth.GetUserId(req);
         return user.IsFailure
-            ? FunctionHttpResults.Unauthorized(user.Error)
-            : FunctionHttpResults.FromResult(await expenseService.GetByIdAsync(id, user.Value, ct));
+            ? FunctionHttpResults.Unauthorized(req, user.Error)
+            : FunctionHttpResults.FromResult(req, await expenseService.GetByIdAsync(id, user.Value, ct));
     }
 
     [Function("AddExpense")]
@@ -59,15 +64,18 @@ public sealed class ExpenseFunctions(IExpenseService expenseService, FunctionAut
         CancellationToken ct)
     {
         var user = auth.GetUserId(req);
-        if (user.IsFailure) return FunctionHttpResults.Unauthorized(user.Error);
+        if (user.IsFailure) return FunctionHttpResults.Unauthorized(req, user.Error);
 
         var input = await FunctionJson.ReadJsonAsync<AddExpenseInput>(req, ct);
-        if (input is null) return FunctionHttpResults.Validation("Request body is required.");
+        if (input is null) return FunctionHttpResults.Validation(req, "Request body is required.");
 
-        var result = await expenseService.AddAsync(input, user.Value, ct);
-        return result.IsSuccess
-            ? new ObjectResult(result.Value) { StatusCode = 201 }
-            : FunctionHttpResults.FromResult(result);
+        return await FunctionIdempotency.RunAsync(
+            req,
+            user.Value,
+            idempotencyService,
+            () => expenseService.AddAsync(input, user.Value, ct),
+            StatusCodes.Status201Created,
+            ct);
     }
 
     [Function("UpdateExpense")]
@@ -78,12 +86,18 @@ public sealed class ExpenseFunctions(IExpenseService expenseService, FunctionAut
         CancellationToken ct)
     {
         var user = auth.GetUserId(req);
-        if (user.IsFailure) return FunctionHttpResults.Unauthorized(user.Error);
+        if (user.IsFailure) return FunctionHttpResults.Unauthorized(req, user.Error);
 
         var input = await FunctionJson.ReadJsonAsync<UpdateExpenseInput>(req, ct);
-        if (input is null) return FunctionHttpResults.Validation("Request body is required.");
+        if (input is null) return FunctionHttpResults.Validation(req, "Request body is required.");
 
-        return FunctionHttpResults.FromResult(await expenseService.UpdateAsync(input with { Id = id }, user.Value, ct));
+        return await FunctionIdempotency.RunAsync(
+            req,
+            user.Value,
+            idempotencyService,
+            () => expenseService.UpdateAsync(input with { Id = id }, user.Value, ct),
+            StatusCodes.Status200OK,
+            ct);
     }
 
     [Function("DeleteExpense")]
@@ -95,7 +109,7 @@ public sealed class ExpenseFunctions(IExpenseService expenseService, FunctionAut
     {
         var user = auth.GetUserId(req);
         return user.IsFailure
-            ? FunctionHttpResults.Unauthorized(user.Error)
-            : FunctionHttpResults.Deleted(await expenseService.DeleteAsync(id, user.Value, ct));
+            ? FunctionHttpResults.Unauthorized(req, user.Error)
+            : FunctionHttpResults.Deleted(req, await expenseService.DeleteAsync(id, user.Value, ct));
     }
 }

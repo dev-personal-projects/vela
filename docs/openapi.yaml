@@ -1,0 +1,259 @@
+openapi: 3.1.0
+info:
+  title: Vela API
+  version: v1
+  description: REST API for personal finance tracking.
+servers:
+  - url: http://localhost:7071/api/v1
+    description: Local Azure Functions host
+security:
+  - bearerAuth: []
+paths:
+  /health:
+    get:
+      security: []
+      summary: Health check
+      responses:
+        "200":
+          description: Service is healthy.
+  /auth/signup:
+    post:
+      security: []
+      summary: Create an account
+      responses:
+        "201":
+          description: Account created.
+        "400":
+          $ref: "#/components/responses/ValidationError"
+  /auth/signin:
+    post:
+      security: []
+      summary: Sign in and receive tokens
+      responses:
+        "200":
+          description: Signed in.
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+  /incomes:
+    get:
+      summary: List incomes
+      parameters:
+        - $ref: "#/components/parameters/FromDate"
+        - $ref: "#/components/parameters/ToDate"
+        - name: source
+          in: query
+          schema:
+            type: string
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Offset"
+      responses:
+        "200":
+          description: Income records.
+    post:
+      summary: Create income
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "201":
+          description: Income created.
+        "400":
+          $ref: "#/components/responses/ValidationError"
+  /incomes/{id}:
+    get:
+      summary: Get income by ID
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Income record.
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+    put:
+      summary: Update income
+      parameters:
+        - $ref: "#/components/parameters/Id"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "200":
+          description: Income updated.
+    delete:
+      summary: Delete income
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "204":
+          description: Income deleted.
+  /expenses:
+    get:
+      summary: List expenses
+      parameters:
+        - $ref: "#/components/parameters/FromDate"
+        - $ref: "#/components/parameters/ToDate"
+        - name: category
+          in: query
+          schema:
+            type: string
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Offset"
+      responses:
+        "200":
+          description: Expense records.
+    post:
+      summary: Create expense
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "201":
+          description: Expense created.
+  /savings-goals:
+    get:
+      summary: List savings goals
+      parameters:
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Offset"
+      responses:
+        "200":
+          description: Savings goals.
+    post:
+      summary: Create savings goal
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "201":
+          description: Savings goal created.
+  /loans:
+    get:
+      summary: List loans
+      parameters:
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [Owed, Given]
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [Active, Settled, Overdue]
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Offset"
+      responses:
+        "200":
+          description: Loans.
+    post:
+      summary: Create loan
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "201":
+          description: Loan created.
+  /dashboard:
+    get:
+      summary: Get dashboard summary
+      parameters:
+        - $ref: "#/components/parameters/FromDate"
+        - $ref: "#/components/parameters/ToDate"
+        - name: activityLimit
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Dashboard summary.
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    FromDate:
+      name: fromDate
+      in: query
+      schema:
+        type: string
+        format: date-time
+    ToDate:
+      name: toDate
+      in: query
+      schema:
+        type: string
+        format: date-time
+    Limit:
+      name: limit
+      in: query
+      description: Enables paginated response shape when supplied. Maximum is 100.
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+    Offset:
+      name: offset
+      in: query
+      description: Enables paginated response shape when supplied.
+      schema:
+        type: integer
+        minimum: 0
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      schema:
+        type: string
+        maxLength: 255
+  responses:
+    ValidationError:
+      description: Validation failed.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    UnauthorizedError:
+      description: Authentication failed.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    NotFoundError:
+      description: Resource not found.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+  schemas:
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message, requestId]
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            requestId:
+              type: string
+    Pagination:
+      type: object
+      required: [limit, offset, count, total, hasMore]
+      properties:
+        limit:
+          type: integer
+        offset:
+          type: integer
+        count:
+          type: integer
+        total:
+          type: integer
+        hasMore:
+          type: boolean

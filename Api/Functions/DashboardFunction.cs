@@ -15,17 +15,17 @@ public sealed class DashboardFunction(IDashboardService dashboardService, Functi
         CancellationToken ct)
     {
         var user = auth.GetUserId(req);
-        if (user.IsFailure) return FunctionHttpResults.Unauthorized(user.Error);
+        if (user.IsFailure) return FunctionHttpResults.Unauthorized(req, user.Error);
 
         var query = FunctionQuery.Parse(req);
         if (!FunctionQuery.TryOptionalDate(query, "fromDate", out var fromDate, out var error) ||
             !FunctionQuery.TryOptionalDate(query, "toDate", out var toDate, out error) ||
             !FunctionQuery.TryOptionalInt(query, "activityLimit", out var activityLimit, out error))
         {
-            return FunctionHttpResults.Validation(error);
+            return FunctionHttpResults.Validation(req, error);
         }
 
-        return FunctionHttpResults.FromResult(
+        return FunctionHttpResults.FromResult(req,
             await dashboardService.GetSummaryAsync(user.Value, fromDate, toDate, activityLimit, ct));
     }
 }

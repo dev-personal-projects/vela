@@ -1,13 +1,17 @@
 using Vela.Api.Functions.Support;
 using Vela.Application.DTOs.Savings;
 using Vela.Application.Interfaces;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 
 namespace Vela.Api.Functions;
 
-public sealed class SavingsGoalFunctions(ISavingsGoalService savingsGoalService, FunctionAuth auth)
+public sealed class SavingsGoalFunctions(
+    ISavingsGoalService savingsGoalService,
+    FunctionAuth auth,
+    IIdempotencyService idempotencyService)
 {
     private sealed record UpdateProgressRequest(decimal Amount);
 
@@ -18,9 +22,18 @@ public sealed class SavingsGoalFunctions(ISavingsGoalService savingsGoalService,
         CancellationToken ct)
     {
         var user = auth.GetUserId(req);
-        return user.IsFailure
-            ? FunctionHttpResults.Unauthorized(user.Error)
-            : FunctionHttpResults.FromResult(await savingsGoalService.GetAllAsync(user.Value, ct));
+        if (user.IsFailure) return FunctionHttpResults.Unauthorized(req, user.Error);
+
+        var query = FunctionQuery.Parse(req);
+        if (!FunctionQuery.TryOptionalPagination(query, out var pagination, out var error))
+        {
+            return FunctionHttpResults.Validation(req, error);
+        }
+
+        var result = await savingsGoalService.GetAllAsync(user.Value, ct);
+        return result.IsSuccess
+            ? FunctionHttpResults.OkList(req, result.Value!, pagination)
+            : FunctionHttpResults.FromResult(req, result);
     }
 
     [Function("GetSavingsGoal")]
@@ -32,8 +45,8 @@ public sealed class SavingsGoalFunctions(ISavingsGoalService savingsGoalService,
     {
         var user = auth.GetUserId(req);
         return user.IsFailure
-            ? FunctionHttpResults.Unauthorized(user.Error)
-            : FunctionHttpResults.FromResult(await savingsGoalService.GetByIdAsync(id, user.Value, ct));
+            ? FunctionHttpResults.Unauthorized(req, user.Error)
+            : FunctionHttpResults.FromResult(req, await savingsGoalService.GetByIdAsync(id, user.Value, ct));
     }
 
     [Function("CreateSavingsGoal")]
@@ -43,15 +56,18 @@ public sealed class SavingsGoalFunctions(ISavingsGoalService savingsGoalService,
         CancellationToken ct)
     {
         var user = auth.GetUserId(req);
-        if (user.IsFailure) return FunctionHttpResults.Unauthorized(user.Error);
+        if (user.IsFailure) return FunctionHttpResults.Unauthorized(req, user.Error);
 
         var input = await FunctionJson.ReadJsonAsync<CreateSavingsGoalInput>(req, ct);
-        if (input is null) return FunctionHttpResults.Validation("Request body is required.");
+        if (input is null) return FunctionHttpResults.Validation(req, "Request body is required.");
 
-        var result = await savingsGoalService.CreateAsync(input, user.Value, ct);
-        return result.IsSuccess
-            ? new ObjectResult(result.Value) { StatusCode = 201 }
-            : FunctionHttpResults.FromResult(result);
+        return await FunctionIdempotency.RunAsync(
+            req,
+            user.Value,
+            idempotencyService,
+            () => savingsGoalService.CreateAsync(input, user.Value, ct),
+            StatusCodes.Status201Created,
+            ct);
     }
 
     [Function("UpdateSavingsGoal")]
@@ -62,12 +78,18 @@ public sealed class SavingsGoalFunctions(ISavingsGoalService savingsGoalService,
         CancellationToken ct)
     {
         var user = auth.GetUserId(req);
-        if (user.IsFailure) return FunctionHttpResults.Unauthorized(user.Error);
+        if (user.IsFailure) return FunctionHttpResults.Unauthorized(req, user.Error);
 
         var input = await FunctionJson.ReadJsonAsync<UpdateSavingsGoalInput>(req, ct);
-        if (input is null) return FunctionHttpResults.Validation("Request body is required.");
+        if (input is null) return FunctionHttpResults.Validation(req, "Request body is required.");
 
-        return FunctionHttpResults.FromResult(await savingsGoalService.UpdateAsync(input with { Id = id }, user.Value, ct));
+        return await FunctionIdempotency.RunAsync(
+            req,
+            user.Value,
+            idempotencyService,
+            () => savingsGoalService.UpdateAsync(input with { Id = id }, user.Value, ct),
+            StatusCodes.Status200OK,
+            ct);
     }
 
     [Function("AddSavingsContribution")]
@@ -78,12 +100,18 @@ public sealed class SavingsGoalFunctions(ISavingsGoalService savingsGoalService,
         CancellationToken ct)
     {
         var user = auth.GetUserId(req);
-        if (user.IsFailure) return FunctionHttpResults.Unauthorized(user.Error);
+        if (user.IsFailure) return FunctionHttpResults.Unauthorized(req, user.Error);
 
         var input = await FunctionJson.ReadJsonAsync<AddSavingsContributionInput>(req, ct);
-        if (input is null) return FunctionHttpResults.Validation("Request body is required.");
+        if (input is null) return FunctionHttpResults.Validation(req, "Request body is required.");
 
-        return FunctionHttpResults.FromResult(await savingsGoalService.AddContributionAsync(input with { Id = id }, user.Value, ct));
+        return await FunctionIdempotency.RunAsync(
+            req,
+            user.Value,
+            idempotencyService,
+            () => savingsGoalService.AddContributionAsync(input with { Id = id }, user.Value, ct),
+            StatusCodes.Status200OK,
+            ct);
     }
 
     [Function("UpdateSavingsProgress")]
@@ -94,12 +122,18 @@ public sealed class SavingsGoalFunctions(ISavingsGoalService savingsGoalService,
         CancellationToken ct)
     {
         var user = auth.GetUserId(req);
-        if (user.IsFailure) return FunctionHttpResults.Unauthorized(user.Error);
+        if (user.IsFailure) return FunctionHttpResults.Unauthorized(req, user.Error);
 
         var input = await FunctionJson.ReadJsonAsync<UpdateProgressRequest>(req, ct);
-        if (input is null) return FunctionHttpResults.Validation("Request body is required.");
+        if (input is null) return FunctionHttpResults.Validation(req, "Request body is required.");
 
-        return FunctionHttpResults.FromResult(await savingsGoalService.UpdateProgressAsync(id, input.Amount, user.Value, ct));
+        return await FunctionIdempotency.RunAsync(
+            req,
+            user.Value,
+            idempotencyService,
+            () => savingsGoalService.UpdateProgressAsync(id, input.Amount, user.Value, ct),
+            StatusCodes.Status200OK,
+            ct);
     }
 
     [Function("DeleteSavingsGoal")]
@@ -111,7 +145,7 @@ public sealed class SavingsGoalFunctions(ISavingsGoalService savingsGoalService,
     {
         var user = auth.GetUserId(req);
         return user.IsFailure
-            ? FunctionHttpResults.Unauthorized(user.Error)
-            : FunctionHttpResults.Deleted(await savingsGoalService.DeleteAsync(id, user.Value, ct));
+            ? FunctionHttpResults.Unauthorized(req, user.Error)
+            : FunctionHttpResults.Deleted(req, await savingsGoalService.DeleteAsync(id, user.Value, ct));
     }
 }
