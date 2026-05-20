@@ -74,3 +74,6 @@ local.settings.json
 # Generated commit message review file
 commit-message-proposal.md
 COMMIT_MESSAGE_PROPOSAL.md
+
+# UI/UX design prototypes (local only)
+designs/

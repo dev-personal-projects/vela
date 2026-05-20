@@ -4,12 +4,18 @@ using Vela.Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
+using Microsoft.Azure.WebJobs.Extensions.OpenApi.Core.Attributes;
+using System.Net;
 
 namespace Vela.Api.Functions;
 
 public sealed class AuthFunctions(IAuthService authService)
 {
     [Function("SignUp")]
+    [OpenApiOperation(operationId: "SignUp", tags: [ApiDocumentation.AuthTag], Summary = "Creates an account.")]
+    [OpenApiRequestBody(ApiDocumentation.Json, typeof(SignUpInput), Required = true, Description = "Account credentials.")]
+    [OpenApiResponseWithBody(HttpStatusCode.Created, ApiDocumentation.Json, typeof(SignUpPayload), Description = "The account was created.")]
+    [OpenApiResponseWithBody(HttpStatusCode.BadRequest, ApiDocumentation.Json, typeof(ApiErrorResponse), Description = "The request body is invalid.")]
     public async Task<IActionResult> SignUpAsync(
         [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = ApiRoutes.AuthSignUp)]
         HttpRequestData req,
@@ -28,6 +34,11 @@ public sealed class AuthFunctions(IAuthService authService)
     }
 
     [Function("SignIn")]
+    [OpenApiOperation(operationId: "SignIn", tags: [ApiDocumentation.AuthTag], Summary = "Signs in and returns JWT tokens.")]
+    [OpenApiRequestBody(ApiDocumentation.Json, typeof(SignInInput), Required = true, Description = "Account credentials.")]
+    [OpenApiResponseWithBody(HttpStatusCode.OK, ApiDocumentation.Json, typeof(SignInPayload), Description = "JWT tokens for API access.")]
+    [OpenApiResponseWithBody(HttpStatusCode.BadRequest, ApiDocumentation.Json, typeof(ApiErrorResponse), Description = "The request body is invalid.")]
+    [OpenApiResponseWithBody(HttpStatusCode.Unauthorized, ApiDocumentation.Json, typeof(ApiErrorResponse), Description = "The credentials are invalid.")]
     public async Task<IActionResult> SignInAsync(
         [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = ApiRoutes.AuthSignIn)]
         HttpRequestData req,

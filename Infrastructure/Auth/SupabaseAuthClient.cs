@@ -10,7 +10,7 @@ public sealed class SupabaseAuthClient(HttpClient httpClient) : ISupabaseAuthCli
 {
     public async Task<AppResult<SignUpPayload>> SignUpAsync(string email, string password, CancellationToken ct = default)
     {
-        var response = await httpClient.PostAsJsonAsync("auth/v1/signup", new { email, password }, ct);
+        var response = await System.Net.Http.Json.HttpClientJsonExtensions.PostAsJsonAsync(httpClient, "auth/v1/signup", new { email, password }, ct);
 
         return await ParseSignUpResponseAsync(response, ct);
     }
@@ -18,7 +18,7 @@ public sealed class SupabaseAuthClient(HttpClient httpClient) : ISupabaseAuthCli
     public async Task<AppResult<SignInPayload>> SignInAsync(string email, string password, CancellationToken ct = default)
     {
         var url = "auth/v1/token?grant_type=password";
-        var response = await httpClient.PostAsJsonAsync(url, new { email, password }, ct);
+        var response = await System.Net.Http.Json.HttpClientJsonExtensions.PostAsJsonAsync(httpClient, url, new { email, password }, ct);
 
         return await ParseResponseAsync(response, ct);
     }
