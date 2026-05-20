@@ -1,5 +1,5 @@
-using FinanceTracker.Domain.Entities;
-using FinanceTracker.Domain.Enums;
+using Vela.Domain.Entities;
+using Vela.Domain.Enums;
 using UnitTests.Common;
 
 namespace UnitTests.Builders;
@@ -51,9 +51,9 @@ internal sealed class LoanBuilder
         return this;
     }
 
-    internal FinanceTracker.Domain.Entities.Loan Build(Guid? userId = null)
+    internal Vela.Domain.Entities.Loan Build(Guid? userId = null)
     {
-        var loan = new FinanceTracker.Domain.Entities.Loan(
+        var loan = new Vela.Domain.Entities.Loan(
             userId ?? TestUsers.PrimaryUserId,
             _counterpartyName,
             _counterpartyPhoneNumber,

@@ -1,6 +1,6 @@
-using FinanceTracker.Domain.Enums;
+using Vela.Domain.Enums;
 
-namespace FinanceTracker.Application.DTOs.Loan;
+namespace Vela.Application.DTOs.Loan;
 
 public sealed record AddLoanInput(
     string CounterpartyName,

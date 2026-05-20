@@ -1,10 +1,10 @@
-using FinanceTracker.Application.Interfaces;
-using FinanceTracker.Api.Functions.Support;
-using FinanceTracker.Infrastructure.Auth;
+using Vela.Application.Interfaces;
+using Vela.Api.Functions.Support;
+using Vela.Infrastructure.Auth;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace FinanceTracker.Api.Extensions;
+namespace Vela.Api.Extensions;
 
 public static class AuthExtensions
 {

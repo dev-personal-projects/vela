@@ -5,25 +5,25 @@
 Provision or update the Function App:
 
 ```bash
-./Infrastructure/Azure/AzureFunctions/1.deploy-financetracker-AzFunc.sh
+./Infrastructure/Azure/AzureFunctions/1.deploy-vela-AzFunc.sh
 ```
 
 Preview only:
 
 ```bash
-./Infrastructure/Azure/AzureFunctions/1.deploy-financetracker-AzFunc.sh --plan
+./Infrastructure/Azure/AzureFunctions/1.deploy-vela-AzFunc.sh --plan
 ```
 
 ## Validate
 
 ```bash
 az functionapp show \
-  --name func-fintrack-api-dev-neu-001 \
-  --resource-group rg-finance-tracker-dev-neu \
+  --name func-vela-api-dev-neu-001 \
+  --resource-group rg-vela-dev-neu \
   --query '{state:state,hostNames:defaultHostName}' \
   -o json
 
-curl -fsS "https://func-fintrack-api-dev-neu-001.azurewebsites.net/api/v1/health"
+curl -fsS "https://func-vela-api-dev-neu-001.azurewebsites.net/api/v1/health"
 ```
 
 ## Cutover

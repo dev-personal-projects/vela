@@ -1,10 +1,10 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using FinanceTracker.Application.Interfaces;
+using Vela.Application.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 
-namespace FinanceTracker.Infrastructure.Auth;
+namespace Vela.Infrastructure.Auth;
 
 public sealed class ApiTokenService : IApiTokenService
 {

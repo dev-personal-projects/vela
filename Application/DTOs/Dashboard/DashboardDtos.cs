@@ -1,4 +1,4 @@
-namespace FinanceTracker.Application.DTOs.Dashboard;
+namespace Vela.Application.DTOs.Dashboard;
 
 public sealed record DashboardSummary(
     decimal TotalIncome,

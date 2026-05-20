@@ -1,6 +1,6 @@
 using NpgsqlTypes;
 
-namespace FinanceTracker.Domain.Enums;
+namespace Vela.Domain.Enums;
 
 public enum LoanType
 {

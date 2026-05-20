@@ -5,7 +5,7 @@ using Azure.Security.KeyVault.Secrets;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 
-namespace FinanceTracker.Api.Extensions;
+namespace Vela.Api.Extensions;
 
 public static class KeyVaultExtensions
 {
@@ -13,7 +13,7 @@ public static class KeyVaultExtensions
     private const string _managedIdentityMode = "ManagedIdentity";
     private const string _azureCliMode = "AzureCli";
 
-    private static readonly IReadOnlyDictionary<string, string> _requiredSecrets = new Dictionary<string, string>
+    private static readonly IReadOnlyDictionary<string, string> _requiredKeyVaultSecrets = new Dictionary<string, string>
     {
         ["Auth--JwtSecret"] = "Auth:JwtSecret",
         ["ConnectionStrings--Default"] = "ConnectionStrings:Default",
@@ -22,7 +22,15 @@ public static class KeyVaultExtensions
         ["Redis--ConnectionString"] = "Redis:ConnectionString"
     };
 
-    public static async Task<ConfigurationManager> AddFinanceTrackerKeyVaultAsync(
+    private static readonly string[] _requiredLocalDevelopmentSecrets =
+    [
+        "Auth:JwtSecret",
+        "ConnectionStrings:Default",
+        "Supabase:Url",
+        "Supabase:AnonKey"
+    ];
+
+    public static async Task<ConfigurationManager> AddVelaKeyVaultAsync(
         this ConfigurationManager configuration,
         IHostEnvironment environment,
         CancellationToken cancellationToken = default)
@@ -30,19 +38,43 @@ public static class KeyVaultExtensions
         var vaultUriRaw = configuration[$"{_sectionName}:VaultUri"];
         if (string.IsNullOrWhiteSpace(vaultUriRaw))
         {
+            if (environment.IsDevelopment())
+            {
+                EnsureLocalDevelopmentSecrets(configuration, "Azure Key Vault is not configured.");
+                return configuration;
+            }
+
             throw new InvalidOperationException("AzureKeyVault:VaultUri is required.");
         }
 
         if (!Uri.TryCreate(vaultUriRaw, UriKind.Absolute, out var vaultUri))
         {
+            if (environment.IsDevelopment())
+            {
+                EnsureLocalDevelopmentSecrets(configuration, "AzureKeyVault:VaultUri is not an absolute URI.");
+                return configuration;
+            }
+
             throw new InvalidOperationException("AzureKeyVault:VaultUri must be an absolute URI.");
         }
 
-        EnsureSecretsAreNotSuppliedByBootstrapConfiguration(configuration);
+        if (!environment.IsDevelopment())
+        {
+            EnsureSecretsAreNotSuppliedByBootstrapConfiguration(configuration);
+        }
 
-        var credential = CreateCredential(configuration, environment);
-        var secretClient = new SecretClient(vaultUri, credential);
-        var secrets = await LoadRequiredSecretsAsync(secretClient, cancellationToken);
+        IReadOnlyDictionary<string, string?> secrets;
+        try
+        {
+            var credential = CreateCredential(configuration, environment);
+            var secretClient = new SecretClient(vaultUri, credential);
+            secrets = await LoadRequiredSecretsAsync(secretClient, cancellationToken);
+        }
+        catch (Exception ex) when (environment.IsDevelopment() && IsLocalDevelopmentFallbackAllowed(ex))
+        {
+            EnsureLocalDevelopmentSecrets(configuration, $"Azure Key Vault could not be loaded: {ex.Message}");
+            return configuration;
+        }
 
         configuration.AddInMemoryCollection(secrets);
 
@@ -79,7 +111,7 @@ public static class KeyVaultExtensions
 
     private static void EnsureSecretsAreNotSuppliedByBootstrapConfiguration(IConfiguration configuration)
     {
-        foreach (var configKey in _requiredSecrets.Values)
+        foreach (var configKey in _requiredKeyVaultSecrets.Values)
         {
             if (!string.IsNullOrWhiteSpace(configuration[configKey]))
             {
@@ -88,11 +120,36 @@ public static class KeyVaultExtensions
         }
     }
 
+    private static void EnsureLocalDevelopmentSecrets(IConfiguration configuration, string fallbackReason)
+    {
+        var missingSecrets = _requiredLocalDevelopmentSecrets
+            .Where(configKey => string.IsNullOrWhiteSpace(configuration[configKey]))
+            .ToArray();
+
+        if (missingSecrets.Length == 0)
+        {
+            return;
+        }
+
+        throw new InvalidOperationException(
+            $"{fallbackReason} Configure local development secrets in local.settings.json Values: {string.Join(", ", missingSecrets.Select(ToEnvironmentVariableName))}.");
+    }
+
+    private static bool IsLocalDevelopmentFallbackAllowed(Exception exception)
+    {
+        return exception is InvalidOperationException or RequestFailedException;
+    }
+
+    private static string ToEnvironmentVariableName(string configKey)
+    {
+        return configKey.Replace(":", "__", StringComparison.Ordinal);
+    }
+
     private static async Task<IReadOnlyDictionary<string, string?>> LoadRequiredSecretsAsync(
         SecretClient secretClient,
         CancellationToken cancellationToken)
     {
-        var secretTasks = _requiredSecrets.Select(async item =>
+        var secretTasks = _requiredKeyVaultSecrets.Select(async item =>
         {
             KeyVaultSecret secret;
             try

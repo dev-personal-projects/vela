@@ -37,7 +37,7 @@
 - How can a reviewer verify this locally?
 
 ### Verification
-- [ ] `dotnet build FinanceTracker.csproj`
+- [ ] `dotnet build Vela.csproj`
 - [ ] manual API verification completed
 - [ ] migrations validated or applied if needed
 

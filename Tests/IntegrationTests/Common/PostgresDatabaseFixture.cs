@@ -1,5 +1,5 @@
-using FinanceTracker.Domain.Enums;
-using FinanceTracker.Infrastructure.Data;
+using Vela.Domain.Enums;
+using Vela.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using Respawn;

@@ -1,11 +1,11 @@
 using System.Text.Json;
-using FinanceTracker.Application.DTOs.Dashboard;
-using FinanceTracker.Application.Interfaces;
+using Vela.Application.DTOs.Dashboard;
+using Vela.Application.Interfaces;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace FinanceTracker.Infrastructure.Caching;
+namespace Vela.Infrastructure.Caching;
 
 public sealed class DashboardCacheService(
     IDistributedCache cache,

@@ -1,4 +1,4 @@
-using FinanceTracker.Application.DTOs.Dashboard;
+using Vela.Application.DTOs.Dashboard;
 
 namespace UnitTests.Builders;
 

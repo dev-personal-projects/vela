@@ -1,5 +1,5 @@
-using FinanceTracker.Domain.Entities;
-using FinanceTracker.Infrastructure.Repositories;
+using Vela.Domain.Entities;
+using Vela.Infrastructure.Repositories;
 using IntegrationTests.Common;
 using Microsoft.EntityFrameworkCore;
 

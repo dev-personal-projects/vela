@@ -1,10 +1,10 @@
 using System.Net.Http.Json;
 using System.Text.Json.Serialization;
-using FinanceTracker.Application.DTOs.Auth;
-using FinanceTracker.Application.Interfaces;
-using FinanceTracker.Domain.Common;
+using Vela.Application.DTOs.Auth;
+using Vela.Application.Interfaces;
+using Vela.Domain.Common;
 
-namespace FinanceTracker.Infrastructure.Auth;
+namespace Vela.Infrastructure.Auth;
 
 public sealed class SupabaseAuthClient(HttpClient httpClient) : ISupabaseAuthClient
 {

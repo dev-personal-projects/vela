@@ -1,6 +1,6 @@
-using FinanceTracker.Application.DTOs.Dashboard;
+using Vela.Application.DTOs.Dashboard;
 
-namespace FinanceTracker.Application.Interfaces;
+namespace Vela.Application.Interfaces;
 
 public interface IDashboardCacheService
 {

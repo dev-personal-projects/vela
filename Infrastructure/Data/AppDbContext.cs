@@ -1,9 +1,9 @@
-using FinanceTracker.Domain.Entities;
-using FinanceTracker.Domain.Enums;
+using Vela.Domain.Entities;
+using Vela.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 
-namespace FinanceTracker.Infrastructure.Data;
+namespace Vela.Infrastructure.Data;
 
 public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
 {

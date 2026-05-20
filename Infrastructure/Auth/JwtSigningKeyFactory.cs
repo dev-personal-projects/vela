@@ -1,7 +1,7 @@
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
 
-namespace FinanceTracker.Infrastructure.Auth;
+namespace Vela.Infrastructure.Auth;
 
 public static class JwtSigningKeyFactory
 {

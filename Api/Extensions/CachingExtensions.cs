@@ -1,9 +1,9 @@
-using FinanceTracker.Application.Interfaces;
-using FinanceTracker.Infrastructure.Caching;
+using Vela.Application.Interfaces;
+using Vela.Infrastructure.Caching;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace FinanceTracker.Api.Extensions;
+namespace Vela.Api.Extensions;
 
 public static class CachingExtensions
 {
@@ -24,7 +24,7 @@ public static class CachingExtensions
             {
                 options.Configuration = redisConnectionString;
                 options.InstanceName = string.IsNullOrWhiteSpace(redisInstanceName)
-                    ? "FinanceTracker:"
+                    ? "Vela:"
                     : redisInstanceName;
             });
         }

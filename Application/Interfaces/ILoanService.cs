@@ -1,9 +1,9 @@
-using FinanceTracker.Application.DTOs.Loan;
-using FinanceTracker.Domain.Common;
-using FinanceTracker.Domain.Entities;
-using FinanceTracker.Domain.Enums;
+using Vela.Application.DTOs.Loan;
+using Vela.Domain.Common;
+using Vela.Domain.Entities;
+using Vela.Domain.Enums;
 
-namespace FinanceTracker.Application.Interfaces;
+namespace Vela.Application.Interfaces;
 
 public interface ILoanService
 {

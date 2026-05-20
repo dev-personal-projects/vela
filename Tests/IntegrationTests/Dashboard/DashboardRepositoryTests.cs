@@ -1,12 +1,12 @@
-using FinanceTracker.Application.DTOs.Dashboard;
-using FinanceTracker.Domain.Enums;
-using FinanceTracker.Infrastructure.Repositories;
+using Vela.Application.DTOs.Dashboard;
+using Vela.Domain.Enums;
+using Vela.Infrastructure.Repositories;
 using IntegrationTests.Common;
-using ExpenseEntity = FinanceTracker.Domain.Entities.Expense;
-using IncomeEntity = FinanceTracker.Domain.Entities.Income;
-using LoanEntity = FinanceTracker.Domain.Entities.Loan;
-using LoanRepaymentEntity = FinanceTracker.Domain.Entities.LoanRepayment;
-using SavingsGoalEntity = FinanceTracker.Domain.Entities.SavingsGoal;
+using ExpenseEntity = Vela.Domain.Entities.Expense;
+using IncomeEntity = Vela.Domain.Entities.Income;
+using LoanEntity = Vela.Domain.Entities.Loan;
+using LoanRepaymentEntity = Vela.Domain.Entities.LoanRepayment;
+using SavingsGoalEntity = Vela.Domain.Entities.SavingsGoal;
 
 namespace IntegrationTests.Dashboard;
 

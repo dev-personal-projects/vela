@@ -5,11 +5,11 @@ WORKDIR /src
 
 COPY global.json ./
 COPY Directory.Build.props ./
-COPY FinanceTracker.csproj ./
-RUN dotnet restore FinanceTracker.csproj
+COPY Vela.csproj ./
+RUN dotnet restore Vela.csproj
 
 COPY . .
-RUN dotnet publish FinanceTracker.csproj \
+RUN dotnet publish Vela.csproj \
     --configuration Release \
     --output /app/publish \
     --no-restore \
@@ -22,4 +22,4 @@ ENV ASPNETCORE_URLS=http://0.0.0.0:8080
 EXPOSE 8080
 
 COPY --from=build /app/publish .
-ENTRYPOINT ["dotnet", "FinanceTracker.dll"]
+ENTRYPOINT ["dotnet", "Vela.dll"]

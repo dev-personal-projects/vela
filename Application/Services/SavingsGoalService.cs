@@ -1,9 +1,9 @@
-using FinanceTracker.Application.DTOs.Savings;
-using FinanceTracker.Application.Interfaces;
-using FinanceTracker.Domain.Common;
-using FinanceTracker.Domain.Entities;
+using Vela.Application.DTOs.Savings;
+using Vela.Application.Interfaces;
+using Vela.Domain.Common;
+using Vela.Domain.Entities;
 
-namespace FinanceTracker.Application.Services;
+namespace Vela.Application.Services;
 
 public sealed class SavingsGoalService(
     ISavingsGoalRepository repository,

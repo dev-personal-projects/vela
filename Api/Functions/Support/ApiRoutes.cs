@@ -1,4 +1,4 @@
-namespace FinanceTracker.Api.Functions.Support;
+namespace Vela.Api.Functions.Support;
 
 public static class ApiRoutes
 {

@@ -1,9 +1,9 @@
 using System.IdentityModel.Tokens.Jwt;
-using FinanceTracker.Application.Interfaces;
-using FinanceTracker.Domain.Common;
+using Vela.Application.Interfaces;
+using Vela.Domain.Common;
 using Microsoft.Azure.Functions.Worker.Http;
 
-namespace FinanceTracker.Api.Functions.Support;
+namespace Vela.Api.Functions.Support;
 
 public sealed class FunctionAuth(IApiTokenValidator tokenValidator)
 {

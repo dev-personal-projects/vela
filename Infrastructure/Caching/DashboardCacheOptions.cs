@@ -1,4 +1,4 @@
-namespace FinanceTracker.Infrastructure.Caching;
+namespace Vela.Infrastructure.Caching;
 
 public sealed class DashboardCacheOptions
 {

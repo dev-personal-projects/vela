@@ -1,9 +1,9 @@
-using FinanceTracker.Application.Interfaces;
-using FinanceTracker.Domain.Entities;
-using FinanceTracker.Infrastructure.Data;
+using Vela.Application.Interfaces;
+using Vela.Domain.Entities;
+using Vela.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
-namespace FinanceTracker.Infrastructure.Repositories;
+namespace Vela.Infrastructure.Repositories;
 
 public sealed class ExpenseRepository(AppDbContext db) : IExpenseRepository
 {

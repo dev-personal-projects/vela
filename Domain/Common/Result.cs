@@ -1,4 +1,4 @@
-namespace FinanceTracker.Domain.Common;
+namespace Vela.Domain.Common;
 
 public abstract class AppResultBase
 {

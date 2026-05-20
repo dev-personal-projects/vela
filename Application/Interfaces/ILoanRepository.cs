@@ -1,7 +1,7 @@
-using FinanceTracker.Domain.Entities;
-using FinanceTracker.Domain.Enums;
+using Vela.Domain.Entities;
+using Vela.Domain.Enums;
 
-namespace FinanceTracker.Application.Interfaces;
+namespace Vela.Application.Interfaces;
 
 public interface ILoanRepository
 {

@@ -1,4 +1,4 @@
-namespace FinanceTracker.Application.Interfaces;
+namespace Vela.Application.Interfaces;
 
 public interface IApiTokenService
 {

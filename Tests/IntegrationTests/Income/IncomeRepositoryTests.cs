@@ -1,6 +1,6 @@
-using FinanceTracker.Infrastructure.Repositories;
+using Vela.Infrastructure.Repositories;
 using IntegrationTests.Common;
-using IncomeEntity = FinanceTracker.Domain.Entities.Income;
+using IncomeEntity = Vela.Domain.Entities.Income;
 using Microsoft.EntityFrameworkCore;
 
 namespace IntegrationTests.Income;

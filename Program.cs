@@ -1,4 +1,4 @@
-using FinanceTracker.Api.Extensions;
+using Vela.Api.Extensions;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Builder;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,7 +22,7 @@ builder.Services
     .AddApplicationInsightsTelemetryWorkerService()
     .ConfigureFunctionsApplicationInsights();
 
-await builder.Configuration.AddFinanceTrackerKeyVaultAsync(builder.Environment);
+await builder.Configuration.AddVelaKeyVaultAsync(builder.Environment);
 
 builder.Services.AddApiAuth(builder.Configuration);
 builder.Services.AddSupabaseClient(builder.Configuration);

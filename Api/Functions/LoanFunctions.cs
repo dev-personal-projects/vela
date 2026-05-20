@@ -1,12 +1,12 @@
-using FinanceTracker.Api.Functions.Support;
-using FinanceTracker.Application.DTOs.Loan;
-using FinanceTracker.Application.Interfaces;
-using FinanceTracker.Domain.Enums;
+using Vela.Api.Functions.Support;
+using Vela.Application.DTOs.Loan;
+using Vela.Application.Interfaces;
+using Vela.Domain.Enums;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 
-namespace FinanceTracker.Api.Functions;
+namespace Vela.Api.Functions;
 
 public sealed class LoanFunctions(ILoanService loanService, FunctionAuth auth)
 {

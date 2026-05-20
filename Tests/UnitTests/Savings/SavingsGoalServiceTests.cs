@@ -1,7 +1,7 @@
-using FinanceTracker.Application.DTOs.Savings;
-using FinanceTracker.Application.Interfaces;
-using FinanceTracker.Application.Services;
-using FinanceTracker.Domain.Entities;
+using Vela.Application.DTOs.Savings;
+using Vela.Application.Interfaces;
+using Vela.Application.Services;
+using Vela.Domain.Entities;
 using UnitTests.Builders;
 using UnitTests.Common;
 

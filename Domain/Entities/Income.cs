@@ -1,4 +1,4 @@
-namespace FinanceTracker.Domain.Entities;
+namespace Vela.Domain.Entities;
 
 public sealed class Income
 {

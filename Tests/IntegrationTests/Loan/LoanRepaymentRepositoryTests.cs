@@ -1,8 +1,8 @@
-using FinanceTracker.Domain.Enums;
-using FinanceTracker.Infrastructure.Repositories;
+using Vela.Domain.Enums;
+using Vela.Infrastructure.Repositories;
 using IntegrationTests.Common;
-using LoanEntity = FinanceTracker.Domain.Entities.Loan;
-using LoanRepaymentEntity = FinanceTracker.Domain.Entities.LoanRepayment;
+using LoanEntity = Vela.Domain.Entities.Loan;
+using LoanRepaymentEntity = Vela.Domain.Entities.LoanRepayment;
 
 namespace IntegrationTests.Loan;
 

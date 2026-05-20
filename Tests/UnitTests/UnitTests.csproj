@@ -17,6 +17,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\FinanceTracker.csproj" />
+    <ProjectReference Include="..\..\Vela.csproj" />
   </ItemGroup>
 </Project>

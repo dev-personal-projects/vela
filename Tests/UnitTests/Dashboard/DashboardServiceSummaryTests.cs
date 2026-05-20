@@ -1,6 +1,6 @@
-using FinanceTracker.Application.DTOs.Dashboard;
-using FinanceTracker.Application.Interfaces;
-using FinanceTracker.Application.Services;
+using Vela.Application.DTOs.Dashboard;
+using Vela.Application.Interfaces;
+using Vela.Application.Services;
 using UnitTests.Builders;
 using UnitTests.Common;
 

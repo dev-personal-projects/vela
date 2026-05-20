@@ -71,7 +71,7 @@ What the devcontainer now provides:
 
 Recommended first-run flow inside the devcontainer:
 1. Run `az login` if the devcontainer cannot see an active Azure CLI session.
-2. Confirm your account can read `https://kv-fintrack-dev-neu.vault.azure.net/`.
+2. Confirm your account can read `https://kv-vela-dev-neu.vault.azure.net/`.
 3. Create `appsettings.Development.json` from `appsettings.Development.example.json` if needed.
 4. Open the repository in the devcontainer.
 5. Let the bootstrap finish.

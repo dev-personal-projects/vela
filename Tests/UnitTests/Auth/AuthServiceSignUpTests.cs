@@ -1,7 +1,7 @@
-using FinanceTracker.Application.DTOs.Auth;
-using FinanceTracker.Application.Interfaces;
-using FinanceTracker.Application.Services;
-using FinanceTracker.Domain.Common;
+using Vela.Application.DTOs.Auth;
+using Vela.Application.Interfaces;
+using Vela.Application.Services;
+using Vela.Domain.Common;
 
 namespace UnitTests.Auth;
 

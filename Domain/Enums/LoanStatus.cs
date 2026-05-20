@@ -1,4 +1,4 @@
-namespace FinanceTracker.Domain.Enums;
+namespace Vela.Domain.Enums;
 
 public enum LoanStatus
 {

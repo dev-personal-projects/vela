@@ -1,7 +1,7 @@
 using System.Text.Json;
 using Microsoft.Azure.Functions.Worker.Http;
 
-namespace FinanceTracker.Api.Functions.Support;
+namespace Vela.Api.Functions.Support;
 
 public static class FunctionJson
 {

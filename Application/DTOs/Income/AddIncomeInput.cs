@@ -1,4 +1,4 @@
-namespace FinanceTracker.Application.DTOs.Income;
+namespace Vela.Application.DTOs.Income;
 
 public sealed record AddIncomeInput(
     decimal Amount,

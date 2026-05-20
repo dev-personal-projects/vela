@@ -1,11 +1,11 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text.RegularExpressions;
-using FinanceTracker.Application.DTOs.Auth;
-using FinanceTracker.Application.Interfaces;
-using FinanceTracker.Domain.Common;
+using Vela.Application.DTOs.Auth;
+using Vela.Application.Interfaces;
+using Vela.Domain.Common;
 
-namespace FinanceTracker.Application.Services;
+namespace Vela.Application.Services;
 
 public sealed class AuthService(ISupabaseAuthClient authClient, IApiTokenService apiTokenService) : IAuthService
 {

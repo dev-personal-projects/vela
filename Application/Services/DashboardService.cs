@@ -1,10 +1,10 @@
-using FinanceTracker.Application.DTOs.Dashboard;
-using FinanceTracker.Application.Interfaces;
-using FinanceTracker.Domain.Common;
-using FinanceTracker.Domain.Entities;
-using FinanceTracker.Domain.Enums;
+using Vela.Application.DTOs.Dashboard;
+using Vela.Application.Interfaces;
+using Vela.Domain.Common;
+using Vela.Domain.Entities;
+using Vela.Domain.Enums;
 
-namespace FinanceTracker.Application.Services;
+namespace Vela.Application.Services;
 
 public sealed class DashboardService(
     IDashboardRepository dashboardRepository,

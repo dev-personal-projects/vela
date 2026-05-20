@@ -15,10 +15,27 @@ require_command() {
     fi
 }
 
+warn_or_exit() {
+    local message="$1"
+
+    if [[ "${DEVCONTAINER_STRICT_VALIDATION:-0}" == "1" ]]; then
+        echo "${message}" >&2
+        exit 1
+    fi
+
+    echo "${message}" >&2
+}
+
 cd "${ROOT_DIR}"
 
-for command_name in dotnet git gh jq rg psql node npm docker az; do
+for command_name in dotnet git jq rg psql node npm; do
     require_command "${command_name}"
+done
+
+for command_name in gh docker az; do
+    if ! command -v "${command_name}" >/dev/null 2>&1; then
+        warn_or_exit "[devcontainer] Optional command is unavailable: ${command_name}"
+    fi
 done
 
 if [[ ! -f "${SOLUTION_FILE}" ]]; then
@@ -26,11 +43,14 @@ if [[ ! -f "${SOLUTION_FILE}" ]]; then
     exit 1
 fi
 
-bash "${ROOT_DIR}/scripts/devcontainer/check-testcontainers.sh"
+if command -v docker >/dev/null 2>&1; then
+    if ! bash "${ROOT_DIR}/scripts/devcontainer/check-testcontainers.sh"; then
+        warn_or_exit "[devcontainer] Docker/Testcontainers validation failed. Integration tests may not run until Docker access is fixed."
+    fi
+fi
 
-if ! az account show >/dev/null 2>&1; then
-    echo "[devcontainer] Azure CLI is installed but not logged in. Run: az login" >&2
-    exit 1
+if command -v az >/dev/null 2>&1 && ! az account show >/dev/null 2>&1; then
+    warn_or_exit "[devcontainer] Azure CLI is installed but not logged in. Run: az login"
 fi
 
 vault_uri="${AzureKeyVault__VaultUri:-}"
@@ -39,9 +59,7 @@ if [[ -z "${vault_uri}" && -f "${APPSETTINGS_LOCAL}" ]]; then
 fi
 
 if [[ -z "${vault_uri}" ]]; then
-    echo "[devcontainer] Missing Azure Key Vault bootstrap config." >&2
-    echo "[devcontainer] Set AzureKeyVault__VaultUri or create appsettings.Development.json from appsettings.Development.example.json." >&2
-    exit 1
+    warn_or_exit "[devcontainer] Missing Azure Key Vault bootstrap config. Set AzureKeyVault__VaultUri or create appsettings.Development.json from appsettings.Development.example.json."
 fi
 
 echo "[devcontainer] dotnet SDK: $(dotnet --version)"

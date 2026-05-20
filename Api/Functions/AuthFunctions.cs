@@ -1,11 +1,11 @@
-using FinanceTracker.Api.Functions.Support;
-using FinanceTracker.Application.DTOs.Auth;
-using FinanceTracker.Application.Interfaces;
+using Vela.Api.Functions.Support;
+using Vela.Application.DTOs.Auth;
+using Vela.Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 
-namespace FinanceTracker.Api.Functions;
+namespace Vela.Api.Functions;
 
 public sealed class AuthFunctions(IAuthService authService)
 {

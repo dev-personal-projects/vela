@@ -1,6 +1,6 @@
-using FinanceTracker.Domain.Entities;
+using Vela.Domain.Entities;
 
-namespace FinanceTracker.Application.Interfaces;
+namespace Vela.Application.Interfaces;
 
 public interface IExpenseRepository
 {

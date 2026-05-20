@@ -5,10 +5,15 @@
     "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
     "ASPNETCORE_ENVIRONMENT": "Development",
     "FUNCTIONS_ENVIRONMENT": "Development",
-    "AzureKeyVault__VaultUri": "https://kv-fintrack-dev-neu.vault.azure.net/",
+    "AzureKeyVault__VaultUri": "https://kv-vela-dev-neu.vault.azure.net/",
     "AzureKeyVault__CredentialMode": "AzureCli",
     "DashboardCache__Enabled": "true",
     "DashboardCache__TtlSeconds": "60",
-    "DashboardCache__VersionTtlHours": "24"
+    "DashboardCache__VersionTtlHours": "24",
+    "Auth__JwtSecret": "vela-local-dev-jwt-secret-keep-out-of-git-32-bytes",
+    "ConnectionStrings__Default": "Host=localhost;Port=5432;Database=vela_dev;Username=postgres;Password=postgres",
+    "Supabase__Url": "https://localhost",
+    "Supabase__AnonKey": "vela-local-dev-supabase-anon-key",
+    "Redis__ConnectionString": ""
   }
 }

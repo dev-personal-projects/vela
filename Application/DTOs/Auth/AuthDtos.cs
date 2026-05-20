@@ -1,4 +1,4 @@
-namespace FinanceTracker.Application.DTOs.Auth;
+namespace Vela.Application.DTOs.Auth;
 
 public sealed record SignUpInput(string Email, string Password);
 

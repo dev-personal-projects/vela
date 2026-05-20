@@ -1,7 +1,7 @@
-using FinanceTracker.Domain.Common;
+using Vela.Domain.Common;
 using Microsoft.AspNetCore.Mvc;
 
-namespace FinanceTracker.Api.Functions.Support;
+namespace Vela.Api.Functions.Support;
 
 public static class FunctionHttpResults
 {

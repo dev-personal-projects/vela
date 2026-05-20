@@ -1,4 +1,4 @@
-using FinanceTracker.Infrastructure.Data;
+using Vela.Infrastructure.Data;
 
 namespace IntegrationTests.Common;
 

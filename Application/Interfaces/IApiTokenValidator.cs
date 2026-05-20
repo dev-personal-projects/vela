@@ -1,7 +1,7 @@
 using System.Security.Claims;
-using FinanceTracker.Domain.Common;
+using Vela.Domain.Common;
 
-namespace FinanceTracker.Application.Interfaces;
+namespace Vela.Application.Interfaces;
 
 public interface IApiTokenValidator
 {

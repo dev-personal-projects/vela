@@ -12,11 +12,11 @@ on:
       - "Infrastructure/**"
       - "Tests/**"
       - "Program.cs"
-      - "FinanceTracker.csproj"
+      - "Vela.csproj"
       - "build/vela.sln"
       - "host.json"
       - "global.json"
-      - ".github/workflows/dev-deploy-fintrack-api-functions.yml"
+      - ".github/workflows/dev-deploy-vela-api-functions.yml"
 
 permissions:
   id-token: write
@@ -53,12 +53,12 @@ jobs:
 
       - name: Restore
         run: |
-          dotnet restore FinanceTracker.csproj
+          dotnet restore Vela.csproj
           dotnet restore Tests/UnitTests/UnitTests.csproj
           dotnet restore Tests/IntegrationTests/IntegrationTests.csproj
 
       - name: Build
-        run: dotnet build FinanceTracker.csproj --configuration Release --no-restore
+        run: dotnet build Vela.csproj --configuration Release --no-restore
 
       - name: Test
         run: |
@@ -66,7 +66,7 @@ jobs:
           dotnet test Tests/IntegrationTests/IntegrationTests.csproj --configuration Release --no-restore --verbosity normal
 
       - name: Publish
-        run: dotnet publish FinanceTracker.csproj --configuration Release --output ./publish
+        run: dotnet publish Vela.csproj --configuration Release --output ./publish
 
       - name: Azure Login
         uses: azure/login@v2

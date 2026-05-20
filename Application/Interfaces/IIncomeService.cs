@@ -1,8 +1,8 @@
-using FinanceTracker.Application.DTOs.Income;
-using FinanceTracker.Domain.Common;
-using FinanceTracker.Domain.Entities;
+using Vela.Application.DTOs.Income;
+using Vela.Domain.Common;
+using Vela.Domain.Entities;
 
-namespace FinanceTracker.Application.Interfaces;
+namespace Vela.Application.Interfaces;
 
 public interface IIncomeService
 {

@@ -1,5 +1,6 @@
 {
     "editor.fontSize": 12,
+    "editor.wordWrap": "on",
     "workbench.colorTheme": "One Dark Pro Night Flat",
     "azureFunctions.deploySubpath": "bin/Release/net10.0/publish",
     "azureFunctions.projectLanguage": "C#",

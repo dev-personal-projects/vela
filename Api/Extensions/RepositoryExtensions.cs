@@ -1,8 +1,8 @@
-using FinanceTracker.Application.Interfaces;
-using FinanceTracker.Infrastructure.Repositories;
+using Vela.Application.Interfaces;
+using Vela.Infrastructure.Repositories;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace FinanceTracker.Api.Extensions;
+namespace Vela.Api.Extensions;
 
 public static class RepositoryExtensions
 {

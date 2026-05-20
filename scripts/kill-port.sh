@@ -30,9 +30,9 @@ if [[ -n "$INODE" ]]; then
     fi
 fi
 
-# Strategy 4 — fallback: kill all FinanceTracker processes
+# Strategy 4 — fallback: kill all Vela processes
 if [[ "$KILLED" == false ]]; then
-    PIDS=$(ps aux | grep -i "FinanceTracker\|dotnet run" | grep -v grep | awk '{print $2}')
+    PIDS=$(ps aux | grep -i "Vela\|dotnet run" | grep -v grep | awk '{print $2}')
     if [[ -n "$PIDS" ]]; then
         echo "$PIDS" | xargs -r kill -9
         echo "Port $PORT freed via process name (killed PID: $PIDS)"

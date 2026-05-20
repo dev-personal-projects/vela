@@ -1,11 +1,11 @@
-using FinanceTracker.Infrastructure.Data;
-using FinanceTracker.Domain.Enums;
+using Vela.Infrastructure.Data;
+using Vela.Domain.Enums;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 
-namespace FinanceTracker.Api.Extensions;
+namespace Vela.Api.Extensions;
 
 public static class DatabaseExtensions
 {

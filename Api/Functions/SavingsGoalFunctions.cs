@@ -1,11 +1,11 @@
-using FinanceTracker.Api.Functions.Support;
-using FinanceTracker.Application.DTOs.Savings;
-using FinanceTracker.Application.Interfaces;
+using Vela.Api.Functions.Support;
+using Vela.Application.DTOs.Savings;
+using Vela.Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 
-namespace FinanceTracker.Api.Functions;
+namespace Vela.Api.Functions;
 
 public sealed class SavingsGoalFunctions(ISavingsGoalService savingsGoalService, FunctionAuth auth)
 {

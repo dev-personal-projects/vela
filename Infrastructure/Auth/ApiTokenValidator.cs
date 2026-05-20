@@ -1,11 +1,11 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using FinanceTracker.Application.Interfaces;
-using FinanceTracker.Domain.Common;
+using Vela.Application.Interfaces;
+using Vela.Domain.Common;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 
-namespace FinanceTracker.Infrastructure.Auth;
+namespace Vela.Infrastructure.Auth;
 
 public sealed class ApiTokenValidator : IApiTokenValidator
 {

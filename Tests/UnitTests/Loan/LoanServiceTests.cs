@@ -1,8 +1,8 @@
-using FinanceTracker.Application.DTOs.Loan;
-using FinanceTracker.Application.Interfaces;
-using FinanceTracker.Application.Services;
-using FinanceTracker.Domain.Entities;
-using FinanceTracker.Domain.Enums;
+using Vela.Application.DTOs.Loan;
+using Vela.Application.Interfaces;
+using Vela.Application.Services;
+using Vela.Domain.Entities;
+using Vela.Domain.Enums;
 using UnitTests.Builders;
 using UnitTests.Common;
 
@@ -20,11 +20,11 @@ public sealed class LoanServiceTests
         var service = CreateService();
         var userId = TestUsers.PrimaryUserId;
         var ct = TestContext.Current.CancellationToken;
-        FinanceTracker.Domain.Entities.Loan? savedLoan = null;
+        Vela.Domain.Entities.Loan? savedLoan = null;
 
         _repository
-            .Setup(x => x.AddAsync(It.IsAny<FinanceTracker.Domain.Entities.Loan>(), It.IsAny<CancellationToken>()))
-            .Callback<FinanceTracker.Domain.Entities.Loan, CancellationToken>((loan, _) => savedLoan = loan)
+            .Setup(x => x.AddAsync(It.IsAny<Vela.Domain.Entities.Loan>(), It.IsAny<CancellationToken>()))
+            .Callback<Vela.Domain.Entities.Loan, CancellationToken>((loan, _) => savedLoan = loan)
             .Returns(Task.CompletedTask);
 
         _cache
@@ -57,7 +57,7 @@ public sealed class LoanServiceTests
 
         result.IsFailure.Should().BeTrue();
         result.Error.Should().Be("Counterparty name is required.");
-        _repository.Verify(x => x.AddAsync(It.IsAny<FinanceTracker.Domain.Entities.Loan>(), It.IsAny<CancellationToken>()), Times.Never);
+        _repository.Verify(x => x.AddAsync(It.IsAny<Vela.Domain.Entities.Loan>(), It.IsAny<CancellationToken>()), Times.Never);
         _cache.Verify(x => x.InvalidateUserAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -74,7 +74,7 @@ public sealed class LoanServiceTests
 
         result.IsFailure.Should().BeTrue();
         result.Error.Should().Be("Amount must be greater than 0.");
-        _repository.Verify(x => x.AddAsync(It.IsAny<FinanceTracker.Domain.Entities.Loan>(), It.IsAny<CancellationToken>()), Times.Never);
+        _repository.Verify(x => x.AddAsync(It.IsAny<Vela.Domain.Entities.Loan>(), It.IsAny<CancellationToken>()), Times.Never);
         _cache.Verify(x => x.InvalidateUserAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -261,7 +261,7 @@ public sealed class LoanServiceTests
 
         result.IsFailure.Should().BeTrue();
         result.Error.Should().Be("Due date must be after the loan date.");
-        _repository.Verify(x => x.AddAsync(It.IsAny<FinanceTracker.Domain.Entities.Loan>(), It.IsAny<CancellationToken>()), Times.Never);
+        _repository.Verify(x => x.AddAsync(It.IsAny<Vela.Domain.Entities.Loan>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact(DisplayName = "UT-LOAN-UPDATE-001 rejects reducing the amount below the amount already repaid")]
@@ -285,7 +285,7 @@ public sealed class LoanServiceTests
 
         result.IsFailure.Should().BeTrue();
         result.Error.Should().Be($"Amount cannot be less than the amount already repaid ({loan.AmountRepaid:C}).");
-        _repository.Verify(x => x.UpdateAsync(It.IsAny<FinanceTracker.Domain.Entities.Loan>(), It.IsAny<CancellationToken>()), Times.Never);
+        _repository.Verify(x => x.UpdateAsync(It.IsAny<Vela.Domain.Entities.Loan>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact(DisplayName = "UT-LOAN-UPDATE-002 rejects update due dates that are not after the loan date")]
@@ -308,7 +308,7 @@ public sealed class LoanServiceTests
 
         result.IsFailure.Should().BeTrue();
         result.Error.Should().Be("Due date must be after the loan date.");
-        _repository.Verify(x => x.UpdateAsync(It.IsAny<FinanceTracker.Domain.Entities.Loan>(), It.IsAny<CancellationToken>()), Times.Never);
+        _repository.Verify(x => x.UpdateAsync(It.IsAny<Vela.Domain.Entities.Loan>(), It.IsAny<CancellationToken>()), Times.Never);
         _cache.Verify(x => x.InvalidateUserAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -360,7 +360,7 @@ public sealed class LoanServiceTests
 
         _repository
             .Setup(x => x.GetByIdAsync(loanId, TestUsers.PrimaryUserId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((FinanceTracker.Domain.Entities.Loan?)null);
+            .ReturnsAsync((Vela.Domain.Entities.Loan?)null);
 
         var result = await service.GetRepaymentHistoryAsync(loanId, TestUsers.PrimaryUserId, ct);
 

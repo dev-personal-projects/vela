@@ -1,7 +1,7 @@
-using FinanceTracker.Application.DTOs.Auth;
-using FinanceTracker.Domain.Common;
+using Vela.Application.DTOs.Auth;
+using Vela.Domain.Common;
 
-namespace FinanceTracker.Application.Interfaces;
+namespace Vela.Application.Interfaces;
 
 public interface IAuthService
 {

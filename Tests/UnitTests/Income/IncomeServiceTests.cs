@@ -1,6 +1,6 @@
-using FinanceTracker.Application.DTOs.Income;
-using FinanceTracker.Application.Interfaces;
-using FinanceTracker.Application.Services;
+using Vela.Application.DTOs.Income;
+using Vela.Application.Interfaces;
+using Vela.Application.Services;
 using UnitTests.Common;
 
 namespace UnitTests.Income;
@@ -16,11 +16,11 @@ public sealed class IncomeServiceTests
         var service = CreateService();
         var userId = TestUsers.PrimaryUserId;
         var ct = TestContext.Current.CancellationToken;
-        FinanceTracker.Domain.Entities.Income? savedIncome = null;
+        Vela.Domain.Entities.Income? savedIncome = null;
 
         _repository
-            .Setup(x => x.AddAsync(It.IsAny<FinanceTracker.Domain.Entities.Income>(), It.IsAny<CancellationToken>()))
-            .Callback<FinanceTracker.Domain.Entities.Income, CancellationToken>((income, _) => savedIncome = income)
+            .Setup(x => x.AddAsync(It.IsAny<Vela.Domain.Entities.Income>(), It.IsAny<CancellationToken>()))
+            .Callback<Vela.Domain.Entities.Income, CancellationToken>((income, _) => savedIncome = income)
             .Returns(Task.CompletedTask);
 
         _cache
@@ -53,7 +53,7 @@ public sealed class IncomeServiceTests
         result.IsFailure.Should().BeTrue();
         result.Error.Should().Be("Date cannot be in the future.");
 
-        _repository.Verify(x => x.AddAsync(It.IsAny<FinanceTracker.Domain.Entities.Income>(), It.IsAny<CancellationToken>()), Times.Never);
+        _repository.Verify(x => x.AddAsync(It.IsAny<Vela.Domain.Entities.Income>(), It.IsAny<CancellationToken>()), Times.Never);
         _cache.Verify(x => x.InvalidateUserAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -71,7 +71,7 @@ public sealed class IncomeServiceTests
         result.IsFailure.Should().BeTrue();
         result.Error.Should().Be("Amount must be greater than 0.");
 
-        _repository.Verify(x => x.AddAsync(It.IsAny<FinanceTracker.Domain.Entities.Income>(), It.IsAny<CancellationToken>()), Times.Never);
+        _repository.Verify(x => x.AddAsync(It.IsAny<Vela.Domain.Entities.Income>(), It.IsAny<CancellationToken>()), Times.Never);
         _cache.Verify(x => x.InvalidateUserAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -89,7 +89,7 @@ public sealed class IncomeServiceTests
         result.IsFailure.Should().BeTrue();
         result.Error.Should().Be("Source is required.");
 
-        _repository.Verify(x => x.AddAsync(It.IsAny<FinanceTracker.Domain.Entities.Income>(), It.IsAny<CancellationToken>()), Times.Never);
+        _repository.Verify(x => x.AddAsync(It.IsAny<Vela.Domain.Entities.Income>(), It.IsAny<CancellationToken>()), Times.Never);
         _cache.Verify(x => x.InvalidateUserAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -141,7 +141,7 @@ public sealed class IncomeServiceTests
 
         _repository
             .Setup(x => x.GetByIdAsync(incomeId, TestUsers.PrimaryUserId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((FinanceTracker.Domain.Entities.Income?)null);
+            .ReturnsAsync((Vela.Domain.Entities.Income?)null);
 
         var result = await service.GetByIdAsync(incomeId, TestUsers.PrimaryUserId, ct);
 
@@ -155,7 +155,7 @@ public sealed class IncomeServiceTests
         var service = CreateService();
         var ct = TestContext.Current.CancellationToken;
         var userId = TestUsers.PrimaryUserId;
-        var income = new FinanceTracker.Domain.Entities.Income(userId, 1000m, "Salary", "Old description", TestDates.OneWeekAgo);
+        var income = new Vela.Domain.Entities.Income(userId, 1000m, "Salary", "Old description", TestDates.OneWeekAgo);
 
         _repository
             .Setup(x => x.GetByIdAsync(income.Id, userId, It.IsAny<CancellationToken>()))

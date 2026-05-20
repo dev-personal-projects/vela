@@ -1,7 +1,7 @@
-using FinanceTracker.Infrastructure.Repositories;
+using Vela.Infrastructure.Repositories;
 using IntegrationTests.Common;
 using Microsoft.EntityFrameworkCore;
-using ExpenseEntity = FinanceTracker.Domain.Entities.Expense;
+using ExpenseEntity = Vela.Domain.Entities.Expense;
 
 namespace IntegrationTests.Expense;
 

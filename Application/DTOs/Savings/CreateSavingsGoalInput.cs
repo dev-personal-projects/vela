@@ -1,4 +1,4 @@
-namespace FinanceTracker.Application.DTOs.Savings;
+namespace Vela.Application.DTOs.Savings;
 
 public sealed record CreateSavingsGoalInput(
     string Name,

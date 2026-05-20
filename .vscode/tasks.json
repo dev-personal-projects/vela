@@ -55,7 +55,7 @@
       "type": "process",
       "args": [
         "publish",
-        "${workspaceFolder}/FinanceTracker.csproj",
+        "${workspaceFolder}/Vela.csproj",
         "--configuration",
         "Release",
         "--output",

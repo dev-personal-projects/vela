@@ -1,7 +1,7 @@
-using FinanceTracker.Application.DTOs.Dashboard;
-using FinanceTracker.Domain.Entities;
+using Vela.Application.DTOs.Dashboard;
+using Vela.Domain.Entities;
 
-namespace FinanceTracker.Application.Interfaces;
+namespace Vela.Application.Interfaces;
 
 public interface IDashboardRepository
 {

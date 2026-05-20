@@ -1,6 +1,6 @@
-using FinanceTracker.Domain.Enums;
+using Vela.Domain.Enums;
 
-namespace FinanceTracker.Domain.Entities;
+namespace Vela.Domain.Entities;
 
 public sealed class Loan
 {

@@ -19,6 +19,12 @@ echo "[bootstrap] Validating devcontainer environment..."
 bash "${ROOT_DIR}/scripts/devcontainer/validate-env.sh"
 
 echo "[bootstrap] Ensuring development database schema..."
-bash "${ROOT_DIR}/scripts/devcontainer/ensure-dev-db.sh"
+if ! bash "${ROOT_DIR}/scripts/devcontainer/ensure-dev-db.sh"; then
+    if [[ "${DEVCONTAINER_STRICT_VALIDATION:-0}" == "1" ]]; then
+        exit 1
+    fi
+
+    echo "[bootstrap] Development database schema was not applied. Run scripts/devcontainer/ensure-dev-db.sh after Azure/database config is ready." >&2
+fi
 
 echo "[bootstrap] Devcontainer bootstrap complete."

@@ -18,7 +18,7 @@ Recommended setup:
 Run Postgres in Docker (example uses port `5432`):
 
 ```bash
-docker run --rm --name finance-tracker-test-db \
+docker run --rm --name vela-test-db \
   -e POSTGRES_PASSWORD=postgres \
   -e POSTGRES_DB=finance_tracker_test \
   -p 5432:5432 \
@@ -59,21 +59,21 @@ If you want the tests to be fully self-contained, prefer approach (1) and have t
 The test plan proposes either:
 
 Option A (separate project):
-- `Tests/FinanceTracker.E2ETests/FinanceTracker.E2ETests.csproj`
+- `Tests/Vela.E2ETests/Vela.E2ETests.csproj`
 
 Option B (combined):
-- Put E2E tests into `FinanceTracker.ApiTests` and tag them (Trait/Category).
+- Put E2E tests into `Vela.ApiTests` and tag them (Trait/Category).
 
 Example commands:
 
 ```bash
-dotnet test Tests/FinanceTracker.E2ETests/FinanceTracker.E2ETests.csproj
+dotnet test Tests/Vela.E2ETests/Vela.E2ETests.csproj
 ```
 
 Or if combined + tagged:
 
 ```bash
-dotnet test Tests/FinanceTracker.ApiTests/FinanceTracker.ApiTests.csproj --filter "Category=E2E"
+dotnet test Tests/Vela.ApiTests/Vela.ApiTests.csproj --filter "Category=E2E"
 ```
 
 ## Token Strategy (No Supabase Needed)

@@ -1,11 +1,11 @@
-using FinanceTracker.Api.Functions.Support;
-using FinanceTracker.Application.DTOs.Expense;
-using FinanceTracker.Application.Interfaces;
+using Vela.Api.Functions.Support;
+using Vela.Application.DTOs.Expense;
+using Vela.Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 
-namespace FinanceTracker.Api.Functions;
+namespace Vela.Api.Functions;
 
 public sealed class ExpenseFunctions(IExpenseService expenseService, FunctionAuth auth)
 {

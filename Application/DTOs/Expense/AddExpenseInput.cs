@@ -1,4 +1,4 @@
-namespace FinanceTracker.Application.DTOs.Expense;
+namespace Vela.Application.DTOs.Expense;
 
 public sealed record AddExpenseInput(
     decimal Amount,

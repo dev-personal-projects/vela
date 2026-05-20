@@ -1,5 +1,5 @@
-using FinanceTracker.Application.DTOs.Dashboard;
-using FinanceTracker.Infrastructure.Caching;
+using Vela.Application.DTOs.Dashboard;
+using Vela.Infrastructure.Caching;
 using IntegrationTests.Common;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Memory;

@@ -87,7 +87,7 @@ Key Vault         : $KEY_VAULT_NAME
 App Insights      : $APPLICATION_INSIGHTS_NAME
 GitHub Repo       : $(repo_short)
 GitHub Branch     : $GITHUB_BRANCH
-Workflow          : .github/workflows/dev-deploy-fintrack-api-functions.yml
+Workflow          : .github/workflows/dev-deploy-vela-api-functions.yml
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 PLAN
@@ -328,7 +328,7 @@ print_summary() {
   log_info    "  Function App : $FUNCTION_APP_NAME"
   log_info    "  URL          : https://${FUNCTION_APP_NAME}.azurewebsites.net"
   log_info    "  Health       : https://${FUNCTION_APP_NAME}.azurewebsites.net/api/v1/health"
-  log_info    "  Workflow     : .github/workflows/dev-deploy-fintrack-api-functions.yml"
+  log_info    "  Workflow     : .github/workflows/dev-deploy-vela-api-functions.yml"
   log_success "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 }
 

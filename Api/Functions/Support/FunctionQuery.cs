@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Primitives;
 
-namespace FinanceTracker.Api.Functions.Support;
+namespace Vela.Api.Functions.Support;
 
 public static class FunctionQuery
 {

@@ -1,4 +1,4 @@
-using FinanceTracker.Domain.Entities;
+using Vela.Domain.Entities;
 using UnitTests.Common;
 
 namespace UnitTests.Builders;

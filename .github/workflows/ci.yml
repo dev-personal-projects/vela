@@ -45,12 +45,12 @@ jobs:
 
       - name: Restore
         run: |
-          dotnet restore FinanceTracker.csproj
+          dotnet restore Vela.csproj
           dotnet restore Tests/UnitTests/UnitTests.csproj
           dotnet restore Tests/IntegrationTests/IntegrationTests.csproj
 
       - name: Build
-        run: dotnet build FinanceTracker.csproj --configuration Release --no-restore
+        run: dotnet build Vela.csproj --configuration Release --no-restore
 
       - name: Run tests
         run: scripts/test/run-tests.sh all --configuration Release --no-restore
