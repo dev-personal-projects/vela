@@ -7,7 +7,7 @@
   "mounts": [
     "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
   ],
-  "workspaceFolder": "/workspaces/finance-tracker-graphql",
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
   "containerEnv": {
     "DOTNET_CLI_TELEMETRY_OPTOUT": "1",
     "DOTNET_SKIP_FIRST_TIME_EXPERIENCE": "1",
